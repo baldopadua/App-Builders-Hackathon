@@ -6,13 +6,13 @@ import com.secondlook.Warning
 /**
  * Plug-and-Play AI Engine Adapter Interface.
  *
- * Provides a standardized contract between Klarenz (Keyboard Lead) and Annie (AI Lead).
+ * Provides a standardized contract between the Keyboard IME and AI Detection engine.
  * Enables seamless switching between regex heuristics, ONNX Runtime models, and
  * vector similarity matchers without touching the keyboard IME logic.
  */
 interface AiDetectionAdapter {
     /**
-     * Human-readable identifier for the active engine (e.g. "RuleBasedAiAdapter", "AnnieOnnxAiAdapter").
+     * Human-readable identifier for the active engine (e.g. "RuleBasedAiAdapter", "OnDeviceAiAdapter").
      */
     val engineName: String
 

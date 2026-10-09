@@ -59,6 +59,42 @@ object FeedbackManager {
         playDing(context, isHighAlert)
     }
 
+    /**
+     * Crisp, low-latency tactile vibration feedback for keyboard touch events (matching Gboard feel).
+     */
+    fun vibrateKeyPress(context: Context, view: android.view.View? = null) {
+        if (!SettingsManager.isHapticFeedbackEnabled(context)) return
+
+        @Suppress("DEPRECATION")
+        val handled = view?.performHapticFeedback(
+            android.view.HapticFeedbackConstants.KEYBOARD_TAP,
+            android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+        ) ?: false
+
+        if (handled) return
+
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+            }
+
+            if (vibrator == null || !vibrator.hasVibrator()) return
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(14, 180))
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(14)
+            }
+        } catch (_: Exception) {}
+    }
+
     private fun vibrate(context: Context, isHighAlert: Boolean) {
         try {
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

@@ -99,7 +99,7 @@
     <LinearLayout
         android:id="@+id/row_1"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="54dp"
         android:orientation="horizontal">
         <Button android:text="Q" android:tag="q" style="@style/KeyButton" />
         <Button android:text="W" android:tag="w" style="@style/KeyButton" />
@@ -117,7 +117,7 @@
     <LinearLayout
         android:id="@+id/row_2"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="54dp"
         android:orientation="horizontal">
         <Space android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
         <Button android:text="A" android:tag="a" style="@style/KeyButton" />
@@ -136,7 +136,7 @@
     <LinearLayout
         android:id="@+id/row_3"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="54dp"
         android:orientation="horizontal">
         <Button
             android:id="@+id/btn_shift"
@@ -161,11 +161,11 @@
             android:textSize="22sp" />
     </LinearLayout>
 
-    <!-- Row 4: ?123 + , + SPACE + . + ENTER (1.4 + 1.0 + 4.6 + 1.0 + 2.0 = 10.0 weight) -->
+    <!-- Row 4: ?123 + , + SPACE + ' + . + ENTER (1.4 + 0.9 + 3.9 + 0.9 + 0.9 + 2.0 = 10.0 weight) -->
     <LinearLayout
         android:id="@+id/row_4"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="54dp"
         android:orientation="horizontal">
         <Button
             android:id="@+id/btn_mode_toggle"
@@ -173,27 +173,34 @@
             android:tag="\?123"
             style="@style/KeyButton.Functional"
             android:layout_weight="1.4"
-            android:textSize="14sp" />
+            android:textSize="15sp" />
         <Button
             android:id="@+id/btn_comma"
             android:text=","
             android:tag=","
             style="@style/KeyButton"
-            android:layout_weight="1.0"
-            android:textSize="18sp" />
+            android:layout_weight="0.9"
+            android:textSize="20sp" />
         <Button
             android:id="@+id/btn_space"
             android:text="Tanggolin"
             android:tag="SPACE"
             style="@style/KeyButton.Space"
-            android:layout_weight="4.6" />
+            android:layout_weight="3.9" />
+        <Button
+            android:id="@+id/btn_apostrophe"
+            android:text="'"
+            android:tag="'"
+            style="@style/KeyButton"
+            android:layout_weight="0.9"
+            android:textSize="20sp" />
         <Button
             android:id="@+id/btn_period"
             android:text="."
             android:tag="."
             style="@style/KeyButton"
-            android:layout_weight="1.0"
-            android:textSize="18sp" />
+            android:layout_weight="0.9"
+            android:textSize="20sp" />
         <Button
             android:id="@+id/btn_enter"
             android:text="↵"

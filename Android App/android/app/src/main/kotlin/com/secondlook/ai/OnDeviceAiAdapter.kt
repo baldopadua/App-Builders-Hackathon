@@ -18,27 +18,27 @@ import com.secondlook.ai.rules.RuleDetector
 import java.util.concurrent.Executors
 
 /**
- * On-Device AI Detection Adapter bridging Annie's AI Core with the keyboard and Flutter app.
+ * On-Device AI Detection Adapter bridging local AI Core with the keyboard and Flutter app.
  *
  * Implements the 4-stage cheapest-first detection pipeline:
  *  0. Taught Secrets: HMAC-SHA256 fingerprint exact matching (MPIN, passcodes, taught keys)
- *  1. Rule Detector: regex + Luhn + Taglish / Filipino phrasing (sub-millisecond)
+ *  1. Rule Detector: regex + Luhn + conversational phrasing (sub-millisecond)
  *  2. PII Model: bert-small-pii-detection (28.7 MB ONNX Runtime)
- *  3. Private Notes: all-MiniLM-L6-v2 Candidate v2 Filipino embeddings (22.8 MB ONNX Runtime)
+ *  3. Private Notes: all-MiniLM-L6-v2 embeddings (22.8 MB ONNX Runtime)
  *
  * Zero-jank guarantee: Rule detector handles typing synchronously from millisecond 0 while
  * ONNX models load asynchronously in the background (~1.3s on cold start).
  */
-class AnnieAiAdapter : AiDetectionAdapter {
+class OnDeviceAiAdapter : AiDetectionAdapter {
 
     companion object {
-        private const val TAG = "AnnieAiAdapter"
+        private const val TAG = "OnDeviceAiAdapter"
         @Volatile
-        var instance: AnnieAiAdapter? = null
+        var instance: OnDeviceAiAdapter? = null
             private set
     }
 
-    override val engineName: String = "TanggolinLocalAiCore"
+    override val engineName: String = "OnDeviceAiCore"
 
     @Volatile
     override var isReady: Boolean = false
@@ -89,7 +89,7 @@ class AnnieAiAdapter : AiDetectionAdapter {
                 isReady = true
 
                 val elapsed = System.currentTimeMillis() - t0
-                Log.i(TAG, "Tanggolin AI Core ready in ${elapsed}ms. Both ONNX models loaded successfully.")
+                Log.i(TAG, "On-device AI Core ready in ${elapsed}ms. Both ONNX models loaded successfully.")
             } catch (e: Exception) {
                 Log.e(TAG, "Error initializing ONNX models. RuleDetector remains active.", e)
             }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/platform_bridge.dart';
+import 'about_screen.dart';
 import 'practice_screen.dart';
 
 class OnboardingStepData {
@@ -137,7 +138,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // Handle Step 2: Switch Input Method
   Future<void> _handleStep2() async {
     if (!_step1Completed) {
-      _showOrderWarning('Mangyaring paganahin muna ang Step 1 sa Settings.');
+      _showOrderWarning('Please enable Step 1 in Settings first.');
       return;
     }
     await PlatformBridge.showInputMethodPicker();
@@ -153,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // Handle Step 3: Test Drive (No redirect needed)
   void _handleStep3() {
     if (!_step2Completed) {
-      _showOrderWarning('Piliin muna ang Tanggolin sa Step 2.');
+      _showOrderWarning('Please select Tanggolin in Step 2 first.');
       return;
     }
     setState(() {
@@ -620,6 +621,22 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            Center(
+              child: GestureDetector(
+                onTap: () => AboutScreen.showTermsAndConditionsSheet(context),
+                child: const Text(
+                  'By enabling Tanggolin, you agree to our Terms & Conditions',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF7C3AED),
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -645,7 +662,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     return InkWell(
       onTap: isClickable
           ? onTap
-          : () => _showOrderWarning('Mangyaring sundin ang tamang pagkakasunod-sunod.'),
+          : () => _showOrderWarning('Please complete the steps in order.'),
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

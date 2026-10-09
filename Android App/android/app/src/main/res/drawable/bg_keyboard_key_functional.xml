@@ -3,7 +3,7 @@
     <!-- Pressed state -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <corners android:radius="5dp" />
+            <corners android:radius="7dp" />
             <solid android:color="@color/key_functional_pressed" />
         </shape>
     </item>
@@ -14,14 +14,14 @@
             <!-- Shadow Layer -->
             <item>
                 <shape android:shape="rectangle">
-                    <corners android:radius="5dp" />
+                    <corners android:radius="7dp" />
                     <solid android:color="@color/key_functional_shadow" />
                 </shape>
             </item>
             <!-- Key Surface Layer -->
             <item android:bottom="1.5dp">
                 <shape android:shape="rectangle">
-                    <corners android:radius="5dp" />
+                    <corners android:radius="7dp" />
                     <solid android:color="@color/key_functional_face" />
                 </shape>
             </item>

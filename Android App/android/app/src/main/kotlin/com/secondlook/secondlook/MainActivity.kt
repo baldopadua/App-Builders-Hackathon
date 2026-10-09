@@ -81,15 +81,6 @@ class MainActivity : FlutterActivity() {
                     val success = SecretManager.deleteSecret(applicationContext, id)
                     result.success(success)
                 }
-                "isIngatModeEnabled" -> {
-                    val enabled = SettingsManager.isIngatModeEnabled(applicationContext)
-                    result.success(enabled)
-                }
-                "setIngatModeEnabled" -> {
-                    val enabled = call.argument<Boolean>("enabled") ?: true
-                    SettingsManager.setIngatModeEnabled(applicationContext, enabled)
-                    result.success(true)
-                }
                 "openInputMethodSettings" -> {
                     try {
                         val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)

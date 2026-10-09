@@ -33,7 +33,7 @@
             android:background="@drawable/bg_badge_high"
             android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
-            android:text="BABALA"
+            android:text="ALERT"
             android:textColor="#991B1B"
             android:textSize="10sp"
             android:textStyle="bold"
@@ -41,12 +41,12 @@
             android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
-    <!-- Clear, Readable Filipino Headline -->
+    <!-- Clear, Readable English Headline -->
     <TextView
         android:id="@+id/banner_headline"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Teka! Huwag ibigay ang OTP o PIN."
+        android:text="Careful! OTP or PIN code detected."
         android:textStyle="bold"
         android:textColor="#991B1B"
         android:textSize="16sp"
@@ -58,7 +58,7 @@
         android:id="@+id/banner_tip"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ang OTP ay parang susi ng bahay. Huwag ipamahagi sa iba."
+        android:text="One-time passcodes protect your accounts. Never share them over chat."
         android:textColor="#7F1D1D"
         android:textSize="13.5sp"
         android:lineSpacingExtra="1dp"
@@ -104,14 +104,14 @@
             android:paddingHorizontal="10dp"
             android:layout_marginEnd="8dp" />
 
-        <!-- Itago Button (Clean Solid Pill, No Emojis) -->
+        <!-- Hide Button (Clean Solid Pill, No Emojis) -->
         <Button
             android:id="@+id/btn_itago"
             android:layout_width="wrap_content"
             android:layout_height="36dp"
             android:minHeight="36dp"
             android:minWidth="78dp"
-            android:text="Itago"
+            android:text="Hide"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             android:textStyle="bold"

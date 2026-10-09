@@ -1,5 +1,6 @@
 package com.secondlook
 
+import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.Looper
@@ -87,6 +88,7 @@ class SecondLookIME : InputMethodService() {
     private val deleteRepeatHandler = Handler(Looper.getMainLooper())
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
+            FeedbackManager.vibrateKeyPress(applicationContext)
             currentInputConnection?.deleteSurroundingText(1, 0)
             onTextChanged()
             deleteRepeatHandler.postDelayed(this, 50)
@@ -128,6 +130,21 @@ class SecondLookIME : InputMethodService() {
         pangolinStatusDot = keyboardView.findViewById<View>(R.id.pangolin_status_indicator)
         pangolinStatusLabel = keyboardView.findViewById<TextView>(R.id.tv_pangolin_label)
 
+        // Make Tanggolin header badge actively launch the main app when clicked
+        val pangolinBtn = keyboardView.findViewById<View>(R.id.btn_pangolin)
+        pangolinBtn?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
+            try {
+                val intent = packageManager.getLaunchIntentForPackage(packageName)
+                if (intent != null) {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }
+            } catch (e: Exception) {
+                Log.e("SecondLookIME", "Failed to launch main app from header: ${e.message}")
+            }
+        }
+
         setupKeys(keyboardView)
         updateKeyboardUi()
         updateEnterKeyUi(currentInputEditorInfo)
@@ -140,7 +157,7 @@ class SecondLookIME : InputMethodService() {
         when (warning?.type) {
             WarningType.HIGH -> {
                 dot.setBackgroundColor(android.graphics.Color.parseColor("#EF4444"))
-                label.text = "Ingat!"
+                label.text = "Alert!"
             }
             WarningType.MEDIUM -> {
                 dot.setBackgroundColor(android.graphics.Color.parseColor("#F59E0B"))
@@ -288,17 +305,27 @@ class SecondLookIME : InputMethodService() {
 
         // Set click listeners on dynamic rows
         row1Buttons.forEachIndexed { index, btn ->
-            btn.setOnClickListener { handleKeyClick(index, 1) }
+            btn.setOnClickListener { v ->
+                FeedbackManager.vibrateKeyPress(applicationContext, v)
+                handleKeyClick(index, 1)
+            }
         }
         row2Buttons.forEachIndexed { index, btn ->
-            btn.setOnClickListener { handleKeyClick(index, 2) }
+            btn.setOnClickListener { v ->
+                FeedbackManager.vibrateKeyPress(applicationContext, v)
+                handleKeyClick(index, 2)
+            }
         }
         row3MiddleButtons.forEachIndexed { index, btn ->
-            btn.setOnClickListener { handleKeyClick(index, 3) }
+            btn.setOnClickListener { v ->
+                FeedbackManager.vibrateKeyPress(applicationContext, v)
+                handleKeyClick(index, 3)
+            }
         }
 
         // Shift button listener (handles QWERTY Shift/Caps Lock and symbol page toggles)
-        shiftButton?.setOnClickListener {
+        shiftButton?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             when (keyboardMode) {
                 KeyboardMode.QWERTY -> handleShiftClick()
                 KeyboardMode.SYMBOLS -> {
@@ -311,7 +338,8 @@ class SecondLookIME : InputMethodService() {
                 }
             }
         }
-        shiftButton?.setOnLongClickListener {
+        shiftButton?.setOnLongClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             if (keyboardMode == KeyboardMode.QWERTY) {
                 shiftState = ShiftState.CAPS_LOCKED
                 updateKeyboardUi()
@@ -322,7 +350,8 @@ class SecondLookIME : InputMethodService() {
         }
 
         // Mode toggle (?123 / ABC)
-        modeToggleButton?.setOnClickListener {
+        modeToggleButton?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             keyboardMode = if (keyboardMode == KeyboardMode.QWERTY) {
                 KeyboardMode.SYMBOLS
             } else {
@@ -336,6 +365,7 @@ class SecondLookIME : InputMethodService() {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     v.isPressed = true
+                    FeedbackManager.vibrateKeyPress(applicationContext, v)
                     currentInputConnection?.deleteSurroundingText(1, 0)
                     onTextChanged()
                     deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
@@ -353,23 +383,33 @@ class SecondLookIME : InputMethodService() {
         }
 
         // Punctuation and functional keys
-        (view.findViewById<Button>(R.id.btn_comma) ?: view.findViewWithTag<Button>(","))?.setOnClickListener {
+        (view.findViewById<Button>(R.id.btn_comma) ?: view.findViewWithTag<Button>(","))?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText(",", 1)
             onTextChanged()
         }
 
-        (view.findViewById<Button>(R.id.btn_period) ?: view.findViewWithTag<Button>("."))?.setOnClickListener {
+        (view.findViewById<Button>(R.id.btn_period) ?: view.findViewWithTag<Button>("."))?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText(".", 1)
             onTextChanged()
         }
 
-        (view.findViewById<Button>(R.id.btn_space) ?: view.findViewWithTag<Button>("SPACE"))?.setOnClickListener {
+        (view.findViewById<Button>(R.id.btn_apostrophe) ?: view.findViewWithTag<Button>("'"))?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
+            currentInputConnection?.commitText("'", 1)
+            onTextChanged()
+        }
+
+        (view.findViewById<Button>(R.id.btn_space) ?: view.findViewWithTag<Button>("SPACE"))?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText(" ", 1)
             onTextChanged()
         }
 
         enterButton = view.findViewById<Button>(R.id.btn_enter) ?: view.findViewWithTag<Button>("ENTER")
-        enterButton?.setOnClickListener {
+        enterButton?.setOnClickListener { v ->
+            FeedbackManager.vibrateKeyPress(applicationContext, v)
             handleEnterClick()
         }
         updateEnterKeyUi(currentInputEditorInfo)
@@ -416,13 +456,6 @@ class SecondLookIME : InputMethodService() {
     private fun handleEnterClick() {
         debounceHandler.removeCallbacks(debounceRunnable)
 
-        // If intercept banner is already active and user taps Enter on keyboard, prompt them to hold the button
-        if (::warningBanner.isInitialized && warningBanner.isInterceptActive()) {
-            Log.d("SecondLookIME", "Intercept already active, showing hold prompt on Enter tap")
-            warningBanner.showHoldPrompt()
-            return
-        }
-
         val draft = getCurrentText()
         val warning = DetectionEngine.detectSync(draft)
         currentWarning = warning
@@ -430,13 +463,12 @@ class SecondLookIME : InputMethodService() {
 
         val actionInfo = getEnterActionInfo(currentInputEditorInfo)
 
-        // Intercept if Red Warning (High Alert) is active: Hold send/submit and transform banner UI
+        // Intercept if Red Warning (High Alert) is active: Prompt user with alert banner
         if (warning?.type == WarningType.HIGH && (actionInfo.isSendOrSubmit || actionInfo.targetAction == EditorInfo.IME_ACTION_SEND)) {
-            val isIngatMode = SettingsManager.isIngatModeEnabled(this)
-            Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Hold 2s to send] (IngatMode=$isIngatMode)")
+            Log.w("SecondLookIME", "Intercepted Send action! Displaying alert banner")
             FeedbackManager.notifyWarning(applicationContext, isHighAlert = true)
             if (::warningBanner.isInitialized) {
-                warningBanner.showSendIntercept(warning, isIngatMode) {
+                warningBanner.showSendIntercept(warning) {
                     Log.i("SecondLookIME", "User authorized send. Dispatching held action.")
                     currentWarning = null
                     dispatchAction(actionInfo)

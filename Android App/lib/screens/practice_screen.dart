@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/platform_bridge.dart';
 import 'about_screen.dart';
@@ -20,33 +19,19 @@ class _PracticeScreenState extends State<PracticeScreen> {
   List<PrivateSecret> _vaultSecrets = [];
   Timer? _debounceTimer;
 
-  DetectionResult? _currentWarning;
-  bool _isDismissed = false;
-  bool _isMaskedApplied = false;
-  String _maskedSecretType = 'OTP';
   String? _activeQuickTestKey;
-  bool _isIngatMode = true;
 
   // Shared Brand Palette aligned with SecretsScreen
   static const Color _brandPurple = Color(0xFF581C87); // Deep rich violet
   static const Color _accentPurple = Color(0xFF7C3AED);
   static const Color _surfaceLavender = Color(0xFFFAF5FF);
   static const Color _borderLavender = Color(0xFFE9D5FF);
-  static const Color _badgeLavender = Color(0xFFF3E8FF);
 
   @override
   void initState() {
     super.initState();
     _loadSecrets();
-    _loadIngatMode();
     _textController.addListener(_onTextChanged);
-  }
-
-  Future<void> _loadIngatMode() async {
-    final enabled = await PlatformBridge.isIngatModeEnabled();
-    if (mounted) {
-      setState(() => _isIngatMode = enabled);
-    }
   }
 
   @override
@@ -68,206 +53,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _onTextChanged() {
-    final text = _textController.text;
-
-    // Reset debounce & trigger analysis
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 150), () {
-      _analyzeText(text);
-    });
-  }
-
-  Future<void> _analyzeText(String text) async {
-    if (text.trim().isEmpty) {
-      if (mounted) {
+      final text = _textController.text;
+      if (text.isEmpty && mounted) {
         setState(() {
-          _currentWarning = null;
-          _isMaskedApplied = false;
-          _isDismissed = false;
           _activeQuickTestKey = null;
         });
       }
-      return;
-    }
-
-    // Try native detection first
-    DetectionResult? result = await PlatformBridge.check(text);
-
-    // Synchronous Dart fallback for immediate zero-lag UX
-    result ??= _detectLocally(text);
-
-    final isNewWarning = result != null &&
-        (_currentWarning == null ||
-            _currentWarning?.risk != result.risk ||
-            _currentWarning?.headline != result.headline);
-
-    if (isNewWarning) {
-      final isHigh = result.risk == DetectionRisk.high;
-      PlatformBridge.triggerWarningFeedback(isHighRisk: isHigh);
-      if (isHigh) {
-        HapticFeedback.heavyImpact();
-      } else {
-        HapticFeedback.mediumImpact();
-      }
-    }
-
-    if (mounted) {
-      setState(() {
-        _currentWarning = result;
-        _isDismissed = false;
-      });
-    }
-  }
-
-  DetectionResult? _detectLocally(String text) {
-    final lower = text.toLowerCase();
-
-    // Check for Lola OTP or verification codes
-    final hasOtp = lower.contains('482913') ||
-        (lower.contains('code na pinadala') &&
-            RegExp(r'\b\d{4,8}\b').hasMatch(text)) ||
-        lower.contains('otp') ||
-        lower.contains('pin');
-
-    if (hasOtp) {
-      return DetectionResult(
-        risk: DetectionRisk.high,
-        headline: 'Teka! OTP o PIN ito — huwag ibigay kahit kanino.',
-        tip:
-            'Ang OTP ay parang susi ng bahay. Walang totoong bangko o GCash na hihingi nito.',
-        category: 'BABALA · OTP',
-      );
-    }
-
-    // ML Password / generic passwords
-    if (lower.contains('hunter2') || lower.contains('password')) {
-      return DetectionResult(
-        risk: DetectionRisk.high,
-        headline: 'Teka! Password ito — huwag ibigay kahit kanino.',
-        tip:
-            'Account password detected. Walang admin o customer service na hihingi ng password mo.',
-        category: 'BABALA · PASSWORD',
-      );
-    }
-
-    // Gemini API Key
-    if (lower.contains('aiza') ||
-        lower.contains('api key') ||
-        lower.contains('gemini')) {
-      return DetectionResult(
-        risk: DetectionRisk.high,
-        headline: 'Teka! API Key o Secret ito.',
-        tip:
-            'Critical developer key detected in draft. Never share API keys in chat.',
-        category: 'BABALA · API KEY',
-      );
-    }
-
-    // Check against user's Vault Secrets
-    for (final secret in _vaultSecrets) {
-      if (secret.value.isNotEmpty &&
-          lower.contains(secret.value.toLowerCase())) {
-        return DetectionResult(
-          risk: DetectionRisk.high,
-          headline: 'Teka! Sikreto mo ito — itinuro mong protektahan.',
-          tip:
-              'Tumutugma ito sa private note na "${secret.label}" na nakatago sa iyong vault.',
-          category: 'BABALA · VAULT',
-        );
-      }
-    }
-
-    // Fallback for private note test string
-    if (lower.contains('secretpin88') || lower.contains('private note')) {
-      return DetectionResult(
-        risk: DetectionRisk.high,
-        headline: 'Teka! Sikreto mo ito — itinuro mong protektahan.',
-        tip:
-            'Tumutugma ito sa pribadong tala na protektado sa iyong Tanggolin vault.',
-        category: 'BABALA · VAULT',
-      );
-    }
-
-    // GCash / Phone Number detection (Medium Risk)
-    if (lower.contains('gcash') || RegExp(r'\b09\d{9}\b').hasMatch(lower)) {
-      return DetectionResult(
-        risk: DetectionRisk.medium,
-        headline: 'Sinadya mo ba?',
-        tip: 'Phone number or account detected. Intended to share?',
-        category: 'PANSIN · INTENDED?',
-      );
-    }
-
-    return null;
-  }
-
-  Future<void> _applyItago() async {
-    final text = _textController.text;
-    String masked = await PlatformBridge.hide(text);
-
-    if (masked == text) {
-      // Local fallback masking
-      masked = _maskLocally(text);
-    }
-
-    String secretName = 'OTP';
-    final lower = text.toLowerCase();
-    if (lower.contains('hunter2') || lower.contains('password')) {
-      secretName = 'Password';
-    } else if (lower.contains('aiza') || lower.contains('api key')) {
-      secretName = 'API Key';
-    } else if (lower.contains('09') || lower.contains('gcash')) {
-      secretName = 'Contact Number';
-    } else if (_currentWarning?.category.contains('VAULT') == true) {
-      secretName = 'Sikreto';
-    }
-
-    setState(() {
-      _textController.text = masked;
-      _isMaskedApplied = true;
-      _maskedSecretType = secretName;
-      _isDismissed = false;
     });
-  }
-
-  String _maskLocally(String text) {
-    var result = text;
-    // OTP 6 digits e.g. 482913 -> ••••••
-    final otpMatch = RegExp(r'\b\d{4,8}\b').firstMatch(result);
-    if (otpMatch != null) {
-      final bullets = '•' * otpMatch.group(0)!.length;
-      return result.replaceRange(otpMatch.start, otpMatch.end, bullets);
-    }
-
-    if (result.contains('hunter2')) {
-      result = result.replaceAll('hunter2', '••••••••');
-    }
-
-    final phoneMatch = RegExp(r'\b09\d{9}\b').firstMatch(result);
-    if (phoneMatch != null) {
-      result = result.replaceRange(phoneMatch.start, phoneMatch.end, '•••••••••••');
-    }
-
-    final keyMatch = RegExp(r'AIza[0-9A-Za-z\-_]{10,}').firstMatch(result);
-    if (keyMatch != null) {
-      result = result.replaceRange(keyMatch.start, keyMatch.end, '••••••••');
-    }
-
-    for (final s in _vaultSecrets) {
-      if (s.value.isNotEmpty && result.contains(s.value)) {
-        result = result.replaceAll(s.value, '••••••••');
-      }
-    }
-
-    return result;
   }
 
   void _clearText() {
     setState(() {
       _textController.clear();
-      _currentWarning = null;
-      _isMaskedApplied = false;
-      _isDismissed = false;
       _activeQuickTestKey = null;
     });
   }
@@ -275,12 +74,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void _selectQuickTest(String key, String text) {
     setState(() {
       _activeQuickTestKey = key;
-      _isMaskedApplied = false;
-      _isDismissed = false;
-      _currentWarning = null;
       _textController.text = text;
     });
-    _analyzeText(text);
   }
 
   @override
@@ -313,16 +108,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // ✈️ 100% On-Device AI • Offline Active Status Chip
-                      Center(child: _buildStatusBadge()),
-
-                      const SizedBox(height: 14),
-
-                      // Ingat Mode Setting Card
-                      _buildIngatModeToggle(),
-
-                      const SizedBox(height: 20),
-
                       // Scratchpad Title
                       const Text(
                         'Scratchpad',
@@ -335,9 +120,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       ),
 
                       const SizedBox(height: 12),
-
-                      // Dynamic Warning or Masked Success Banner matching XML style
-                      _buildDynamicAlertCard(),
 
                       // Text Box (Scratchpad)
                       _buildScratchpadTextBox(),
@@ -431,399 +213,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
     );
   }
 
-  /// ✈️ 100% On-Device AI • Offline Active badge
-  Widget _buildStatusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: _badgeLavender,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.flight,
-            size: 15,
-            color: _brandPurple,
-          ),
-          SizedBox(width: 6),
-          Text(
-            '100% On-Device AI • Offline Active',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: _brandPurple,
-              letterSpacing: 0.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 🛡️ Ingat Mode (2s Send-Key Hold) Toggle Card
-  Widget _buildIngatModeToggle() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _surfaceLavender,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _borderLavender, width: 1.0),
-      ),
-      child: SwitchListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-        value: _isIngatMode,
-        activeThumbColor: _accentPurple,
-        title: const Text(
-          'Ingat Mode (2s Send Hold)',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        subtitle: const Padding(
-          padding: EdgeInsets.only(top: 2.0),
-          child: Text(
-            'High Alert red warnings require a 2-second press & hold on Send to prevent accidental leaks.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-          ),
-        ),
-        onChanged: (val) async {
-          await PlatformBridge.setIngatModeEnabled(val);
-          if (mounted) {
-            setState(() => _isIngatMode = val);
-          }
-        },
-      ),
-    );
-  }
-
-  /// Dynamic Alert Card (High Risk, Medium Risk, or Masked Success)
-  Widget _buildDynamicAlertCard() {
-    if (_isMaskedApplied) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: _buildMaskedSuccessBanner(),
-      );
-    }
-
-    if (_currentWarning == null || _isDismissed) {
-      return const SizedBox.shrink();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: _currentWarning!.risk == DetectionRisk.high
-            ? _buildHighRiskCard(_currentWarning!)
-            : _buildMediumRiskCard(_currentWarning!),
-      ),
-    );
-  }
-
-  /// High Risk banner matching warning_banner.xml (light rose #FFF8F8, red #991B1B)
-  Widget _buildHighRiskCard(DetectionResult warning) {
-    return Container(
-      key: const ValueKey('high_risk_card'),
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF8F8),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFECDD3), width: 1.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Sleek Header: Status Icon + Text Badge (No Emojis)
-          Row(
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 16,
-                color: Color(0xFFEF4444),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  warning.category.isNotEmpty ? warning.category : 'BABALA',
-                  style: const TextStyle(
-                    color: Color(0xFF991B1B),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 6),
-
-          // Clear, Readable Filipino Headline (Plus Jakarta Sans Bold 16sp)
-          Text(
-            warning.headline,
-            style: GoogleFonts.plusJakartaSans(
-              color: const Color(0xFF991B1B),
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              height: 1.25,
-            ),
-          ),
-
-          const SizedBox(height: 3),
-
-          // Reason & Tip Text (Plus Jakarta Sans Regular 13sp)
-          Text(
-            warning.tip,
-            style: GoogleFonts.plusJakartaSans(
-              color: const Color(0xFF7F1D1D),
-              fontSize: 13,
-              fontWeight: FontWeight.normal,
-              height: 1.35,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Sleek Action Buttons Bar matching XML: [Dismiss] [Itago]
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // Dismiss Button (Ghost)
-              TextButton(
-                onPressed: () {
-                  setState(() => _isDismissed = true);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF991B1B),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  minimumSize: const Size(0, 36),
-                ),
-                child: Text(
-                  'Dismiss',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Itago Button (Clean Solid Red Pill, No Emojis)
-              ElevatedButton(
-                onPressed: _applyItago,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC2626),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  minimumSize: const Size(78, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Itago',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Medium Risk banner matching warning_banner.xml (light amber #FFFDF2, #854D0E)
-  Widget _buildMediumRiskCard(DetectionResult warning) {
-    return Container(
-      key: const ValueKey('medium_risk_card'),
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFDF2),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFDE68A), width: 1.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Sleek Header: Status Icon + Text Badge (No Emojis)
-          Row(
-            children: [
-              const Icon(
-                Icons.warning_amber_rounded,
-                size: 16,
-                color: Color(0xFFF59E0B),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'PANSIN · INTENDED?',
-                  style: GoogleFonts.plusJakartaSans(
-                    color: const Color(0xFF854D0E),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 6),
-
-          // Clear, Readable Filipino Headline (Plus Jakarta Sans Bold 16sp)
-          Text(
-            warning.headline,
-            style: GoogleFonts.plusJakartaSans(
-              color: const Color(0xFF854D0E),
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              height: 1.25,
-            ),
-          ),
-
-          const SizedBox(height: 3),
-
-          // Reason & Tip Text (Plus Jakarta Sans Regular 13sp)
-          Text(
-            warning.tip,
-            style: GoogleFonts.plusJakartaSans(
-              color: const Color(0xFF78350F),
-              fontSize: 13,
-              fontWeight: FontWeight.normal,
-              height: 1.35,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Sleek Action Buttons Bar: [Dismiss] [Itago]
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // Dismiss Button (Ghost)
-              TextButton(
-                onPressed: () {
-                  setState(() => _isDismissed = true);
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF854D0E),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  minimumSize: const Size(0, 36),
-                ),
-                child: Text(
-                  'Dismiss',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Itago Button (Clean Solid Amber Pill)
-              ElevatedButton(
-                onPressed: _applyItago,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD97706),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  minimumSize: const Size(78, 36),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: Text(
-                  'Itago',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Itago Applied success banner
-  Widget _buildMaskedSuccessBanner() {
-    return Container(
-      key: const ValueKey('masked_success_banner'),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _surfaceLavender,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _borderLavender, width: 1.0),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Icon(
-              Icons.shield_outlined,
-              color: _brandPurple,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Naitago na ang $_maskedSecretType.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: _brandPurple,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Only the sensitive code was masked.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: const Color(0xFF6B21A8),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18, color: Color(0xFF9333EA)),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: () {
-              setState(() => _isMaskedApplied = false);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Multi-line scratchpad text box with lavender-tinted border
   Widget _buildScratchpadTextBox() {
     final hasMaskedChars = _textController.text.contains('•');
@@ -907,14 +296,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
   Widget _buildQuickTestsSection() {
     final tests = [
       {
-        'key': 'lola_otp',
-        'label': 'Lola OTP',
-        'text': 'Anak, eto yung code na pinadala sa akin:\n482913',
+        'key': 'otp_code',
+        'label': 'OTP Code',
+        'text': 'Here is the verification code sent to me:\n482913',
       },
       {
         'key': 'ml_password',
-        'label': 'ML Password',
-        'text': 'Pre, ito yung ML password ko: hunter2',
+        'label': 'Account Password',
+        'text': 'Hey, here is my account password: hunter2',
       },
       {
         'key': 'gemini_key',
@@ -922,9 +311,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
         'text': 'Here is my Gemini API key: AIzaSyD3x920Kla82HjK981qWe',
       },
       {
-        'key': 'gcash_no',
-        'label': 'GCash No.',
-        'text': 'Pa-GCash na lang sa 09171234567',
+        'key': 'phone_no',
+        'label': 'Phone Number',
+        'text': 'Send payment to my mobile: 09171234567',
       },
       {
         'key': 'private_note',

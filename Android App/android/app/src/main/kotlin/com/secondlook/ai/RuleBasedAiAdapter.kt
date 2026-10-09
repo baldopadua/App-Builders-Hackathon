@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
  *
  * Provides sub-millisecond heuristic detection for credentials, OTPs, API keys,
  * payment info, and user-trained private notes. Serves as the primary engine until
- * Annie's on-device ONNX models load, and functions as the continuous safety net.
+ * on-device ONNX models load, and functions as the continuous safety net.
  */
 class RuleBasedAiAdapter : AiDetectionAdapter {
 
@@ -35,8 +35,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (isOtpOrPin(text, lower)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! OTP o PIN ito — huwag ibigay kahit kanino.",
-                tip = "One-time passcode detected in your draft. Walang totoong bangko o GCash na hihingi ng OTP mo."
+                headline = "Wait! This is an OTP or PIN — never share this.",
+                tip = "One-time passcode detected in your draft. Never share your verification codes."
             )
         }
 
@@ -44,8 +44,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (isPassword(text, lower)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! Password ito — huwag ibigay kahit kanino.",
-                tip = "Account password detected in your draft. Walang admin o suporta na hihingi ng password mo."
+                headline = "Careful! This looks like a password.",
+                tip = "Account password detected in your draft. Legitimate services will never ask for your password."
             )
         }
 
@@ -53,7 +53,7 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (isApiKey(text, lower)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! API Key o Secret ito.",
+                headline = "Caution — this looks like an API key.",
                 tip = "Critical developer key detected in draft. Never share API keys in chat."
             )
         }
@@ -62,7 +62,7 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (text.contains("-----BEGIN") && text.contains("PRIVATE KEY-----")) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! SSH Private Key ito.",
+                headline = "Alert! SSH Private Key detected.",
                 tip = "Private cryptographic keys give total server access. Never send them over chat."
             )
         }
@@ -71,7 +71,7 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (isDatabaseOrServerCredential(text, lower)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! Database o Server credential ito.",
+                headline = "Alert! Database or server credentials detected.",
                 tip = "Database connection strings contain passwords and grant direct access to records."
             )
         }
@@ -80,16 +80,16 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (hasCreditCardNumber(text)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! Credit card details ito.",
+                headline = "Careful! These are payment card details.",
                 tip = "Payment card credentials detected. Ensure you are on a trusted payment portal."
             )
         }
 
-        // 7. Government IDs - PH (High Alert)
+        // 7. Government IDs (High Alert)
         if (isGovernmentId(text, lower)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! Government ID details ito.",
+                headline = "Careful! Government ID number detected.",
                 tip = "National and tax IDs can be used for identity theft. Verify the recipient."
             )
         }
@@ -98,17 +98,17 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (SecretManager.containsProtectedSecret(text)) {
             return Warning(
                 type = WarningType.HIGH,
-                headline = "Teka! Sikreto mo ito — itinuro mong protektahan.",
-                tip = "Tumutugma ito sa private note na nakatago sa iyong Tanggolin vault."
+                headline = "Wait! This matches a secret you saved.",
+                tip = "This matches a private note stored securely in your vault."
             )
         }
 
-        // 9. Phone Numbers & GCash (Medium Alert - "Intended?")
+        // 9. Phone Numbers (Medium Alert - "Intended?")
         if (isPhoneOrGcash(lower)) {
             return Warning(
                 type = WarningType.MEDIUM,
-                headline = "Sinadya mo ba?",
-                tip = "Phone number or account detected. Intended to share?"
+                headline = "Phone number detected. Intended?",
+                tip = "Phone number or mobile wallet account detected. Intended to share?"
             )
         }
 
@@ -116,8 +116,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (EMAIL_REGEX.containsMatchIn(text)) {
             return Warning(
                 type = WarningType.MEDIUM,
-                headline = "Sinadya mo ba?",
-                tip = "Email address detected. Intended to share?"
+                headline = "Email address detected. Intended?",
+                tip = "Email address detected in draft. Intended to share?"
             )
         }
 
@@ -125,8 +125,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (isBankAccountNumber(lower)) {
             return Warning(
                 type = WarningType.MEDIUM,
-                headline = "Sinadya mo ba?",
-                tip = "Bank account number detected. Intended to share?"
+                headline = "Bank account number detected. Intended?",
+                tip = "Bank account number detected. Double check that you trust the recipient."
             )
         }
 

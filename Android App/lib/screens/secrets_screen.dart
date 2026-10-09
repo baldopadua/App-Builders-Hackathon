@@ -49,7 +49,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
     if (_secrets.length >= 5) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Puno na ang vault (maximum 5 secrets).'),
+          content: Text('Vault capacity reached (maximum 5 secrets).'),
           backgroundColor: _brandPurple,
           behavior: SnackBarBehavior.floating,
         ),
@@ -63,7 +63,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
     if (label.isEmpty || value.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Pakilagay ang label at ang sikreto.'),
+          content: Text('Please enter both a label and a secret.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -81,7 +81,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
         _loadSecrets();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Protektado na ang "$label"!'),
+            content: Text('"$label" is now protected!'),
             backgroundColor: _brandPurple,
             behavior: SnackBarBehavior.floating,
           ),
@@ -135,7 +135,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
 
                 // Dialog Body
                 const Text(
-                  'Hindi na ito poprotektahan ng Tanggolin. This removes the saved note from your device.',
+                  'This secret will no longer be protected. This removes the saved note from your device.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 13.5,
@@ -292,7 +292,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Puno na ang iyong proteksyon.',
+                                            'Vault capacity reached.',
                                             style: TextStyle(
                                               fontSize: 13.5,
                                               fontWeight: FontWeight.bold,
@@ -485,7 +485,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
                       ),
                     )
                   : const Text(
-                      'I-save ang Sikreto / Protect Secret',
+                      'Save and Protect Secret',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

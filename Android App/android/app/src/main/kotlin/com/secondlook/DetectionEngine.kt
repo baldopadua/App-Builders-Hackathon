@@ -13,7 +13,7 @@ import java.util.concurrent.Executors
  *
  * Implements the Plug-and-Play AI Architecture for Phase 2.3:
  * - Defaults to [RuleBasedAiAdapter] for sub-millisecond, zero-jank offline protection.
- * - Dynamically hooks into Annie's on-device AI model adapter when classes/models are dropped.
+ * - Dynamically hooks into on-device AI model adapter when classes/models are dropped.
  * - Guarantees background thread isolation: model loading, tokenizing, and inference
  *   never lock or lag keyboard typing.
  */
@@ -51,19 +51,19 @@ object DetectionEngine {
                 Log.i(TAG, "Initializing DetectionEngine on background thread...")
                 fallbackAdapter.init(context.applicationContext)
 
-                // Initialize Annie's AI core adapter directly with reflection fallback
-                val annieAdapter: AiDetectionAdapter? = try {
-                    com.secondlook.ai.AnnieAiAdapter().also { it.init(context.applicationContext) }
+                // Initialize on-device AI core adapter directly with reflection fallback
+                val onDeviceAdapter: AiDetectionAdapter? = try {
+                    com.secondlook.ai.OnDeviceAiAdapter().also { it.init(context.applicationContext) }
                 } catch (t: Throwable) {
-                    Log.w(TAG, "Direct AnnieAiAdapter instantiation threw error; using reflection discovery", t)
-                    discoverAnnieAiAdapter(context.applicationContext)
+                    Log.w(TAG, "Direct OnDeviceAiAdapter instantiation threw error; using reflection discovery", t)
+                    discoverOnDeviceAiAdapter(context.applicationContext)
                 }
 
-                if (annieAdapter != null) {
-                    Log.i(TAG, "Successfully plugged into Annie's AI Core: ${annieAdapter.engineName}")
-                    activeAdapter = annieAdapter
+                if (onDeviceAdapter != null) {
+                    Log.i(TAG, "Successfully plugged into On-Device AI Core: ${onDeviceAdapter.engineName}")
+                    activeAdapter = onDeviceAdapter
                 } else {
-                    Log.i(TAG, "Annie's AI Core not yet detected. Active engine: ${fallbackAdapter.engineName}")
+                    Log.i(TAG, "On-Device AI Core not yet detected. Active engine: ${fallbackAdapter.engineName}")
                     activeAdapter = fallbackAdapter
                 }
             } catch (e: Exception) {
@@ -130,11 +130,11 @@ object DetectionEngine {
     }
 
     /**
-     * Probes the runtime classpath for Annie's AI core implementation if dropped in.
+     * Probes the runtime classpath for on-device AI core implementation if dropped in.
      */
-    private fun discoverAnnieAiAdapter(context: Context): AiDetectionAdapter? {
+    private fun discoverOnDeviceAiAdapter(context: Context): AiDetectionAdapter? {
         val candidateClassNames = listOf(
-            "com.secondlook.ai.AnnieAiAdapter",
+            "com.secondlook.ai.OnDeviceAiAdapter",
             "com.secondlook.ai.model.PiiDetectorAdapter",
             "com.secondlook.ai.OnnxAiAdapter"
         )
