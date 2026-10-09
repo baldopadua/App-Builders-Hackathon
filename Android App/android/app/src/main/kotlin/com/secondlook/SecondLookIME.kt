@@ -92,6 +92,11 @@ class SecondLookIME : InputMethodService() {
     private var pangolinStatusDot: View? = null
     private var pangolinStatusLabel: TextView? = null
 
+    override fun onCreate() {
+        super.onCreate()
+        DetectionEngine.init(applicationContext)
+    }
+
     override fun onCreateInputView(): View {
         val keyboardView = layoutInflater.inflate(R.layout.keyboard_layout, null)
         

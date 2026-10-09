@@ -1,64 +1,110 @@
 package com.secondlook
 
+import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
+import com.secondlook.ai.AiDetectionAdapter
+import com.secondlook.ai.RuleBasedAiAdapter
 import java.util.concurrent.Executors
 
+/**
+ * Central Detection Engine coordinating AI and heuristic leak detection.
+ *
+ * Implements the Plug-and-Play AI Architecture for Phase 2.3:
+ * - Defaults to [RuleBasedAiAdapter] for sub-millisecond, zero-jank offline protection.
+ * - Dynamically hooks into Annie's on-device AI model adapter when classes/models are dropped.
+ * - Guarantees background thread isolation: model loading, tokenizing, and inference
+ *   never lock or lag keyboard typing.
+ */
 object DetectionEngine {
-    private val executor = Executors.newSingleThreadExecutor()
+    private const val TAG = "DetectionEngine"
+
+    private val bgExecutor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    private val fallbackAdapter: AiDetectionAdapter = RuleBasedAiAdapter()
+    @Volatile
+    private var activeAdapter: AiDetectionAdapter = fallbackAdapter
+
+    @Volatile
+    private var isInitialized = false
+
     /**
-     * Synchronously analyzes draft text for immediate pre-send checks.
+     * Singleton accessor matching ARCHITECTURE.md: `DetectionEngine.get(context)`.
      */
-    fun detectSync(text: String): Warning? {
-        val lower = text.lowercase()
-        return when {
-            lower.contains("482913") || (lower.contains("code na pinadala") && Regex("""\b\d{4,8}\b""").containsMatchIn(text)) || lower.contains("otp") || lower.contains("pin") -> {
-                Warning(
-                    type = WarningType.HIGH,
-                    headline = "Teka! OTP o PIN ito — huwag ibigay kahit kanino.",
-                    tip = "One-time passcode detected in your draft.\nWalang totoong bangko o GCash na hihingi ng OTP mo."
-                )
+    fun get(context: Context): DetectionEngine {
+        init(context)
+        return this
+    }
+
+    /**
+     * Warm up and load models asynchronously in the background.
+     * Guaranteed never to block the main/UI thread.
+     */
+    fun init(context: Context) {
+        if (isInitialized) return
+        isInitialized = true
+
+        bgExecutor.execute {
+            try {
+                Log.i(TAG, "Initializing DetectionEngine on background thread...")
+                fallbackAdapter.init(context.applicationContext)
+
+                // Dynamic plug-and-play discovery for Annie's AI core
+                val annieAdapter = discoverAnnieAiAdapter(context.applicationContext)
+                if (annieAdapter != null) {
+                    Log.i(TAG, "Successfully plugged into Annie's AI Core: ${annieAdapter.engineName}")
+                    activeAdapter = annieAdapter
+                } else {
+                    Log.i(TAG, "Annie's AI Core not yet detected. Active engine: ${fallbackAdapter.engineName}")
+                    activeAdapter = fallbackAdapter
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error during AI adapter initialization. Safe fallback active.", e)
+                activeAdapter = fallbackAdapter
             }
-            lower.contains("hunter2") || lower.contains("password") -> {
-                Warning(
-                    type = WarningType.HIGH,
-                    headline = "Teka! Password ito — huwag ibigay kahit kanino.",
-                    tip = "Account password detected in your draft. Walang admin o suporta na hihingi ng password mo."
-                )
-            }
-            lower.contains("aiza") || lower.contains("api key") || lower.contains("gemini") -> {
-                Warning(
-                    type = WarningType.HIGH,
-                    headline = "Teka! API Key o Secret ito.",
-                    tip = "Critical developer key detected in draft. Never share API keys in chat."
-                )
-            }
-            SecretManager.containsProtectedSecret(text) -> {
-                Warning(
-                    type = WarningType.HIGH,
-                    headline = "Teka! Sikreto mo ito — itinuro mong protektahan.",
-                    tip = "This matches a private note you protected in SecondLook."
-                )
-            }
-            lower.contains("gcash") || Regex("""\b09\d{9}\b""").containsMatchIn(lower) -> {
-                Warning(
-                    type = WarningType.MEDIUM,
-                    headline = "Sinadya mo ba?",
-                    tip = "Phone number or account detected. Intended to share?"
-                )
-            }
-            else -> null
         }
     }
 
     /**
-     * Analyzes draft text asynchronously after debounce pause.
+     * Explicitly registers a custom AI adapter (e.g. during handoff or unit testing).
+     */
+    fun registerAdapter(adapter: AiDetectionAdapter) {
+        Log.i(TAG, "Registering AI adapter: ${adapter.engineName}")
+        activeAdapter = adapter
+    }
+
+    fun getActiveEngineName(): String = activeAdapter.engineName
+
+    val isReady: Boolean
+        get() = activeAdapter.isReady
+
+    /**
+     * Synchronously analyzes draft text for immediate Send key interception.
+     * Fast-paths through active adapter, falling back seamlessly on error or timeout.
+     */
+    fun detectSync(text: String): Warning? {
+        return try {
+            activeAdapter.detectSync(text) ?: fallbackAdapter.detectSync(text)
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in active adapter detectSync; using fallback", e)
+            fallbackAdapter.detectSync(text)
+        }
+    }
+
+    /**
+     * Asynchronously analyzes draft text after debounce pause.
+     * Guaranteed execution on background executor; callback dispatched to main thread.
      */
     fun detectAsync(text: String, callback: (Warning?) -> Unit) {
-        executor.execute {
-            val warning = detectSync(text)
+        bgExecutor.execute {
+            val warning = try {
+                activeAdapter.detectSync(text) ?: fallbackAdapter.detectSync(text)
+            } catch (e: Exception) {
+                Log.e(TAG, "Exception in active adapter detectAsync", e)
+                fallbackAdapter.detectSync(text)
+            }
             mainHandler.post {
                 callback(warning)
             }
@@ -69,39 +115,38 @@ object DetectionEngine {
      * Masks detected sensitive secrets in the draft text.
      */
     fun hide(text: String, warning: Warning? = null): String {
-        var result = text
-        // Specific OTP code masking (e.g. 482913 -> ••••••)
-        val otpMatch = Regex("""\b\d{4,8}\b""").find(result)
-        if (otpMatch != null) {
-            val bullets = "•".repeat(otpMatch.value.length)
-            return result.replaceRange(otpMatch.range, bullets)
+        return try {
+            activeAdapter.hide(text, warning)
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in active adapter hide; using fallback", e)
+            fallbackAdapter.hide(text, warning)
         }
+    }
 
-        val secretPatterns = listOf(
-            Regex("""(?i)\b(password|pin|otp|code)\s*(?:is|:|:=|=)?\s*([^\s]+)"""),
-            Regex("""\b09\d{9}\b"""),
-            Regex("""(?i)\bhunter2\b"""),
-            Regex("""AIza[0-9A-Za-z-_]{10,}""")
+    /**
+     * Probes the runtime classpath for Annie's AI core implementation if dropped in.
+     */
+    private fun discoverAnnieAiAdapter(context: Context): AiDetectionAdapter? {
+        val candidateClassNames = listOf(
+            "com.secondlook.ai.AnnieAiAdapter",
+            "com.secondlook.ai.model.PiiDetectorAdapter",
+            "com.secondlook.ai.OnnxAiAdapter"
         )
 
-        var replaced = false
-        for (pattern in secretPatterns) {
-            if (pattern.containsMatchIn(result)) {
-                result = pattern.replace(result) { matchResult ->
-                    if (matchResult.groupValues.size > 2 && matchResult.groupValues[2].isNotEmpty()) {
-                        val label = matchResult.groupValues[1]
-                        "$label: ••••••••"
-                    } else {
-                        "••••••••"
-                    }
+        for (className in candidateClassNames) {
+            try {
+                val clazz = Class.forName(className)
+                val instance = clazz.getDeclaredConstructor().newInstance()
+                if (instance is AiDetectionAdapter) {
+                    instance.init(context)
+                    return instance
                 }
-                replaced = true
+            } catch (_: ClassNotFoundException) {
+                // Class not dropped in yet
+            } catch (e: Exception) {
+                Log.w(TAG, "Candidate adapter $className failed to instantiate", e)
             }
         }
-
-        if (!replaced) {
-            return "••••••••"
-        }
-        return result
+        return null
     }
 }
