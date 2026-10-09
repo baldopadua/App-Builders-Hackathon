@@ -2,5 +2,78 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#D1D5DB"
+    android:paddingBottom="4dp">
+
+    <!-- Top Banner Placeholder (Pangolin Strip) -->
+    <FrameLayout
+        android:id="@+id/warning_banner_container"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="#E5E7EB">
+        <!-- Will be replaced dynamically later -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="SecondLook Keyboard"
+            android:textStyle="bold"
+            android:textColor="#6B7280"/>
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="4dp">
+        <Button android:text="Q" android:tag="q" style="@style/KeyButton"/>
+        <Button android:text="W" android:tag="w" style="@style/KeyButton"/>
+        <Button android:text="E" android:tag="e" style="@style/KeyButton"/>
+        <Button android:text="R" android:tag="r" style="@style/KeyButton"/>
+        <Button android:text="T" android:tag="t" style="@style/KeyButton"/>
+        <Button android:text="Y" android:tag="y" style="@style/KeyButton"/>
+        <Button android:text="U" android:tag="u" style="@style/KeyButton"/>
+        <Button android:text="I" android:tag="i" style="@style/KeyButton"/>
+        <Button android:text="O" android:tag="o" style="@style/KeyButton"/>
+        <Button android:text="P" android:tag="p" style="@style/KeyButton"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+        <Button android:text="A" android:tag="a" style="@style/KeyButton"/>
+        <Button android:text="S" android:tag="s" style="@style/KeyButton"/>
+        <Button android:text="D" android:tag="d" style="@style/KeyButton"/>
+        <Button android:text="F" android:tag="f" style="@style/KeyButton"/>
+        <Button android:text="G" android:tag="g" style="@style/KeyButton"/>
+        <Button android:text="H" android:tag="h" style="@style/KeyButton"/>
+        <Button android:text="J" android:tag="j" style="@style/KeyButton"/>
+        <Button android:text="K" android:tag="k" style="@style/KeyButton"/>
+        <Button android:text="L" android:tag="l" style="@style/KeyButton"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <Button android:text="DEL" android:tag="DEL" style="@style/KeyButton" android:layout_weight="1.5"/>
+        <Button android:text="Z" android:tag="z" style="@style/KeyButton"/>
+        <Button android:text="X" android:tag="x" style="@style/KeyButton"/>
+        <Button android:text="C" android:tag="c" style="@style/KeyButton"/>
+        <Button android:text="V" android:tag="v" style="@style/KeyButton"/>
+        <Button android:text="B" android:tag="b" style="@style/KeyButton"/>
+        <Button android:text="N" android:tag="n" style="@style/KeyButton"/>
+        <Button android:text="M" android:tag="m" style="@style/KeyButton"/>
+        <Button android:text="ENT" android:tag="ENTER" style="@style/KeyButton" android:layout_weight="1.5"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+        <Button android:text="SPACE" android:tag="SPACE" style="@style/KeyButton"/>
+    </LinearLayout>
 </LinearLayout>
