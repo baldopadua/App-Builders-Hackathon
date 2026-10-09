@@ -11,11 +11,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:secondlook/main.dart';
 
 void main() {
-  testWidgets('SecondLookApp smoke test', (WidgetTester tester) async {
+  testWidgets('TanggolinApp smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const SecondLookApp());
+    await tester.pumpWidget(const TanggolinApp());
 
-    // Verify that SecondLook Keyboard title or practice screen renders.
+    // Verify that Tanggolin Keyboard title or practice screen renders.
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

@@ -167,7 +167,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
         risk: DetectionRisk.high,
         headline: 'Teka! Sikreto mo ito — itinuro mong protektahan.',
         tip:
-            'Tumutugma ito sa pribadong tala na protektado sa iyong SecondLook vault.',
+            'Tumutugma ito sa pribadong tala na protektado sa iyong Tanggolin vault.',
         category: 'BABALA · VAULT',
       );
     }

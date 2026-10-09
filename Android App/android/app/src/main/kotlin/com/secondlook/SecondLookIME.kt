@@ -143,7 +143,7 @@ class SecondLookIME : InputMethodService() {
             }
             null -> {
                 dot.setBackgroundResource(R.drawable.bg_status_dot)
-                label.text = "SecondLook"
+                label.text = "Tanggolin"
             }
         }
     }

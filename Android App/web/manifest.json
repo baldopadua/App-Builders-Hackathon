@@ -1,6 +1,6 @@
 {
-    "name": "secondlook",
-    "short_name": "secondlook",
+    "name": "Tanggolin - Local AI Privacy Keyboard",
+    "short_name": "Tanggolin",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

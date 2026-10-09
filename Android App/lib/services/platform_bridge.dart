@@ -174,7 +174,7 @@ class PlatformBridge {
     }
   }
 
-  /// Checks if Tanggolin / SecondLook keyboard is enabled in Android settings
+  /// Checks if Tanggolin keyboard is enabled in Android settings
   static Future<bool> isKeyboardEnabled() async {
     try {
       final bool? result =
@@ -185,7 +185,7 @@ class PlatformBridge {
     }
   }
 
-  /// Checks if Tanggolin / SecondLook keyboard is selected as the default input method
+  /// Checks if Tanggolin keyboard is selected as the default input method
   static Future<bool> isKeyboardSelected() async {
     try {
       final bool? result =

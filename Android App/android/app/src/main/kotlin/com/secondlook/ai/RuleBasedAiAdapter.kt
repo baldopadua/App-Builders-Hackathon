@@ -99,7 +99,7 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
             return Warning(
                 type = WarningType.HIGH,
                 headline = "Teka! Sikreto mo ito — itinuro mong protektahan.",
-                tip = "Tumutugma ito sa private note na nakatago sa iyong SecondLook vault."
+                tip = "Tumutugma ito sa private note na nakatago sa iyong Tanggolin vault."
             )
         }
 

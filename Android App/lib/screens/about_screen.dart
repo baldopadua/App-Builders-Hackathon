@@ -83,28 +83,27 @@ class AboutScreen extends StatelessWidget {
 
                       // Tanggolin Title
                       Text(
-                        'Tanggolin (SecondLook\nKeyboard)',
+                        'Tanggolin',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF1E293B),
-                          height: 1.25,
                           letterSpacing: -0.4,
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
 
                       // Subtitle / Tagline
                       Text(
-                        'A second thought before you send • Depensa sa\nbawat pindot',
+                        'Local AI Privacy Keyboard',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.5,
+                          fontSize: 14,
                           color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.1,
                         ),
                       ),
 

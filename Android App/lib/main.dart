@@ -3,18 +3,18 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/onboarding_screen.dart';
 
 void main() {
-  runApp(const SecondLookApp());
+  runApp(const TanggolinApp());
 }
 
-class SecondLookApp extends StatelessWidget {
-  const SecondLookApp({super.key});
+class TanggolinApp extends StatelessWidget {
+  const TanggolinApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     const brandPurple = Color(0xFF581C87);
 
     return MaterialApp(
-      title: 'Tanggolin (SecondLook Keyboard)',
+      title: 'Tanggolin - Local AI Privacy Keyboard',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: brandPurple),
         useMaterial3: true,
