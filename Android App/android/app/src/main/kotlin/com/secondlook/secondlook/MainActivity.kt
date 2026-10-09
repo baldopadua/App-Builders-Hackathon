@@ -7,6 +7,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.annotation.NonNull
 import com.secondlook.DetectionEngine
 import com.secondlook.SecretManager
+import com.secondlook.SettingsManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -63,6 +64,15 @@ class MainActivity : FlutterActivity() {
                     val id = call.argument<String>("id") ?: ""
                     val success = SecretManager.deleteSecret(applicationContext, id)
                     result.success(success)
+                }
+                "isIngatModeEnabled" -> {
+                    val enabled = SettingsManager.isIngatModeEnabled(applicationContext)
+                    result.success(enabled)
+                }
+                "setIngatModeEnabled" -> {
+                    val enabled = call.argument<Boolean>("enabled") ?: true
+                    SettingsManager.setIngatModeEnabled(applicationContext, enabled)
+                    result.success(true)
                 }
                 "openInputMethodSettings" -> {
                     try {

@@ -181,4 +181,26 @@ class PlatformBridge {
       return false;
     }
   }
+
+  /// Checks whether Ingat Mode (2-second press-and-hold send confirmation) is enabled
+  static Future<bool> isIngatModeEnabled() async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('isIngatModeEnabled');
+      return result ?? true;
+    } on PlatformException catch (_) {
+      return true;
+    }
+  }
+
+  /// Toggles Ingat Mode (2-second press-and-hold send confirmation)
+  static Future<bool> setIngatModeEnabled(bool enabled) async {
+    try {
+      final bool? result = await _channel.invokeMethod<bool>(
+          'setIngatModeEnabled', {'enabled': enabled});
+      return result ?? true;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
 }
