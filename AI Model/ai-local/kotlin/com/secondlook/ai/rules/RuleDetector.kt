@@ -125,7 +125,7 @@ class RuleDetector(
 
     private fun codeHits(text: String): List<RiskResult> {
         val out = ArrayList<RiskResult>()
-        for (re in listOf(CODE, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP)) {
+        for (re in listOf(CODE, CODE_BEFORE, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP)) {
             for (m in re.findAll(text)) {
                 val g = m.groups[1] ?: continue
                 out += RiskResult(
@@ -204,10 +204,16 @@ class RuleDetector(
             """(?i)($PASSWORD_CANDIDATE)[^\d\n]{0,40}?\b$PASSWORD_WORD\b""",
         )
 
+        // "ko / mo / namin" plus Nokia-era text speak: "pin q 5521", "pin mu 1234"
+        private const val PIN_OWNER = """(?:ko|mo|namin|q|ku|mu|nmin)"""
+
         // OTP / PIN / passcode / 2FA words followed (within a short distance) by 4-8 digits: "Passcode ko 0517", "6-digit code 739204"
         val CODE = Regex(
-            """(?i)\b(?:otp|one[- ]time\s+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+(?:ko|mo|namin)|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)""",
+            """(?i)\b(?:otp|one[- ]time\s+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+$PIN_OWNER|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)""",
         )
+
+        // Number first, then the PIN word and its owner (elderly / text-speak order): "cge nak 4821 mpin q"
+        val CODE_BEFORE = Regex("""(?i)(?<![\d.,])(\d{4,8})(?!\d)[^\d\n,.;]{0,8}?\b(?:m-?pin|atm\s+pin|pin)\s+$PIN_OWNER\b""")
 
         // E-wallet / bank / app names: "GCash code ko 553201", "code galing GCash: 482913", "Maya OTP 739204".
         // The digits must not be glued to letters ("GCash code PROMO2026" stays quiet).

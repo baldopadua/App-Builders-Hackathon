@@ -32,8 +32,14 @@ const PHONE = /(?<!\d)(?:\+?63|0)9\d{2}[ -]?\d{3}[ -]?\d{4}(?!\d)/g;            
 // "The code is 482916" / "code mo ay 482916" / "code ko: 482916", but not zip / promo / tracking / order codes
 const BARE_CODE = /(?<!\b(?:zip|postal|area|promo|tracking|order|product|country|bar|qr)\s)\bcode\s*(?:(?:is|ay)\s*[:=]?|[:=]|(?:mo|ko)(?:\s+ay|\s*[:=]))\s*(\d{4,8})(?!\d)/gid;
 
+// "ko / mo / namin" plus Nokia-era text speak: "pin q 5521", "pin mu 1234"
+const PIN_OWNER = String.raw`(?:ko|mo|namin|q|ku|mu|nmin)`;
+
 // OTP / PIN / passcode / 2FA words followed (within a short distance) by 4-8 digits: "Passcode ko 0517", "6-digit code 739204"
-const CODE = /\b(?:otp|one[- ]time\s+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+(?:ko|mo|namin)|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)/gid;
+const CODE = new RegExp(String.raw`\b(?:otp|one[- ]time\s+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+${PIN_OWNER}|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)`, 'gid');
+
+// Number first, then the PIN word and its owner (elderly / text-speak order): "cge nak 4821 mpin q"
+const CODE_BEFORE = new RegExp(String.raw`(?<![\d.,])(\d{4,8})(?!\d)[^\d\n,.;]{0,8}?\b(?:m-?pin|atm\s+pin|pin)\s+${PIN_OWNER}\b`, 'gid');
 
 // E-wallet / bank / app names: "GCash code ko 553201", "code galing GCash: 482913", "Maya OTP 739204".
 // The digits must not be glued to letters ("GCash code PROMO2026" stays quiet).
@@ -153,7 +159,7 @@ export function detectRules(text, { flagPhoneNumbers = true, flagEmails = true, 
   for (const m of text.matchAll(ENV_PASSWORD)) { const [gs, ge] = m.indices[1]; hits.push(password(gs, ge, true)); }
 
   for (const m of text.matchAll(CODE)) { const [gs, ge] = m.indices[1]; hits.push(hit('PASSWORD', 'otp', gs, ge, 0.85, OTP_REASON)); }
-  for (const re of [BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP]) {
+  for (const re of [CODE_BEFORE, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP]) {
     for (const m of text.matchAll(re)) { const [gs, ge] = m.indices[1]; hits.push(hit('PASSWORD', 'otp', gs, ge, 0.8, OTP_REASON)); }
   }
 

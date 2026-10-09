@@ -57,8 +57,8 @@ Then **Itago** masks the secret inside the draft (`••••••`, `AIza•
 
 | Check                                            | Result                                      |
 | ------------------------------------------------ | ------------------------------------------- |
-| Detection, rules + PII model (146 messages)      | 146/146                                     |
-| Itago: risky messages masked, then checked again | 87/87 clean                                 |
+| Detection, rules + PII model (162 messages)      | 162/162                                     |
+| Itago: risky messages masked, then checked again | 100/100 clean                                |
 | Taught secrets                                   | 27/27                                       |
 | Private facts (5 notes, 40 drafts)               | 14/18 paraphrases caught, 3/22 false alarms |
 
