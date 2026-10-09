@@ -139,6 +139,7 @@
         android:layout_height="48dp"
         android:orientation="horizontal">
         <Button
+            android:id="@+id/btn_shift"
             android:text="⇧"
             android:tag="SHIFT"
             style="@style/KeyButton.Functional"
@@ -152,6 +153,7 @@
         <Button android:text="N" android:tag="n" style="@style/KeyButton" />
         <Button android:text="M" android:tag="m" style="@style/KeyButton" />
         <Button
+            android:id="@+id/btn_del"
             android:text="⌫"
             android:tag="DEL"
             style="@style/KeyButton.Functional"
@@ -166,29 +168,34 @@
         android:layout_height="48dp"
         android:orientation="horizontal">
         <Button
+            android:id="@+id/btn_mode_toggle"
             android:text="\?123"
             android:tag="\?123"
             style="@style/KeyButton.Functional"
             android:layout_weight="1.4"
             android:textSize="14sp" />
         <Button
+            android:id="@+id/btn_comma"
             android:text=","
             android:tag=","
             style="@style/KeyButton"
             android:layout_weight="1.0"
             android:textSize="18sp" />
         <Button
+            android:id="@+id/btn_space"
             android:text="SecondLook"
             android:tag="SPACE"
             style="@style/KeyButton.Space"
             android:layout_weight="4.6" />
         <Button
+            android:id="@+id/btn_period"
             android:text="."
             android:tag="."
             style="@style/KeyButton"
             android:layout_weight="1.0"
             android:textSize="18sp" />
         <Button
+            android:id="@+id/btn_enter"
             android:text="↵"
             android:tag="ENTER"
             style="@style/KeyButton.Action"
