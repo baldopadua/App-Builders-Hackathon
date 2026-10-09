@@ -53,16 +53,18 @@ experimental models, and local rebuild instructions.
 
 Then **Itago** masks the secret inside the draft (`••••••`, `AIza••••`, last 4 digits kept for cards), and every warning carries a Filipino-first headline and a Taglish tip.
 
-## Results so far (laptop, synthetic test set — not a benchmark)
+## Results so far (laptop: synthetic test set + real PH SMS; not a benchmark)
 
 | Check                                            | Result                                      |
 | ------------------------------------------------ | ------------------------------------------- |
-| Detection, rules + PII model (162 messages)      | 162/162                                     |
-| Itago: risky messages masked, then checked again | 100/100 clean                                |
+| Detection, rules + PII model (169 synthetic messages) | 169/169 |
+| Itago: risky messages masked, then checked again | 106/106 synthetic + 132/132 real clean |
+| **Real PH SMS** (3,630 public messages, scrubbed): OTPs caught | **132/132** (rules + model) |
+| Real PH SMS: red false alarms on 3,498 normal messages | rules only **0**; rules + PII model **12** (0.3%) |
 | Taught secrets                                   | 27/27                                       |
 | Private facts (5 notes, 40 drafts)               | 14/18 paraphrases caught, 3/22 false alarms |
 
-Kotlin (`jvm-check`) and the browser port (`web-demo`) give the same results. **Not yet measured on the Tecno phone or inside the keyboard.** The same person wrote the rules and the test messages, so this shows the rules do what was intended, not that they generalize.
+Kotlin (`jvm-check`) and the browser port (`web-demo`) give the same results. **Not yet measured on the Tecno phone or inside the keyboard.** The same person wrote the rules and the test messages, so this shows the rules do what was intended, not that they generalize. The real-SMS rules were also tuned on that same data (no held-out split yet), so treat 132/132 as an upper bound. Full report: `eval/results/report.txt`.
 
 ## Folders
 

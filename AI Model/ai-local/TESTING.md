@@ -3,16 +3,39 @@
 **For:** Jakim (Test & Identity Lead), Klarenz, Charles, and any AI assistant helping them.
 **Rule zero:** all test data is synthetic. Never type a real PIN, password, OTP, card number, ID or key, not even "just to test". Screenshots, videos and git history keep them.
 
-## 1. Four ways to test
+## 1. Five ways to test
 
 | Where | What it proves | Time | Needs |
 | --- | --- | --- | --- |
-| Laptop check (`jvm-check`) | The real Kotlin code and the real models pass every test case | ~2 min | JDK 17 |
+| Unit tests (`web-demo`, `npm test`) | The rules + Itago on every synthetic case and on 3,630 real PH SMS. No server, no browser, no models | ~1 s | Node.js 20+ |
+| Laptop check (`jvm-check`) | The real Kotlin code and the real models pass every test case; writes the evaluation report (precision / recall / F1, confusion matrix, CSV) | ~2 min | JDK 17 |
 | Browser demo + scorer (`web-demo`) | Same results in a browser; try messages by hand; proof that nothing goes online | ~1 min after `npm install` | Node.js 18+ |
 | Android test app (`test-app`) | The AI core runs on the phone: load time, speed, airplane mode, Itago, Teach | ~2 min build | Android SDK, USB cable |
 | The real keyboard (Klarenz's app) | Warnings inside Messages / Messenger, the Send hold, paste | after Checkpoint 3 | the keyboard APK |
 
 All commands are for Windows PowerShell, starting from the repo root (`App-Builders-Hackathon`). The folder `AI Model` has a space in its name, so keep the quotes.
+
+## 2a. Unit tests and the evaluation report
+
+```powershell
+cd "AI Modelai-localweb-demo"
+npm install        # first time only
+npm test           # Vitest: rules + Itago on samples.json and test-data/external, about 1 second
+```
+
+`jvm-check` (section 2 below) also writes **`eval/results/report.txt`** (scikit-learn style precision / recall / F1 + confusion matrix) and **`eval/results/predictions.csv`** (one row per message: dataset, expected, predicted, severity, kind, text). Open the CSV in Excel, or in Python:
+
+```python
+import pandas as pd                      # optional: pip install pandas scikit-learn
+from sklearn.metrics import classification_report
+df = pd.read_csv("eval/results/predictions.csv")
+synthetic = df[df.dataset == "samples.json"]      # labels: PASSWORD / API_KEY / CARD / OTHER_PII / none
+real = df[df.dataset != "samples.json"]           # labels: warn / quiet
+print(classification_report(synthetic.expected, synthetic.predicted))
+print(classification_report(real.expected, real.predicted))
+```
+
+**Real PH SMS** (`test-data/external/`): public datasets, scrubbed (see `test-data/external/ATTRIBUTION.md` for sources, licenses and what was changed). Rebuild them with `node scripts/build-external-tests.mjs` (needs internet). Floors and ceilings are in `test-data/external/thresholds.json`: raise them when the detector improves, never lower them to make a run pass.
 
 ## 2. Laptop check (Kotlin + real models)
 

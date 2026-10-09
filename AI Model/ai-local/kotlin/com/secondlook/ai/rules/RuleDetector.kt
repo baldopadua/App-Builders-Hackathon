@@ -125,7 +125,7 @@ class RuleDetector(
 
     private fun codeHits(text: String): List<RiskResult> {
         val out = ArrayList<RiskResult>()
-        for (re in listOf(CODE, CODE_BEFORE, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP)) {
+        for (re in listOf(CODE, CODE_BEFORE, CODE_FIRST, USE_CODE, CODE_IS, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP)) {
             for (m in re.findAll(text)) {
                 val g = m.groups[1] ?: continue
                 out += RiskResult(
@@ -180,7 +180,8 @@ class RuleDetector(
 
     private companion object {
         // 13-19 digits, optionally separated by single spaces or dashes
-        val CARD = Regex("""(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)""")
+        // ... and not glued to letters: "Your parcel PH5918957249418" is a tracking number, not a card
+        val CARD = Regex("""(?<![\dA-Za-z])(?:\d[ -]?){12,18}\d(?!\d)""")
 
         val EMAIL = Regex("""(?i)\b[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\b""")
 
@@ -209,7 +210,7 @@ class RuleDetector(
 
         // OTP / PIN / passcode / 2FA words followed (within a short distance) by 4-8 digits: "Passcode ko 0517", "6-digit code 739204"
         val CODE = Regex(
-            """(?i)\b(?:otp|one[- ]time\s+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+$PIN_OWNER|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)""",
+            """(?i)\b(?:otp|one[- ]time[-\s]+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+$PIN_OWNER|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)""",
         )
 
         // Number first, then the PIN word and its owner (elderly / text-speak order): "cge nak 4821 mpin q"
@@ -229,8 +230,23 @@ class RuleDetector(
         val OTP_SENT_BEFORE = Regex("""(?i)\b$SENT\b[^\d\n]{0,25}?$NOT_OTP\b(?:code|otp|pin)\b[^\d\n]{0,15}?(\d{4,8})(?!\d)""")
         val CODE_FROM_APP = Regex("""(?i)$NOT_OTP\b$CODE_WORD\s+(?:ng|sa|galing(?:\s+sa)?|from|para\s+sa)\s+$APPS\b[^\d\n]{0,25}?(?<![A-Za-z])(\d{4,8})(?!\d)""")
 
+        // Forwarded OTP texts put the code FIRST: "482913 is your GRAB verification code", "G-482913 is your Google verification
+        // code", "843 833 is your Instagram code", "482913 - Grab OTP for Udemy". Needs "is" / "ay" / "-" right after the number.
+        val CODE_FIRST = Regex(
+            """(?i)(?<![\w.,#-])(?:g-)?($OTP_DIGITS)[^\S\n]*(?:is|ay|-|–)[^\S\n]+(?:(?:your|ang\s+iyong|ang)[^\S\n]+)?(?:[A-Za-z][\w.]*[^\S\n]+){0,4}?$NOT_OTP(?:(?:verification|security|authentication|auth|login|confirmation|activation|one[- ]time)[^\S\n]+)?(?:code|otp|pin|passcode)\b""",
+        )
+        // "Use 482913 for two-factor authentication on Facebook."
+        val USE_CODE = Regex(
+            """(?i)\buse\s+($OTP_DIGITS)\s+(?:for|to|as)\b[^\d\n]{0,40}?\b(?:two[- ]factor|2fa|verification|authenticat\w*|log\s*in|sign\s*in|confirm\w*|code|otp)\b""",
+        )
+        // Code word, a longer gap, then "is" / ":" right before the code: "Your One-Time PIN for your BDO Securities login is 482913",
+        // "The OTP code for your GCash Bank Transfer is 482913", "Use this code to confirm: 482913"
+        val CODE_IS = Regex(
+            """(?i)\b(?:otp|one[- ]time[-\s]+(?:password|passcode|code|pin)|(?:verification|security|confirmation|login|activation|auth(?:entication)?)\s+code|(?:this|the)\s+code|m-?pin|passcode)\b[^\d\n]{0,40}?(?:\bis|\bay|[:=])[^\S\n]*($OTP_DIGITS)""",
+        )
+
         // Words just before a long number that make it a transaction reference, not a card: "Ref No.", "Trace no."
-        val REFERENCE = Regex("""(?i)\b(?:ref(?:erence)?|trace|txn|transaction|tracking|order|invoice)\b[^\d\n]{0,12}$""")
+        val REFERENCE = Regex("""(?i)\b(?:ref(?:erence)?|trace|txn|transaction|tracking|order|invoice|parcel|package|shipment|waybill|ticket|booking)\b[^\d\n]{0,12}$""")
 
         // CVV / CVC: "CVV 123", "yung CVV sa likod ng card ko 123"
         val CVV = Regex("""(?i)\b(?:cvv2?|cvc2?|csc)\b[^\d\n]{0,25}?(\d{3,4})(?!\d)""")
@@ -242,8 +258,11 @@ class RuleDetector(
         )
 
         // "The code is 482916" / "code: 482916" / "code mo ay 482916" / "code ko: 482916", but not zip / promo / tracking / order codes
+        // A code as apps and people write it: 4-8 digits, or 3 + 3 split by a space or dash ("843 833", "687-781")
+        private const val OTP_DIGITS = """(?:\d{4,8}(?!\d)|\d{3}[ -]\d{3}(?![ -]?\d))"""
+        // ... also "WhatsApp code: 687-781"
         val BARE_CODE = Regex(
-            """(?i)(?<!\b(?:zip|postal|area|promo|tracking|order|product|country|bar|qr)\s)\bcode\s*(?:(?:is|ay)\s*[:=]?|[:=]|(?:mo|ko)(?:\s+ay|\s*[:=]))\s*(\d{4,8})(?!\d)""",
+            """(?i)(?<!\b(?:zip|postal|area|promo|tracking|order|product|country|bar|qr)\s)\bcode\s*(?:(?:is|ay)\s*[:=]?|[:=]|(?:mo|ko)(?:\s+ay|\s*[:=]))\s*($OTP_DIGITS)""",
         )
 
         // KEY_NAME [ko|namin|...] [is|ay|:|=] VALUE   e.g. "api key ko ay Qm8vXz4TnL2pWc9R", "token: 8f3a9c1d7b2e4f60a5d9"

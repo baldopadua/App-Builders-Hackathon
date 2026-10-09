@@ -1,0 +1,5 @@
+{
+  "_note": "Ratchet for the real PH SMS sets. minRecall and maxRedFalseAlarmsModel are checked by jvm-check (rules + PII model, what ships); maxRedFalseAlarmsRules by web-demo `npm test` (rules only). When the detector gets better, raise minRecall / lower the ceilings. Never loosen them to make a run pass: fix the rule instead.",
+  "ph-sms-onzero0.json": { "minRecall": 1.0, "maxRedFalseAlarmsRules": 0, "maxRedFalseAlarmsModel": 9 },
+  "ph-sms-scottleechua.json": { "minRecall": 1.0, "maxRedFalseAlarmsRules": 0, "maxRedFalseAlarmsModel": 3 }
+}

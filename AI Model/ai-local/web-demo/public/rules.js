@@ -14,7 +14,8 @@ export function luhnValid(digits) {
   return sum % 10 === 0;
 }
 
-const CARD = /(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)/g;
+// Not glued to letters: "Your parcel PH5918957249418" is a tracking number, not a card
+const CARD = /(?<![\dA-Za-z])(?:\d[ -]?){12,18}\d(?!\d)/g;
 
 const PASSWORD = new RegExp(
   String.raw`\b(?:password|passcode|passwd|pwd|pw|pasword|paswrd|passwrd|pass(?=\s*[:=]|\s+(?:ng|sa)\s+[\w-]+(?:\s+(?:ko|mo|namin|natin))?\s*[:=]))\b` +
@@ -29,14 +30,16 @@ const CONVERSATIONAL_PASSWORD_BEFORE = new RegExp(
 
 const EMAIL = /\b[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\b/gi;
 const PHONE = /(?<!\d)(?:\+?63|0)9\d{2}[ -]?\d{3}[ -]?\d{4}(?!\d)/g;                       // Philippine mobile
-// "The code is 482916" / "code mo ay 482916" / "code ko: 482916", but not zip / promo / tracking / order codes
-const BARE_CODE = /(?<!\b(?:zip|postal|area|promo|tracking|order|product|country|bar|qr)\s)\bcode\s*(?:(?:is|ay)\s*[:=]?|[:=]|(?:mo|ko)(?:\s+ay|\s*[:=]))\s*(\d{4,8})(?!\d)/gid;
+// A code as apps and people write it: 4-8 digits, or 3 + 3 split by a space or dash ("843 833", "687-781")
+const OTP_DIGITS = String.raw`(?:\d{4,8}(?!\d)|\d{3}[ -]\d{3}(?![ -]?\d))`;
+// "The code is 482916" / "code mo ay 482916" / "code ko: 482916" / "WhatsApp code: 687-781", but not zip / promo / tracking / order codes
+const BARE_CODE = new RegExp(String.raw`(?<!\b(?:zip|postal|area|promo|tracking|order|product|country|bar|qr)\s)\bcode\s*(?:(?:is|ay)\s*[:=]?|[:=]|(?:mo|ko)(?:\s+ay|\s*[:=]))\s*(${OTP_DIGITS})`, 'gid');
 
 // "ko / mo / namin" plus Nokia-era text speak: "pin q 5521", "pin mu 1234"
 const PIN_OWNER = String.raw`(?:ko|mo|namin|q|ku|mu|nmin)`;
 
 // OTP / PIN / passcode / 2FA words followed (within a short distance) by 4-8 digits: "Passcode ko 0517", "6-digit code 739204"
-const CODE = new RegExp(String.raw`\b(?:otp|one[- ]time\s+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+${PIN_OWNER}|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)`, 'gid');
+const CODE = new RegExp(String.raw`\b(?:otp|one[- ]time[-\s]+(?:password|passcode|code|pin)|verification\s+code|security\s+code|authentication\s+code|auth\s+code|confirmation\s+code|login\s+code|2fa|mfa|two[- ]factor(?:\s+code)?|backup\s+code|recovery\s+code|m-?pin|passcode|atm\s+pin|pin\s+code|(?:my|your)\s+pin|pin\s+${PIN_OWNER}|pin\s+(?:ng|sa)\s+[\w-]+|\d[- ]?digits?\s+(?:code|pin|otp))\b[^\d\n]{0,25}?(\d{4,8})(?!\d)`, 'gid');
 
 // Number first, then the PIN word and its owner (elderly / text-speak order): "cge nak 4821 mpin q"
 const CODE_BEFORE = new RegExp(String.raw`(?<![\d.,])(\d{4,8})(?!\d)[^\d\n,.;]{0,8}?\b(?:m-?pin|atm\s+pin|pin)\s+${PIN_OWNER}\b`, 'gid');
@@ -48,7 +51,7 @@ const CODE_WORD = String.raw`(?:code|otp|m?pin|passcode|auth(?:entication)?\s+co
 const APP_CODE = new RegExp(String.raw`\b${APPS}\s+${CODE_WORD}\b[^\d\n]{0,25}?(?<![A-Za-z])(\d{4,8})(?!\d)`, 'gid');
 
 // Words just before a long number that make it a transaction reference, not a card: "Ref No.", "Trace no."
-const REFERENCE = /\b(?:ref(?:erence)?|trace|txn|transaction|tracking|order|invoice)\b[^\d\n]{0,12}$/i;
+const REFERENCE = /\b(?:ref(?:erence)?|trace|txn|transaction|tracking|order|invoice|parcel|package|shipment|waybill|ticket|booking)\b[^\d\n]{0,12}$/i;
 
 // Everyday phrasing (lola, kids): "eto yung code na pinadala sa akin: 482913", "may dumating na code, 739204",
 // "the code they sent me is 551203". Never promo / voucher / tracking / order codes.
@@ -57,6 +60,15 @@ const NOT_OTP = String.raw`(?<!\b(?:zip|postal|area|promo|tracking|order|product
 const OTP_SENT = new RegExp(String.raw`${NOT_OTP}\b(?:code|otp|pin)\b[^\d\n]{0,40}?\b${SENT}\b[^\d\n]{0,25}?(\d{4,8})(?!\d)`, 'gid');
 const OTP_SENT_BEFORE = new RegExp(String.raw`\b${SENT}\b[^\d\n]{0,25}?${NOT_OTP}\b(?:code|otp|pin)\b[^\d\n]{0,15}?(\d{4,8})(?!\d)`, 'gid');
 const CODE_FROM_APP = new RegExp(String.raw`${NOT_OTP}\b${CODE_WORD}\s+(?:ng|sa|galing(?:\s+sa)?|from|para\s+sa)\s+${APPS}\b[^\d\n]{0,25}?(?<![A-Za-z])(\d{4,8})(?!\d)`, 'gid');
+
+// Forwarded OTP texts put the code FIRST: "482913 is your GRAB verification code", "G-482913 is your Google verification
+// code", "843 833 is your Instagram code", "482913 - Grab OTP for Udemy". Needs "is" / "ay" / "-" right after the number.
+const CODE_FIRST = new RegExp(String.raw`(?<![\w.,#-])(?:g-)?(${OTP_DIGITS})[^\S\n]*(?:is|ay|-|–)[^\S\n]+(?:(?:your|ang\s+iyong|ang)[^\S\n]+)?(?:[A-Za-z][\w.]*[^\S\n]+){0,4}?${NOT_OTP}(?:(?:verification|security|authentication|auth|login|confirmation|activation|one[- ]time)[^\S\n]+)?(?:code|otp|pin|passcode)\b`, 'gid');
+// "Use 482913 for two-factor authentication on Facebook."
+const USE_CODE = new RegExp(String.raw`\buse\s+(${OTP_DIGITS})\s+(?:for|to|as)\b[^\d\n]{0,40}?\b(?:two[- ]factor|2fa|verification|authenticat\w*|log\s*in|sign\s*in|confirm\w*|code|otp)\b`, 'gid');
+// Code word, a longer gap, then "is" / ":" right before the code: "Your One-Time PIN for your BDO Securities login is 482913",
+// "The OTP code for your GCash Bank Transfer is 482913", "Use this code to confirm: 482913"
+const CODE_IS = new RegExp(String.raw`\b(?:otp|one[- ]time[-\s]+(?:password|passcode|code|pin)|(?:verification|security|confirmation|login|activation|auth(?:entication)?)\s+code|(?:this|the)\s+code|m-?pin|passcode)\b[^\d\n]{0,40}?(?:\bis|\bay|[:=])[^\S\n]*(${OTP_DIGITS})`, 'gid');
 
 // CVV / CVC: "CVV 123", "yung CVV sa likod ng card ko 123"
 const CVV = /\b(?:cvv2?|cvc2?|csc)\b[^\d\n]{0,25}?(\d{3,4})(?!\d)/gid;
@@ -159,7 +171,7 @@ export function detectRules(text, { flagPhoneNumbers = true, flagEmails = true, 
   for (const m of text.matchAll(ENV_PASSWORD)) { const [gs, ge] = m.indices[1]; hits.push(password(gs, ge, true)); }
 
   for (const m of text.matchAll(CODE)) { const [gs, ge] = m.indices[1]; hits.push(hit('PASSWORD', 'otp', gs, ge, 0.85, OTP_REASON)); }
-  for (const re of [CODE_BEFORE, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP]) {
+  for (const re of [CODE_BEFORE, CODE_FIRST, USE_CODE, CODE_IS, BARE_CODE, OTP_SENT, OTP_SENT_BEFORE, APP_CODE, CODE_FROM_APP]) {
     for (const m of text.matchAll(re)) { const [gs, ge] = m.indices[1]; hits.push(hit('PASSWORD', 'otp', gs, ge, 0.8, OTP_REASON)); }
   }
 
