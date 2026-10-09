@@ -37,9 +37,16 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
         container.visibility = View.GONE
     }
 
+    private var onDismissListener: (() -> Unit)? = null
+
     fun showWarning(warning: Warning) {
         headlineText.text = warning.headline
         tipText.text = warning.tip
+        btnDismiss.text = "Dismiss"
+        btnDismiss.setOnClickListener {
+            hide()
+            onDismissListener?.invoke()
+        }
 
         when (warning.type) {
             WarningType.HIGH -> applyHighAlertStyle()
@@ -49,8 +56,26 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
         container.visibility = View.VISIBLE
     }
 
+    /**
+     * Transforms the banner UI for intercepted Send events: [Itago] [Review] [Send anyway]
+     */
+    fun showSendIntercept(warning: Warning, onSendAnyway: () -> Unit) {
+        headlineText.text = "Ipadala pa rin? ${warning.headline}"
+        tipText.text = warning.tip
+        applyHighAlertStyle()
+
+        btnDismiss.text = "Send anyway"
+        btnDismiss.setOnClickListener {
+            hide()
+            onSendAnyway()
+        }
+
+        container.visibility = View.VISIBLE
+    }
+
     fun hide() {
         container.visibility = View.GONE
+        btnDismiss.text = "Dismiss"
     }
 
     fun setOnItagoClickListener(listener: () -> Unit) {
@@ -62,8 +87,9 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     }
 
     fun setOnDismissClickListener(listener: () -> Unit) {
+        onDismissListener = listener
         btnDismiss.setOnClickListener {
-            hide() // Dismiss should hide the banner automatically
+            hide()
             listener()
         }
     }

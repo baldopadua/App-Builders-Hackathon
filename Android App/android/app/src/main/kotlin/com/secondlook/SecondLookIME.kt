@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.TextView
@@ -179,11 +180,50 @@ class SecondLookIME : InputMethodService() {
         }
 
         view.findViewWithTag<Button>("ENTER")?.setOnClickListener {
+            debounceHandler.removeCallbacks(debounceRunnable)
+            val draft = getCurrentText()
+            val warning = DetectionEngine.detectSync(draft)
+            currentWarning = warning
+            Log.d("SecondLookIME", "Final sync check on Send/Enter: $warning")
+
+            val editorInfo = currentInputEditorInfo
+            val imeAction = (editorInfo?.imeOptions ?: 0) and EditorInfo.IME_MASK_ACTION
+            val actionId = editorInfo?.actionId ?: 0
+            val isSendAction = (imeAction == EditorInfo.IME_ACTION_SEND) || (actionId == EditorInfo.IME_ACTION_SEND)
+
+            val targetAction = if (actionId != 0) actionId else imeAction
+
+            // Intercept if Red Warning (High Alert) is active: Hold send and transform banner UI
+            if (warning?.type == WarningType.HIGH) {
+                Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Send anyway]")
+                if (::warningBanner.isInitialized) {
+                    warningBanner.showSendIntercept(warning) {
+                        Log.i("SecondLookIME", "User selected [Send anyway]. Dispatching held send action.")
+                        currentWarning = null
+                        dispatchSend(targetAction, isSendAction)
+                    }
+                }
+                return@setOnClickListener // Hold/Block the send event
+            }
+
+            // Normal send dispatch
+            if (warning != null && ::warningBanner.isInitialized) {
+                warningBanner.showWarning(warning)
+            }
+
+            dispatchSend(targetAction, isSendAction)
+        }
+    }
+
+    private fun dispatchSend(targetAction: Int, isSendAction: Boolean) {
+        val ic = currentInputConnection ?: return
+        if (isSendAction || (targetAction != EditorInfo.IME_ACTION_NONE && targetAction != EditorInfo.IME_ACTION_UNSPECIFIED)) {
+            ic.performEditorAction(targetAction)
+        } else {
             val eventDown = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)
             val eventUp = KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)
-            currentInputConnection?.sendKeyEvent(eventDown)
-            currentInputConnection?.sendKeyEvent(eventUp)
-            onTextChanged()
+            ic.sendKeyEvent(eventDown)
+            ic.sendKeyEvent(eventUp)
         }
     }
 

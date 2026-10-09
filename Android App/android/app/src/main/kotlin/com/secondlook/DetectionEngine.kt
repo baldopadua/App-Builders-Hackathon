@@ -9,37 +9,42 @@ object DetectionEngine {
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
+     * Synchronously analyzes draft text for immediate pre-send checks.
+     */
+    fun detectSync(text: String): Warning? {
+        val lower = text.lowercase()
+        return when {
+            lower.contains("password") || lower.contains("pin") || lower.contains("otp") || lower.contains("hunter2") -> {
+                Warning(
+                    type = WarningType.HIGH,
+                    headline = "Teka! OTP o PIN ito — huwag ibigay kahit kanino.",
+                    tip = "This looks like a verification code or password. Sharing it could compromise your account."
+                )
+            }
+            SecretManager.containsProtectedSecret(text) -> {
+                Warning(
+                    type = WarningType.HIGH,
+                    headline = "Teka! Sikreto mo ito — itinuro mong protektahan.",
+                    tip = "This matches a private note you protected in SecondLook."
+                )
+            }
+            lower.contains("gcash") || Regex("""\b09\d{9}\b""").containsMatchIn(lower) -> {
+                Warning(
+                    type = WarningType.MEDIUM,
+                    headline = "Pansin: Posibleng personal o payment info ito.",
+                    tip = "Double-check kung sinasadya mong ibahagi ang iyong contact o payment details."
+                )
+            }
+            else -> null
+        }
+    }
+
+    /**
      * Analyzes draft text asynchronously after debounce pause.
-     * Temporary mock implementation until Annie's AI model is integrated.
      */
     fun detectAsync(text: String, callback: (Warning?) -> Unit) {
         executor.execute {
-            val lower = text.lowercase()
-            val warning: Warning? = when {
-                lower.contains("password") || lower.contains("pin") || lower.contains("otp") || lower.contains("hunter2") -> {
-                    Warning(
-                        type = WarningType.HIGH,
-                        headline = "Teka! OTP o PIN ito — huwag ibigay kahit kanino.",
-                        tip = "This looks like a verification code or password. Sharing it could compromise your account."
-                    )
-                }
-                SecretManager.containsProtectedSecret(text) -> {
-                    Warning(
-                        type = WarningType.HIGH,
-                        headline = "Teka! Sikreto mo ito — itinuro mong protektahan.",
-                        tip = "This matches a private note you protected in SecondLook."
-                    )
-                }
-                lower.contains("gcash") || Regex("""\b09\d{9}\b""").containsMatchIn(lower) -> {
-                    Warning(
-                        type = WarningType.MEDIUM,
-                        headline = "Pansin: Posibleng personal o payment info ito.",
-                        tip = "Double-check kung sinasadya mong ibahagi ang iyong contact o payment details."
-                    )
-                }
-                else -> null
-            }
-
+            val warning = detectSync(text)
             mainHandler.post {
                 callback(warning)
             }
