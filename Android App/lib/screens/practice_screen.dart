@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/platform_bridge.dart';
+import 'secrets_screen.dart';
 
 class PracticeScreen extends StatefulWidget {
   const PracticeScreen({super.key});
@@ -88,6 +89,21 @@ class _PracticeScreenState extends State<PracticeScreen> {
       appBar: AppBar(
         title: const Text('SecondLook Practice'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shield_outlined),
+            tooltip: "Teach Me What's Private",
+            onPressed: () {
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(
+                      builder: (context) => const SecretsScreen(),
+                    ),
+                  )
+                  .then((_) => _loadSecrets());
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
