@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/platform_bridge.dart';
-import 'about_screen.dart';
 
 class SecretsScreen extends StatefulWidget {
   const SecretsScreen({super.key});
@@ -232,38 +231,7 @@ class _SecretsScreenState extends State<SecretsScreen> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.info_outline,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                    tooltip: 'About & Privacy',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const AboutScreen(),
-                          transitionsBuilder: (context, animation,
-                              secondaryAnimation, child) {
-                            return FadeTransition(
-                              opacity: CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeInOut,
-                              ),
-                              child: child,
-                            );
-                          },
-                          transitionDuration:
-                              const Duration(milliseconds: 220),
-                          reverseTransitionDuration:
-                              const Duration(milliseconds: 200),
-                        ),
-                      );
-                    },
-                  ),
+                  const SizedBox(width: 48), // Balance leading back button
                 ],
               ),
             ),
