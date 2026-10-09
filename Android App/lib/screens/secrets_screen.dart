@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/platform_bridge.dart';
 import 'about_screen.dart';
 
@@ -616,18 +617,20 @@ class _SecretsScreenState extends State<SecretsScreen> {
               children: [
                 Text(
                   secret.label,
-                  style: const TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: _brandPurple,
                   ),
                 ),
-                const SizedBox(height: 2),
-                const Text(
-                  'Encrypted on-device • AES-GCM',
-                  style: TextStyle(
+                const SizedBox(height: 3),
+                Text(
+                  '••••••••  Encrypted AES-GCM',
+                  style: GoogleFonts.robotoMono(
                     fontSize: 11.5,
-                    color: Color(0xFF6B7280),
+                    color: const Color(0xFF6B7280),
+                    letterSpacing: 0.6,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

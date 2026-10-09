@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/platform_bridge.dart';
 import 'about_screen.dart';
 import 'secrets_screen.dart';
@@ -559,11 +560,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
           const SizedBox(height: 6),
 
-          // Clear, Readable Filipino Headline
+          // Clear, Readable Filipino Headline (Plus Jakarta Sans Bold 16sp)
           Text(
             warning.headline,
-            style: const TextStyle(
-              color: Color(0xFF991B1B),
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF991B1B),
               fontSize: 16,
               fontWeight: FontWeight.bold,
               height: 1.25,
@@ -572,13 +573,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
           const SizedBox(height: 3),
 
-          // Reason & Tip Text
+          // Reason & Tip Text (Plus Jakarta Sans Regular 13sp)
           Text(
             warning.tip,
-            style: const TextStyle(
-              color: Color(0xFF7F1D1D),
-              fontSize: 13.5,
-              height: 1.3,
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF7F1D1D),
+              fontSize: 13,
+              fontWeight: FontWeight.normal,
+              height: 1.35,
             ),
           ),
 
@@ -598,9 +600,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   minimumSize: const Size(0, 36),
                 ),
-                child: const Text(
+                child: Text(
                   'Dismiss',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -621,9 +623,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Itago',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -664,10 +666,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
+                child: Text(
                   'PANSIN · INTENDED?',
-                  style: TextStyle(
-                    color: Color(0xFF854D0E),
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFF854D0E),
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.6,
@@ -679,11 +681,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
           const SizedBox(height: 6),
 
-          // Clear, Readable Filipino Headline
+          // Clear, Readable Filipino Headline (Plus Jakarta Sans Bold 16sp)
           Text(
             warning.headline,
-            style: const TextStyle(
-              color: Color(0xFF854D0E),
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF854D0E),
               fontSize: 16,
               fontWeight: FontWeight.bold,
               height: 1.25,
@@ -692,13 +694,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
           const SizedBox(height: 3),
 
-          // Reason & Tip Text
+          // Reason & Tip Text (Plus Jakarta Sans Regular 13sp)
           Text(
             warning.tip,
-            style: const TextStyle(
-              color: Color(0xFF78350F),
-              fontSize: 13.5,
-              height: 1.3,
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF78350F),
+              fontSize: 13,
+              fontWeight: FontWeight.normal,
+              height: 1.35,
             ),
           ),
 
@@ -718,9 +721,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   minimumSize: const Size(0, 36),
                 ),
-                child: const Text(
+                child: Text(
                   'Dismiss',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -741,9 +744,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Itago',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -784,18 +787,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
               children: [
                 Text(
                   'Naitago na ang $_maskedSecretType.',
-                  style: const TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: _brandPurple,
                   ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'Only the sensitive code was masked.',
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
-                    color: Color(0xFF6B21A8),
+                    color: const Color(0xFF6B21A8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -817,6 +820,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   /// Multi-line scratchpad text box with lavender-tinted border
   Widget _buildScratchpadTextBox() {
+    final hasMaskedChars = _textController.text.contains('•');
+
     return Container(
       constraints: const BoxConstraints(minHeight: 120),
       decoration: BoxDecoration(
@@ -833,19 +838,26 @@ class _PracticeScreenState extends State<PracticeScreen> {
         focusNode: _focusNode,
         maxLines: null,
         minLines: 4,
-        style: const TextStyle(
-          fontSize: 15,
-          color: Color(0xFF1E293B),
-          height: 1.4,
-          fontWeight: FontWeight.w500,
-        ),
-        decoration: const InputDecoration(
+        style: hasMaskedChars
+            ? GoogleFonts.robotoMono(
+                fontSize: 14,
+                color: const Color(0xFF1E293B),
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+              )
+            : GoogleFonts.plusJakartaSans(
+                fontSize: 14.5,
+                color: const Color(0xFF1E293B),
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+              ),
+        decoration: InputDecoration(
           isDense: true,
           contentPadding: EdgeInsets.zero,
           border: InputBorder.none,
           hintText: 'Paste or type sensitive text to verify detection and masking...',
-          hintStyle: TextStyle(
-            color: Color(0xFF94A3B8),
+          hintStyle: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF94A3B8),
             fontSize: 14,
             fontWeight: FontWeight.w400,
           ),
@@ -861,11 +873,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
       children: [
         GestureDetector(
           onTap: _clearText,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: Text(
               'Clear Text',
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 color: _accentPurple,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
@@ -875,8 +887,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
         ),
         Text(
           '$charCount chars / $wordCount words',
-          style: const TextStyle(
-            color: Color(0xFF64748B),
+          style: GoogleFonts.plusJakartaSans(
+            color: const Color(0xFF64748B),
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -920,11 +932,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Synthetic quick tests',
-          style: TextStyle(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
-            color: Color(0xFF64748B),
+            color: const Color(0xFF64748B),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -949,7 +961,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 ),
                 child: Text(
                   t['label']!,
-                  style: TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 12.5,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
                     color: isSelected ? Colors.white : _brandPurple,

@@ -65,6 +65,20 @@ class PlatformBridge {
     }
   }
 
+  /// Checks active AI detection engine status (name and readiness)
+  static Future<Map<String, dynamic>> getAiEngineStatus() async {
+    try {
+      final Map<dynamic, dynamic>? result =
+          await _channel.invokeMapMethod<dynamic, dynamic>('getAiEngineStatus');
+      if (result != null) {
+        return Map<String, dynamic>.from(result);
+      }
+      return {'engineName': 'RuleBasedFallback', 'isReady': true};
+    } on PlatformException catch (_) {
+      return {'engineName': 'RuleBasedFallback', 'isReady': true};
+    }
+  }
+
   /// Real-time detection analysis for draft text
   static Future<DetectionResult?> check(String text) async {
     try {

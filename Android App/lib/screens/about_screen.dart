@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -81,13 +82,13 @@ class AboutScreen extends StatelessWidget {
                       const SizedBox(height: 18),
 
                       // Tanggolin Title
-                      const Text(
+                      Text(
                         'Tanggolin (SecondLook\nKeyboard)',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 22,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E293B),
+                          color: const Color(0xFF1E293B),
                           height: 1.25,
                           letterSpacing: -0.4,
                         ),
@@ -96,12 +97,12 @@ class AboutScreen extends StatelessWidget {
                       const SizedBox(height: 8),
 
                       // Subtitle / Tagline
-                      const Text(
+                      Text(
                         'A second thought before you send • Depensa sa\nbawat pindot',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 13.5,
-                          color: Color(0xFF64748B),
+                          color: const Color(0xFF64748B),
                           fontWeight: FontWeight.w500,
                           height: 1.35,
                         ),
@@ -117,11 +118,11 @@ class AboutScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: _borderLavender, width: 1.0),
                         ),
-                        child: const Text(
+                        child: Text(
                           '“When the Palawan pangolin senses danger, it curls into an impenetrable armored ball. Tanggolin does the same for your personal data—stepping in to seal sensitive information before it leaves your phone.”',
-                          style: TextStyle(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 13.5,
-                            color: Color(0xFF475569),
+                            color: const Color(0xFF475569),
                             height: 1.45,
                             fontWeight: FontWeight.w400,
                           ),
@@ -131,12 +132,12 @@ class AboutScreen extends StatelessWidget {
                       const SizedBox(height: 24),
 
                       // Privacy Architecture Breakdown Section Header
-                      const Text(
+                      Text(
                         'Privacy Architecture Breakdown',
-                        style: TextStyle(
+                        style: GoogleFonts.plusJakartaSans(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF1E293B),
+                          color: const Color(0xFF1E293B),
                           letterSpacing: -0.3,
                         ),
                       ),

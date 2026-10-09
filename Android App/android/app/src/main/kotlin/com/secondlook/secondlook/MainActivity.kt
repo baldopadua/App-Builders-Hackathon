@@ -17,11 +17,18 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        DetectionEngine.init(applicationContext)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "ping" -> {
                     result.success("pong")
+                }
+                "getAiEngineStatus" -> {
+                    result.success(mapOf(
+                        "engineName" to DetectionEngine.getActiveEngineName(),
+                        "isReady" to DetectionEngine.isReady
+                    ))
                 }
                 "check" -> {
                     val text = call.argument<String>("text") ?: ""
