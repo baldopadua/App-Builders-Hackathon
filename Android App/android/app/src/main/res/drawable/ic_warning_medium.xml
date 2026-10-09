@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Amber Caution Diamond/Shield with Question Mark -->
+    <path
+        android:fillColor="#D97706"
+        android:pathData="M12,2 L4,5.5 L4,11.5 C4,16.5 7.4,21.1 12,22 C16.6,21.1 20,16.5 20,11.5 L20,5.5 L12,2 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,7 C11,6.4 11.4,6 12,6 C12.6,6 13,6.4 13,7 C13,7.5 12.6,7.8 12.3,8.1 C11.8,8.5 11.5,9 11.5,9.7 L11.5,10.2 L12.5,10.2 L12.5,9.7 C12.5,9.3 12.8,9 13.1,8.7 C13.7,8.2 14,7.6 14,7 C14,5.9 13.1,5 12,5 C10.9,5 10,5.9 10,7 L11,7 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,12 A0.9,0.9 0 1,0 12,13.8 A0.9,0.9 0 1,0 12,12 Z" />
+</vector>

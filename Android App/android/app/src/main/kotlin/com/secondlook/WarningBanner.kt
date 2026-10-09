@@ -5,7 +5,10 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import com.secondlook.secondlook.R
 
@@ -28,6 +31,8 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     private val container: View = view.findViewById(R.id.banner_container)
     private val headlineText: TextView = view.findViewById(R.id.banner_headline)
     private val tipText: TextView = view.findViewById(R.id.banner_tip)
+    private val bannerIcon: ImageView? = view.findViewById(R.id.banner_icon)
+    private val bannerBadge: TextView? = view.findViewById(R.id.banner_badge)
     private val btnItago: Button = view.findViewById(R.id.btn_itago)
     private val btnReview: Button = view.findViewById(R.id.btn_review)
     private val btnDismiss: Button = view.findViewById(R.id.btn_dismiss)
@@ -53,7 +58,11 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
             WarningType.MEDIUM -> applyMediumAlertStyle()
         }
 
-        container.visibility = View.VISIBLE
+        if (container.visibility != View.VISIBLE) {
+            container.visibility = View.VISIBLE
+            val anim = AnimationUtils.loadAnimation(container.context, R.anim.banner_slide_up)
+            container.startAnimation(anim)
+        }
     }
 
     /**
@@ -70,11 +79,27 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
             onSendAnyway()
         }
 
-        container.visibility = View.VISIBLE
+        if (container.visibility != View.VISIBLE) {
+            container.visibility = View.VISIBLE
+            val anim = AnimationUtils.loadAnimation(container.context, R.anim.banner_slide_up)
+            container.startAnimation(anim)
+        }
     }
 
     fun hide() {
-        container.visibility = View.GONE
+        if (container.visibility == View.VISIBLE) {
+            val anim = AnimationUtils.loadAnimation(container.context, R.anim.banner_slide_down)
+            anim.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationStart(animation: Animation?) {}
+                override fun onAnimationRepeat(animation: Animation?) {}
+                override fun onAnimationEnd(animation: Animation?) {
+                    container.visibility = View.GONE
+                }
+            })
+            container.startAnimation(anim)
+        } else {
+            container.visibility = View.GONE
+        }
         btnDismiss.text = "Dismiss"
     }
 
@@ -95,16 +120,32 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     }
 
     private fun applyHighAlertStyle() {
-        container.setBackgroundColor(Color.parseColor("#FEE2E2"))
+        container.setBackgroundResource(R.drawable.bg_warning_banner_high)
         headlineText.setTextColor(Color.parseColor("#991B1B"))
-        tipText.setTextColor(Color.parseColor("#B91C1C"))
-        btnItago.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#EF4444"))
+        tipText.setTextColor(Color.parseColor("#7F1D1D"))
+        bannerIcon?.setImageResource(R.drawable.ic_warning_high)
+        bannerBadge?.text = "BABALA"
+        bannerBadge?.setTextColor(Color.parseColor("#991B1B"))
+        bannerBadge?.setBackgroundResource(R.drawable.bg_badge_high)
+        btnItago.setBackgroundResource(R.drawable.bg_button_itago_high)
+        btnItago.text = "Itago"
+        btnItago.backgroundTintList = null
+        btnReview.setTextColor(Color.parseColor("#991B1B"))
+        btnDismiss.setTextColor(Color.parseColor("#991B1B"))
     }
 
     private fun applyMediumAlertStyle() {
-        container.setBackgroundColor(Color.parseColor("#FEF08A"))
+        container.setBackgroundResource(R.drawable.bg_warning_banner_medium)
         headlineText.setTextColor(Color.parseColor("#854D0E"))
-        tipText.setTextColor(Color.parseColor("#A16207"))
-        btnItago.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#EAB308"))
+        tipText.setTextColor(Color.parseColor("#78350F"))
+        bannerIcon?.setImageResource(R.drawable.ic_warning_medium)
+        bannerBadge?.text = "PANSIN · INTENDED?"
+        bannerBadge?.setTextColor(Color.parseColor("#854D0E"))
+        bannerBadge?.setBackgroundResource(R.drawable.bg_badge_medium)
+        btnItago.setBackgroundResource(R.drawable.bg_button_itago_medium)
+        btnItago.text = "Itago"
+        btnItago.backgroundTintList = null
+        btnReview.setTextColor(Color.parseColor("#854D0E"))
+        btnDismiss.setTextColor(Color.parseColor("#854D0E"))
     }
 }
