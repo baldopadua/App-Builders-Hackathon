@@ -52,9 +52,17 @@ class SecondLookIME : InputMethodService() {
     private var lastShiftTapTime: Long = 0L
     private var keyboardMode = KeyboardMode.QWERTY
 
+    data class EnterActionInfo(
+        val label: String,
+        val targetAction: Int,
+        val isSendOrSubmit: Boolean,
+        val isNewLine: Boolean
+    )
+
     private var shiftButton: Button? = null
     private var delButton: Button? = null
     private var modeToggleButton: Button? = null
+    private var enterButton: Button? = null
 
     private val row1Buttons = mutableListOf<Button>()
     private val row2Buttons = mutableListOf<Button>()
@@ -112,6 +120,7 @@ class SecondLookIME : InputMethodService() {
 
         setupKeys(keyboardView)
         updateKeyboardUi()
+        updateEnterKeyUi(currentInputEditorInfo)
         return keyboardView
     }
 
@@ -173,6 +182,21 @@ class SecondLookIME : InputMethodService() {
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
+        deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
+        debounceHandler.removeCallbacks(debounceRunnable)
+        delButton?.isPressed = false
+
+        currentWarning = null
+        updatePangolinState(null)
+        if (::warningBanner.isInitialized) {
+            warningBanner.hide()
+        }
+        shiftState = ShiftState.UNSHIFTED
+        keyboardMode = KeyboardMode.QWERTY
+    }
+
+    override fun onFinishInput() {
+        super.onFinishInput()
         deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
     }
@@ -328,40 +352,11 @@ class SecondLookIME : InputMethodService() {
             onTextChanged()
         }
 
-        (view.findViewById<Button>(R.id.btn_enter) ?: view.findViewWithTag<Button>("ENTER"))?.setOnClickListener {
-            debounceHandler.removeCallbacks(debounceRunnable)
-            val draft = getCurrentText()
-            val warning = DetectionEngine.detectSync(draft)
-            currentWarning = warning
-            Log.d("SecondLookIME", "Final sync check on Send/Enter: $warning")
-
-            val editorInfo = currentInputEditorInfo
-            val imeAction = (editorInfo?.imeOptions ?: 0) and EditorInfo.IME_MASK_ACTION
-            val actionId = editorInfo?.actionId ?: 0
-            val isSendAction = (imeAction == EditorInfo.IME_ACTION_SEND) || (actionId == EditorInfo.IME_ACTION_SEND)
-
-            val targetAction = if (actionId != 0) actionId else imeAction
-
-            // Intercept if Red Warning (High Alert) is active: Hold send and transform banner UI
-            if (warning?.type == WarningType.HIGH) {
-                Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Send anyway]")
-                if (::warningBanner.isInitialized) {
-                    warningBanner.showSendIntercept(warning) {
-                        Log.i("SecondLookIME", "User selected [Send anyway]. Dispatching held send action.")
-                        currentWarning = null
-                        dispatchSend(targetAction, isSendAction)
-                    }
-                }
-                return@setOnClickListener // Hold/Block the send event
-            }
-
-            // Normal send dispatch
-            if (warning != null && ::warningBanner.isInitialized) {
-                warningBanner.showWarning(warning)
-            }
-
-            dispatchSend(targetAction, isSendAction)
+        enterButton = view.findViewById<Button>(R.id.btn_enter) ?: view.findViewWithTag<Button>("ENTER")
+        enterButton?.setOnClickListener {
+            handleEnterClick()
         }
+        updateEnterKeyUi(currentInputEditorInfo)
     }
 
     private fun handleKeyClick(index: Int, row: Int) {
@@ -402,10 +397,46 @@ class SecondLookIME : InputMethodService() {
         }
     }
 
-    private fun dispatchSend(targetAction: Int, isSendAction: Boolean) {
+    private fun handleEnterClick() {
+        debounceHandler.removeCallbacks(debounceRunnable)
+        val draft = getCurrentText()
+        val warning = DetectionEngine.detectSync(draft)
+        currentWarning = warning
+        Log.d("SecondLookIME", "Final sync check on Send/Enter: $warning")
+
+        val actionInfo = getEnterActionInfo(currentInputEditorInfo)
+
+        // Intercept if Red Warning (High Alert) is active: Hold send/submit and transform banner UI
+        if (warning?.type == WarningType.HIGH && (actionInfo.isSendOrSubmit || actionInfo.targetAction == EditorInfo.IME_ACTION_SEND)) {
+            Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Send anyway]")
+            if (::warningBanner.isInitialized) {
+                warningBanner.showSendIntercept(warning) {
+                    Log.i("SecondLookIME", "User selected [Send anyway]. Dispatching held action.")
+                    currentWarning = null
+                    dispatchAction(actionInfo)
+                }
+            }
+            return
+        }
+
+        // Normal send dispatch
+        if (warning != null && ::warningBanner.isInitialized) {
+            warningBanner.showWarning(warning)
+        }
+
+        dispatchAction(actionInfo)
+    }
+
+    private fun dispatchAction(actionInfo: EnterActionInfo) {
         val ic = currentInputConnection ?: return
-        if (isSendAction || (targetAction != EditorInfo.IME_ACTION_NONE && targetAction != EditorInfo.IME_ACTION_UNSPECIFIED)) {
-            ic.performEditorAction(targetAction)
+        if (actionInfo.isNewLine) {
+            val eventDown = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)
+            val eventUp = KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)
+            if (!ic.sendKeyEvent(eventDown) || !ic.sendKeyEvent(eventUp)) {
+                ic.commitText("\n", 1)
+            }
+        } else if (actionInfo.targetAction != EditorInfo.IME_ACTION_NONE && actionInfo.targetAction != EditorInfo.IME_ACTION_UNSPECIFIED) {
+            ic.performEditorAction(actionInfo.targetAction)
         } else {
             val eventDown = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER)
             val eventUp = KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER)
@@ -414,13 +445,79 @@ class SecondLookIME : InputMethodService() {
         }
     }
 
+    private fun getEnterActionInfo(info: EditorInfo?): EnterActionInfo {
+        if (info == null) {
+            return EnterActionInfo("↵", EditorInfo.IME_ACTION_NONE, isSendOrSubmit = false, isNewLine = true)
+        }
+
+        val inputType = info.inputType
+        val isMultiLine = (inputType and EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE) != 0
+        val imeOptions = info.imeOptions
+        val hasNoEnterAction = (imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION) != 0
+        val action = imeOptions and EditorInfo.IME_MASK_ACTION
+        val effectiveActionId = if (info.actionId != 0) info.actionId else action
+
+        val customLabel = info.actionLabel?.toString()?.trim()
+        if (!customLabel.isNullOrEmpty() && !hasNoEnterAction) {
+            return EnterActionInfo(
+                label = customLabel.uppercase(),
+                targetAction = effectiveActionId,
+                isSendOrSubmit = true,
+                isNewLine = false
+            )
+        }
+
+        if (hasNoEnterAction || (isMultiLine && (action == EditorInfo.IME_ACTION_NONE || action == EditorInfo.IME_ACTION_UNSPECIFIED))) {
+            return EnterActionInfo(
+                label = "↵",
+                targetAction = EditorInfo.IME_ACTION_NONE,
+                isSendOrSubmit = false,
+                isNewLine = true
+            )
+        }
+
+        return when (action) {
+            EditorInfo.IME_ACTION_SEND -> EnterActionInfo("SEND", effectiveActionId, isSendOrSubmit = true, isNewLine = false)
+            EditorInfo.IME_ACTION_GO -> EnterActionInfo("GO", effectiveActionId, isSendOrSubmit = true, isNewLine = false)
+            EditorInfo.IME_ACTION_SEARCH -> EnterActionInfo("SEARCH", effectiveActionId, isSendOrSubmit = true, isNewLine = false)
+            EditorInfo.IME_ACTION_DONE -> EnterActionInfo("DONE", effectiveActionId, isSendOrSubmit = false, isNewLine = false)
+            EditorInfo.IME_ACTION_NEXT -> EnterActionInfo("NEXT", effectiveActionId, isSendOrSubmit = false, isNewLine = false)
+            else -> {
+                if (isMultiLine) {
+                    EnterActionInfo("↵", EditorInfo.IME_ACTION_NONE, isSendOrSubmit = false, isNewLine = true)
+                } else {
+                    EnterActionInfo("↵", effectiveActionId, isSendOrSubmit = false, isNewLine = false)
+                }
+            }
+        }
+    }
+
+    private fun updateEnterKeyUi(info: EditorInfo?) {
+        val btn = enterButton ?: return
+        val actionInfo = getEnterActionInfo(info)
+        btn.text = actionInfo.label
+        when {
+            actionInfo.label.length > 4 -> btn.textSize = 12f
+            actionInfo.label.length > 2 -> btn.textSize = 13f
+            actionInfo.label == "GO" -> btn.textSize = 15f
+            else -> btn.textSize = 20f
+        }
+    }
+
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        updateEnterKeyUi(info)
         if (!restarting) {
             shiftState = ShiftState.UNSHIFTED
             keyboardMode = KeyboardMode.QWERTY
             updateKeyboardUi()
+            currentWarning = null
+            updatePangolinState(null)
+            if (::warningBanner.isInitialized) {
+                warningBanner.hide()
+            }
         }
+        onTextChanged()
     }
 
     private fun handleShiftClick() {
