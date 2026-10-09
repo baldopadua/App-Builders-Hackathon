@@ -1,5 +1,34 @@
 import 'package:flutter/services.dart';
 
+enum DetectionRisk {
+  high,
+  medium,
+}
+
+class DetectionResult {
+  final DetectionRisk risk;
+  final String headline;
+  final String tip;
+  final String category;
+
+  DetectionResult({
+    required this.risk,
+    required this.headline,
+    required this.tip,
+    required this.category,
+  });
+
+  factory DetectionResult.fromMap(Map<dynamic, dynamic> map) {
+    final typeStr = map['type']?.toString().toUpperCase() ?? 'HIGH';
+    return DetectionResult(
+      risk: typeStr == 'MEDIUM' ? DetectionRisk.medium : DetectionRisk.high,
+      headline: map['headline']?.toString() ?? '',
+      tip: map['tip']?.toString() ?? '',
+      category: map['category']?.toString() ?? 'Protection',
+    );
+  }
+}
+
 class PrivateSecret {
   final String id;
   final String label;
@@ -33,6 +62,31 @@ class PlatformBridge {
       return result ?? 'no response';
     } on PlatformException catch (e) {
       return 'Error: ${e.message}';
+    }
+  }
+
+  /// Real-time detection analysis for draft text
+  static Future<DetectionResult?> check(String text) async {
+    try {
+      final Map<dynamic, dynamic>? result =
+          await _channel.invokeMapMethod<dynamic, dynamic>('check', {'text': text});
+      if (result != null) {
+        return DetectionResult.fromMap(result);
+      }
+      return null;
+    } on PlatformException catch (_) {
+      return null;
+    }
+  }
+
+  /// Masks sensitive content in text using the native engine
+  static Future<String> hide(String text) async {
+    try {
+      final String? result =
+          await _channel.invokeMethod<String>('hide', {'text': text});
+      return result ?? text;
+    } on PlatformException catch (_) {
+      return text;
     }
   }
 

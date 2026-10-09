@@ -14,11 +14,25 @@ object DetectionEngine {
     fun detectSync(text: String): Warning? {
         val lower = text.lowercase()
         return when {
-            lower.contains("password") || lower.contains("pin") || lower.contains("otp") || lower.contains("hunter2") -> {
+            lower.contains("482913") || (lower.contains("code na pinadala") && Regex("""\b\d{4,8}\b""").containsMatchIn(text)) || lower.contains("otp") || lower.contains("pin") -> {
                 Warning(
                     type = WarningType.HIGH,
                     headline = "Teka! OTP o PIN ito — huwag ibigay kahit kanino.",
-                    tip = "This looks like a verification code or password. Sharing it could compromise your account."
+                    tip = "One-time passcode detected in your draft.\nWalang totoong bangko o GCash na hihingi ng OTP mo."
+                )
+            }
+            lower.contains("hunter2") || lower.contains("password") -> {
+                Warning(
+                    type = WarningType.HIGH,
+                    headline = "Teka! Password ito — huwag ibigay kahit kanino.",
+                    tip = "Account password detected in your draft. Walang admin o suporta na hihingi ng password mo."
+                )
+            }
+            lower.contains("aiza") || lower.contains("api key") || lower.contains("gemini") -> {
+                Warning(
+                    type = WarningType.HIGH,
+                    headline = "Teka! API Key o Secret ito.",
+                    tip = "Critical developer key detected in draft. Never share API keys in chat."
                 )
             }
             SecretManager.containsProtectedSecret(text) -> {
@@ -31,8 +45,8 @@ object DetectionEngine {
             lower.contains("gcash") || Regex("""\b09\d{9}\b""").containsMatchIn(lower) -> {
                 Warning(
                     type = WarningType.MEDIUM,
-                    headline = "Pansin: Posibleng personal o payment info ito.",
-                    tip = "Double-check kung sinasadya mong ibahagi ang iyong contact o payment details."
+                    headline = "Sinadya mo ba?",
+                    tip = "Phone number or account detected. Intended to share?"
                 )
             }
             else -> null
@@ -56,10 +70,18 @@ object DetectionEngine {
      */
     fun hide(text: String, warning: Warning? = null): String {
         var result = text
+        // Specific OTP code masking (e.g. 482913 -> ••••••)
+        val otpMatch = Regex("""\b\d{4,8}\b""").find(result)
+        if (otpMatch != null) {
+            val bullets = "•".repeat(otpMatch.value.length)
+            return result.replaceRange(otpMatch.range, bullets)
+        }
+
         val secretPatterns = listOf(
             Regex("""(?i)\b(password|pin|otp|code)\s*(?:is|:|:=|=)?\s*([^\s]+)"""),
             Regex("""\b09\d{9}\b"""),
-            Regex("""(?i)\bhunter2\b""")
+            Regex("""(?i)\bhunter2\b"""),
+            Regex("""AIza[0-9A-Za-z-_]{10,}""")
         )
 
         var replaced = false
