@@ -96,6 +96,14 @@ class RuleDetector(
             if (token.length < 3 || token.lowercase() in NOT_A_SECRET) continue
             out += password(g.range.first, g.range.first + token.length, token.any { it.isDigit() })
         }
+        for (m in CONVERSATIONAL_PASSWORD_AFTER.findAll(text) + CONVERSATIONAL_PASSWORD_BEFORE.findAll(text)) {
+            val g = m.groups[1] ?: continue
+            val token = g.value.trimEnd('.', ',', ';', '!', '?', ')')
+            if (token.length < 3 || token.lowercase() in NOT_A_SECRET) continue
+            if (out.none { it.start == g.range.first && it.end == g.range.first + token.length }) {
+                out += passwordReminder(g.range.first, g.range.first + token.length, token.any { it.isDigit() })
+            }
+        }
         for (m in ENV_PASSWORD.findAll(text)) {
             val g = m.groups[1] ?: continue
             out += password(g.range.first, g.range.last + 1, true)
@@ -107,6 +115,12 @@ class RuleDetector(
         RiskCategory.PASSWORD, start, end,
         "This message appears to include a password. Sharing it could give someone access to your account.",
         if (hasDigit) 0.95f else 0.85f, kind = "password",
+    )
+
+    private fun passwordReminder(start: Int, end: Int, hasDigit: Boolean) = RiskResult(
+        RiskCategory.PASSWORD, start, end,
+        "This message may include a password. Intended?",
+        if (hasDigit) 0.75f else 0.7f, kind = "password", severity = Severity.MEDIUM,
     )
 
     private fun codeHits(text: String): List<RiskResult> {
@@ -180,6 +194,14 @@ class RuleDetector(
             """(?i)\b(?:password|passcode|passwd|pwd|pw|pasword|paswrd|passwrd|pass(?=\s*[:=]|\s+(?:ng|sa)\s+[\w-]+(?:\s+(?:ko|mo|namin|natin))?\s*[:=]))\b""" +
                 """(?:\s+(?:ko|mo|nya|niya|namin|natin|po|(?:for|ng|sa|para\s+sa)\s+(?:the\s+|my\s+|our\s+|ang\s+)?[\w-]+(?:\s+[\w-]+)?)){0,3}""" +
                 """\s*(?:(?:is|ay|ang)\s*[:=]?|[:=]|->|-)\s*["']?([^\s"']{3,})""",
+        )
+        private const val PASSWORD_WORD = """(?:password|passcode|passwd|pwd|pw|pasword|paswrd|passwrd)"""
+        private const val PASSWORD_CANDIDATE = """(?<![\w])(?:\d{3,8}|[A-Za-z][A-Za-z0-9_#@!.-]*\d[A-Za-z0-9_#@!.-]*)(?![\w])"""
+        val CONVERSATIONAL_PASSWORD_AFTER = Regex(
+            """(?i)\b$PASSWORD_WORD\b[^\d\n]{0,40}?($PASSWORD_CANDIDATE)""",
+        )
+        val CONVERSATIONAL_PASSWORD_BEFORE = Regex(
+            """(?i)($PASSWORD_CANDIDATE)[^\d\n]{0,40}?\b$PASSWORD_WORD\b""",
         )
 
         // OTP / PIN / passcode / 2FA words followed (within a short distance) by 4-8 digits: "Passcode ko 0517", "6-digit code 739204"

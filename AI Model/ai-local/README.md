@@ -5,6 +5,42 @@ Owner: Annie (AI Lead). Everything here runs **on the phone**: rules, two small 
 - How to test: [TESTING.md](TESTING.md)
 - How to download models: [HOW_TO_DOWNLOAD_MODELS.md](HOW_TO_DOWNLOAD_MODELS.md)
 - How to put this into the Flutter app: [docs/integration.md](docs/integration.md)
+
+## Download models on Linux or macOS
+
+From any cloned copy of this repository, run the download script from the
+`ai-local` directory. The script finds its own location, so no absolute path
+needs to be configured:
+
+```bash
+cd "AI Model/ai-local"
+pwsh ./scripts/download-models.ps1
+```
+
+If the repository is in another directory, use its path instead:
+
+```bash
+cd "/path/to/App-Builders-Hackathon/AI Model/ai-local"
+pwsh ./scripts/download-models.ps1
+```
+
+The runtime models are downloaded to:
+
+```text
+assets/models/pii/
+assets/models/embedding/
+```
+
+If PowerShell is not installed on Ubuntu or Debian:
+
+```bash
+sudo apt update
+sudo apt install -y powershell
+```
+
+Then run the download command again. See
+[HOW_TO_DOWNLOAD_MODELS.md](HOW_TO_DOWNLOAD_MODELS.md) for Windows commands,
+experimental models, and local rebuild instructions.
 - API contract (keyboard ↔ AI ↔ Flutter): [docs/contract.md](docs/contract.md)
 
 ## How it decides (cheapest first; the first hit wins)

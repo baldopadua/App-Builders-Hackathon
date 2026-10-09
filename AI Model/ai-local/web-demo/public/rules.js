@@ -20,6 +20,12 @@ const PASSWORD = new RegExp(
   String.raw`\b(?:password|passcode|passwd|pwd|pw|pasword|paswrd|passwrd|pass(?=\s*[:=]|\s+(?:ng|sa)\s+[\w-]+(?:\s+(?:ko|mo|namin|natin))?\s*[:=]))\b` +
   String.raw`(?:\s+(?:ko|mo|nya|niya|namin|natin|po|(?:for|ng|sa|para\s+sa)\s+(?:the\s+|my\s+|our\s+|ang\s+)?[\w-]+(?:\s+[\w-]+)?)){0,3}` +
   String.raw`\s*(?:(?:is|ay|ang)\s*[:=]?|[:=]|->|-)\s*["']?([^\s"']{3,})`, 'gid');
+const PASSWORD_WORD = String.raw`(?:password|passcode|passwd|pwd|pw|pasword|paswrd|passwrd)`;
+const PASSWORD_CANDIDATE = String.raw`(?<![\w])(?:\d{3,8}|[A-Za-z][A-Za-z0-9_#@!.-]*\d[A-Za-z0-9_#@!.-]*)(?![\w])`;
+const CONVERSATIONAL_PASSWORD_AFTER = new RegExp(
+  String.raw`\b${PASSWORD_WORD}\b[^\d\n]{0,40}?(${PASSWORD_CANDIDATE})`, 'gid');
+const CONVERSATIONAL_PASSWORD_BEFORE = new RegExp(
+  String.raw`(${PASSWORD_CANDIDATE})[^\d\n]{0,40}?\b${PASSWORD_WORD}\b`, 'gid');
 
 const EMAIL = /\b[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\b/gi;
 const PHONE = /(?<!\d)(?:\+?63|0)9\d{2}[ -]?\d{3}[ -]?\d{4}(?!\d)/g;                       // Philippine mobile
@@ -98,6 +104,8 @@ const isMaskedSpan = (s) => s.includes('•') || s.includes('[private key remove
 const hit = (category, kind, start, end, confidence, reason, severity = 'HIGH') => ({ category, kind, severity, start, end, confidence, reason });
 const password = (start, end, hasDigit) => hit('PASSWORD', 'password', start, end, hasDigit ? 0.95 : 0.85,
   'This message appears to include a password. Sharing it could give someone access to your account.');
+const passwordReminder = (start, end, hasDigit) => hit('PASSWORD', 'password', start, end, hasDigit ? 0.75 : 0.7,
+  'This message may include a password. Intended?', 'MEDIUM');
 const apiKey = (start, end, confidence) => hit('API_KEY', 'api_key', start, end, confidence,
   'This looks like an API key or access token. Anyone with it could use your account or run up charges.');
 const OTP_REASON = 'This looks like a verification code or PIN. Sharing it could let someone into your account.';
@@ -131,6 +139,16 @@ export function detectRules(text, { flagPhoneNumbers = true, flagEmails = true, 
     const token = m[1].replace(/[.,;!?)]+$/, '');
     if (token.length < 3 || NOT_A_SECRET.has(token.toLowerCase())) continue;
     hits.push(password(gs, gs + token.length, /\d/.test(token)));
+  }
+  for (const re of [CONVERSATIONAL_PASSWORD_AFTER, CONVERSATIONAL_PASSWORD_BEFORE]) {
+    for (const m of text.matchAll(re)) {
+      const [gs] = m.indices[1];
+      const token = m[1].replace(/[.,;!?)]+$/, '');
+      if (token.length < 3 || NOT_A_SECRET.has(token.toLowerCase())) continue;
+      if (!hits.some((x) => x.start === gs && x.end === gs + token.length)) {
+        hits.push(passwordReminder(gs, gs + token.length, /\d/.test(token)));
+      }
+    }
   }
   for (const m of text.matchAll(ENV_PASSWORD)) { const [gs, ge] = m.indices[1]; hits.push(password(gs, ge, true)); }
 
