@@ -4,60 +4,120 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:background="@drawable/bg_warning_banner_high"
     android:padding="12dp"
-    android:background="#FEE2E2">
-    <!-- Default background is light red (High Alert) -->
-    <!-- Yellow background for Medium Alert will be set dynamically via Kotlin to #FEF08A -->
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="4dp">
 
-    <TextView
-        android:id="@+id/banner_headline"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Headline Text Placeholder"
-        android:textStyle="bold"
-        android:textColor="#991B1B"
-        android:textSize="16sp"
-        android:layout_marginBottom="4dp"/>
-
-    <TextView
-        android:id="@+id/banner_tip"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Reason/Tip Text Placeholder"
-        android:textColor="#B91C1C"
-        android:textSize="14sp"
-        android:layout_marginBottom="8dp"/>
-
+    <!-- Sleek Header: Status Icon + Text Badge (No Emojis) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="end">
+        android:gravity="center_vertical"
+        android:layout_marginBottom="6dp">
 
+        <ImageView
+            android:id="@+id/banner_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_warning_high"
+            android:contentDescription="Alert Icon" />
+
+        <TextView
+            android:id="@+id/banner_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_badge_high"
+            android:paddingHorizontal="6dp"
+            android:paddingVertical="2dp"
+            android:text="BABALA"
+            android:textColor="#991B1B"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.06"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- Clear, Readable Filipino Headline -->
+    <TextView
+        android:id="@+id/banner_headline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Teka! Huwag ibigay ang OTP o PIN."
+        android:textStyle="bold"
+        android:textColor="#991B1B"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif-medium"
+        android:layout_marginBottom="3dp" />
+
+    <!-- Reason & Tip Text -->
+    <TextView
+        android:id="@+id/banner_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Ang OTP ay parang susi ng bahay. Huwag ipamahagi sa iba."
+        android:textColor="#7F1D1D"
+        android:textSize="13.5sp"
+        android:lineSpacingExtra="1dp"
+        android:fontFamily="sans-serif"
+        android:layout_marginBottom="10dp" />
+
+    <!-- Sleek Action Buttons Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical|end">
+
+        <!-- Dismiss Button -->
         <Button
             android:id="@+id/btn_dismiss"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
             android:text="Dismiss"
-            style="?android:attr/borderlessButtonStyle"
             android:textColor="#991B1B"
-            android:layout_marginEnd="8dp"/>
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_button_ghost"
+            android:stateListAnimator="@null"
+            android:paddingHorizontal="10dp"
+            android:layout_marginEnd="6dp" />
 
+        <!-- Review Button -->
         <Button
             android:id="@+id/btn_review"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
             android:text="Review"
-            style="?android:attr/borderlessButtonStyle"
             android:textColor="#991B1B"
-            android:layout_marginEnd="8dp"/>
+            android:textSize="13sp"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_button_ghost"
+            android:stateListAnimator="@null"
+            android:paddingHorizontal="10dp"
+            android:layout_marginEnd="8dp" />
 
+        <!-- Itago Button (Clean Solid Pill, No Emojis) -->
         <Button
             android:id="@+id/btn_itago"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="78dp"
             android:text="Itago"
             android:textColor="#FFFFFF"
-            android:backgroundTint="#EF4444"/>
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:background="@drawable/bg_button_itago_high"
+            android:stateListAnimator="@null"
+            android:paddingHorizontal="16dp" />
     </LinearLayout>
 </LinearLayout>

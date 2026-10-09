@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Red Alert Shield with Exclamation Mark -->
+    <path
+        android:fillColor="#DC2626"
+        android:pathData="M12,2 L4,5.5 L4,11.5 C4,16.5 7.4,21.1 12,22 C16.6,21.1 20,16.5 20,11.5 L20,5.5 L12,2 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,7 L13,7 L13,13 L11,13 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,15 A1.2,1.2 0 1,0 12,17.4 A1.2,1.2 0 1,0 12,15 Z" />
+</vector>
