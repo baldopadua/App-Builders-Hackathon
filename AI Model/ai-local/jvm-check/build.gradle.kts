@@ -23,3 +23,25 @@ sourceSets {
 application {
     mainClass.set("com.secondlook.check.MainKt")
 }
+
+tasks.register<JavaExec>("gate3Eval") {
+    group = "verification"
+    description = "Evaluate the production NoteMatcher on held-out Gate 3 TSV cases"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.secondlook.check.Gate3EvalKt")
+    args(
+        providers.gradleProperty("gate3Model").orElse("../assets/models/embedding/model_quantized.onnx").get(),
+        providers.gradleProperty("gate3Cases").orElse("../gate3/private_notes_draft.tsv").get(),
+    )
+}
+
+tasks.register<JavaExec>("gate3Parity") {
+    group = "verification"
+    description = "Emit Kotlin ONNX embeddings for comparison with the Python evaluator"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.secondlook.check.Gate3ParityKt")
+    args(
+        providers.gradleProperty("gate3Model").orElse("../assets/models/embedding/model_quantized.onnx").get(),
+        "../gate3/parity_texts.tsv",
+    )
+}

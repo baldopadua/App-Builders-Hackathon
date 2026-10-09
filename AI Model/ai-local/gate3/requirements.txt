@@ -1,0 +1,6 @@
+datasets==4.4.1
+transformers==4.57.1
+onnxruntime==1.26.0
+onnx==1.22.0
+numpy==2.5.2
+# Install a compatible PyTorch build separately for the available CPU or GPU.

@@ -357,7 +357,7 @@ export async function noteScores(allNotes, text) {
  *   - it is very similar to the note with no anchor at all (>= high).
  * Wording stays cautious: similarity can suggest a connection, never prove a disclosure.
  */
-export const NOTE_DEFAULTS = { high: 0.75, floor: 0.35 };
+export const NOTE_DEFAULTS = { high: 0.75, floor: 0.60 };
 
 export function notesResult(scores, high = NOTE_DEFAULTS.high, floor = NOTE_DEFAULTS.floor) {
   let best = null;

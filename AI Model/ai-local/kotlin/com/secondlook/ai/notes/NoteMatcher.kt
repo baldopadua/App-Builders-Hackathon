@@ -21,7 +21,7 @@ class NoteMatcher(
     private val embedder: EmbeddingModel,
     private val store: NotesStore,
     @Volatile var threshold: Float = 0.75f,
-    @Volatile var anchorFloor: Float = 0.35f,
+    @Volatile var anchorFloor: Float = 0.60f,
     private val minChars: Int = 12,
 ) : Detector {
 
