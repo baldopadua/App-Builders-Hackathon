@@ -41,6 +41,7 @@ sudo apt install -y powershell
 Then run the download command again. See
 [HOW_TO_DOWNLOAD_MODELS.md](HOW_TO_DOWNLOAD_MODELS.md) for Windows commands,
 experimental models, and local rebuild instructions.
+
 - API contract (keyboard ↔ AI ↔ Flutter): [docs/contract.md](docs/contract.md)
 
 ## How it decides (cheapest first; the first hit wins)
@@ -54,12 +55,12 @@ Then **Itago** masks the secret inside the draft (`••••••`, `AIza•
 
 ## Results so far (laptop, synthetic test set — not a benchmark)
 
-| Check | Result |
-| --- | --- |
-| Detection, rules + PII model (146 messages) | 146/146 |
-| Itago: risky messages masked, then checked again | 87/87 clean |
-| Taught secrets | 27/27 |
-| Private facts (5 notes, 40 drafts) | 14/18 paraphrases caught, 3/22 false alarms |
+| Check                                            | Result                                      |
+| ------------------------------------------------ | ------------------------------------------- |
+| Detection, rules + PII model (146 messages)      | 146/146                                     |
+| Itago: risky messages masked, then checked again | 87/87 clean                                 |
+| Taught secrets                                   | 27/27                                       |
+| Private facts (5 notes, 40 drafts)               | 14/18 paraphrases caught, 3/22 false alarms |
 
 Kotlin (`jvm-check`) and the browser port (`web-demo`) give the same results. **Not yet measured on the Tecno phone or inside the keyboard.** The same person wrote the rules and the test messages, so this shows the rules do what was intended, not that they generalize.
 
@@ -88,12 +89,12 @@ docs/                              contract.md, integration.md, architecture-rec
 
 ## Models and licenses (for the submission disclosures)
 
-| Model / library | Used for | License |
-| --- | --- | --- |
-| `Xenova/all-MiniLM-L6-v2` (ONNX export of `sentence-transformers/all-MiniLM-L6-v2`), quantized | private facts | Apache-2.0 |
-| `onnx-community/bert-small-pii-detection-ONNX`, quantized | PII model | Apache-2.0 |
-| ONNX Runtime 1.26.0 (`onnxruntime-android`; `onnxruntime` for the laptop check) | runs the models | MIT |
-| Transformers.js 3.8.1 | browser demo on the laptop only | Apache-2.0 |
+| Model / library                                                                                    | Used for                        | License    |
+| -------------------------------------------------------------------------------------------------- | ------------------------------- | ---------- |
+| `Xenova/all-MiniLM-L6-v2` (ONNX export of `sentence-transformers/all-MiniLM-L6-v2`), quantized | private facts                   | Apache-2.0 |
+| `onnx-community/bert-small-pii-detection-ONNX`, quantized                                        | PII model                       | Apache-2.0 |
+| ONNX Runtime 1.26.0 (`onnxruntime-android`; `onnxruntime` for the laptop check)                | runs the models                 | MIT        |
+| Transformers.js 3.8.1                                                                              | browser demo on the laptop only | Apache-2.0 |
 
 Pretrained models, not custom-trained. Re-check each license page before submitting.
 
