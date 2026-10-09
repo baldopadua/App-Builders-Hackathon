@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../services/platform_bridge.dart';
+import 'about_screen.dart';
 import 'secrets_screen.dart';
 
 class PracticeScreen extends StatefulWidget {
@@ -364,8 +365,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Spacer to keep title centered with no back button on default page
-          const SizedBox(width: 48),
+          IconButton(
+            icon: const Icon(
+              Icons.info_outline,
+              color: Colors.white,
+              size: 22,
+            ),
+            tooltip: 'About & Privacy',
+            onPressed: () {
+              Navigator.push(
+                context,
+                _createSeamlessRoute(const AboutScreen()),
+              );
+            },
+          ),
           const Expanded(
             child: Text(
               'Practice Sandbox',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/platform_bridge.dart';
+import 'about_screen.dart';
 
 class SecretsScreen extends StatefulWidget {
   const SecretsScreen({super.key});
@@ -230,7 +231,47 @@ class _SecretsScreenState extends State<SecretsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48), // Balance leading back button
+                  IconButton(
+                    icon: const Icon(
+                      Icons.info_outline,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    tooltip: 'About & Privacy',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const AboutScreen(),
+                          transitionsBuilder: (context, animation,
+                              secondaryAnimation, child) {
+                            const curve = Curves.easeInOutCubic;
+                            final slide = Tween<Offset>(
+                              begin: const Offset(1.0, 0.0),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                                parent: animation, curve: curve));
+                            final fade = Tween<double>(begin: 0.0, end: 1.0)
+                                .animate(CurvedAnimation(
+                                    parent: animation, curve: curve));
+                            return SlideTransition(
+                              position: slide,
+                              child: FadeTransition(
+                                opacity: fade,
+                                child: child,
+                              ),
+                            );
+                          },
+                          transitionDuration:
+                              const Duration(milliseconds: 280),
+                          reverseTransitionDuration:
+                              const Duration(milliseconds: 250),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
