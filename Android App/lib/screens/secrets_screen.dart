@@ -248,27 +248,18 @@ class _SecretsScreenState extends State<SecretsScreen> {
                                   const AboutScreen(),
                           transitionsBuilder: (context, animation,
                               secondaryAnimation, child) {
-                            const curve = Curves.easeInOutCubic;
-                            final slide = Tween<Offset>(
-                              begin: const Offset(1.0, 0.0),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                                parent: animation, curve: curve));
-                            final fade = Tween<double>(begin: 0.0, end: 1.0)
-                                .animate(CurvedAnimation(
-                                    parent: animation, curve: curve));
-                            return SlideTransition(
-                              position: slide,
-                              child: FadeTransition(
-                                opacity: fade,
-                                child: child,
+                            return FadeTransition(
+                              opacity: CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeInOut,
                               ),
+                              child: child,
                             );
                           },
                           transitionDuration:
-                              const Duration(milliseconds: 280),
+                              const Duration(milliseconds: 220),
                           reverseTransitionDuration:
-                              const Duration(milliseconds: 250),
+                              const Duration(milliseconds: 200),
                         ),
                       );
                     },
