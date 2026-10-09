@@ -5,6 +5,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.NonNull
+import com.secondlook.DetectionEngine
 import com.secondlook.SecretManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -20,6 +21,33 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "ping" -> {
                     result.success("pong")
+                }
+                "check" -> {
+                    val text = call.argument<String>("text") ?: ""
+                    val warning = DetectionEngine.detectSync(text)
+                    if (warning != null) {
+                        val lower = text.lowercase()
+                        val category = when {
+                            lower.contains("otp") || lower.contains("pin") || Regex("""\b\d{4,8}\b""").containsMatchIn(text) || text.contains("482913") -> "OTP / PIN protection"
+                            lower.contains("password") || lower.contains("hunter2") -> "Password protection"
+                            lower.contains("aiza") || lower.contains("api key") || lower.contains("gemini") -> "API Key protection"
+                            SecretManager.containsProtectedSecret(text) -> "Vault Secret protection"
+                            else -> "Data protection"
+                        }
+                        result.success(mapOf(
+                            "type" to warning.type.name,
+                            "headline" to warning.headline,
+                            "tip" to warning.tip,
+                            "category" to category
+                        ))
+                    } else {
+                        result.success(null)
+                    }
+                }
+                "hide" -> {
+                    val text = call.argument<String>("text") ?: ""
+                    val masked = DetectionEngine.hide(text)
+                    result.success(masked)
                 }
                 "addSecret" -> {
                     val label = call.argument<String>("label") ?: ""
