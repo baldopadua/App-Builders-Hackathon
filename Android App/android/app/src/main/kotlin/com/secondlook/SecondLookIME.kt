@@ -1,5 +1,6 @@
 package com.secondlook
 
+import android.content.Intent
 import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.Looper
@@ -87,10 +88,39 @@ class SecondLookIME : InputMethodService() {
     private val deleteRepeatHandler = Handler(Looper.getMainLooper())
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
-            currentInputConnection?.deleteSurroundingText(1, 0)
-            onTextChanged()
+            handleBackspace()
             deleteRepeatHandler.postDelayed(this, 50)
         }
+    }
+
+    private fun handleBackspace() {
+        val ic = currentInputConnection ?: return
+
+        // 1. If text is currently selected, replace the entire selection with an empty string
+        val selectedText = ic.getSelectedText(0)
+        if (!selectedText.isNullOrEmpty()) {
+            ic.commitText("", 1)
+            onTextChanged()
+            return
+        }
+
+        // 2. Secondary check via ExtractedText for custom editors where getSelectedText returns null
+        try {
+            val extracted = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)
+            if (extracted != null && extracted.selectionStart != extracted.selectionEnd) {
+                ic.commitText("", 1)
+                onTextChanged()
+                return
+            }
+        } catch (_: Exception) {
+            // Ignore if extracted text request is unsupported
+        }
+
+        // 3. No selection: delete 1 character before cursor, with fallback to KEYCODE_DEL
+        if (!ic.deleteSurroundingText(1, 0)) {
+            sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+        }
+        onTextChanged()
     }
 
     private var pangolinStatusDot: View? = null
@@ -127,6 +157,14 @@ class SecondLookIME : InputMethodService() {
 
         pangolinStatusDot = keyboardView.findViewById<View>(R.id.pangolin_status_indicator)
         pangolinStatusLabel = keyboardView.findViewById<TextView>(R.id.tv_pangolin_label)
+
+        keyboardView.findViewById<View>(R.id.btn_pangolin)?.setOnClickListener {
+            val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+            if (launchIntent != null) {
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(launchIntent)
+            }
+        }
 
         setupKeys(keyboardView)
         updateKeyboardUi()
@@ -336,8 +374,7 @@ class SecondLookIME : InputMethodService() {
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
                     v.isPressed = true
-                    currentInputConnection?.deleteSurroundingText(1, 0)
-                    onTextChanged()
+                    handleBackspace()
                     deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
                     deleteRepeatHandler.postDelayed(deleteRepeatRunnable, 400)
                     true

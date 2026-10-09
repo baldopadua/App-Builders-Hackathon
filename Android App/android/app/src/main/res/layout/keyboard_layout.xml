@@ -39,10 +39,11 @@
 
             <ImageView
                 android:id="@+id/iv_pangolin_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_pangolin"
-                android:contentDescription="Pangolin Brand Icon" />
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_tanggolin"
+                android:contentDescription="Tanggolin Brand Icon" />
 
             <View
                 android:id="@+id/pangolin_status_indicator"
