@@ -1,0 +1,17 @@
+{
+  "name": "secondlook-web-demo",
+  "private": true,
+  "type": "module",
+  "description": "Browser version of the ai-local test app. Same models, everything served from this machine (no CDN, no Hugging Face at runtime).",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "3.8.1"
+  },
+  "devDependencies": {
+    "vitest": "5.0.1"
+  }
+}

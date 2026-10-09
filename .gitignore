@@ -1,0 +1,37 @@
+# Dependencies (reinstall with npm install / flutter pub get)
+node_modules/
+.venv*/
+.jdk*/
+__pycache__/
+.dart_tool/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Build output and caches (Gradle, Kotlin, Android, Flutter)
+build/
+.gradle/
+.kotlin/
+.cxx/
+*.apk
+*.aab
+AI Model/ai-local/gate3/data/
+AI Model/ai-local/gate3/runs/
+.fallow/
+
+# Local machine files (SDK paths, IDE settings, crash logs)
+local.properties
+.idea/
+*.iml
+.vscode/
+hs_err_pid*.log
+*.log
+.DS_Store
+Thumbs.db
+
+# Secrets and signing files: never commit real keys
+.env
+.env.*
+*.jks
+*.keystore
+key.properties

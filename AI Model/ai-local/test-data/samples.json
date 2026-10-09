@@ -1,0 +1,317 @@
+{
+  "_note": "ALL SYNTHETIC. Keys, tokens and IDs are invented lookalikes (AKIAIOSFODNN7EXAMPLE is AWS's published docs example). Card numbers are public test numbers or deliberately Luhn-invalid. Names and emails are invented. Never put real data here.",
+  "_expect": "PASSWORD = password / PIN / OTP-style credential. API_KEY = API key, access token, JWT, private key, URL with password. CARD = payment card number. OTHER_PII = email / government ID. none = should not warn.",
+  "_design": "Email, PH mobile numbers and bank account numbers get a SOFT warning (medium severity, 'Intended?', category OTHER_PII): small businesses share them on purpose to get paid. SSH PUBLIC keys are meant to be shared and stay 'none'; SSH PRIVATE keys are API_KEY. Role talk (admin, staff, viewer) without a secret is 'none'.",
+  "_team": "Cases tagged team-case-N come from the team's manual (section 8). Case 3 ('4532 1234 5678 9012') fails the Luhn checksum, so no Luhn-based detector can flag it; '4532 0151 1283 0366' is a Luhn-valid replacement.",
+
+  "detect": [
+    { "text": "My password is mango72.", "expect": "PASSWORD" },
+    { "text": "my login password is Sunflower!2026", "expect": "PASSWORD" },
+    { "text": "wifi password: kape1234", "expect": "PASSWORD" },
+    { "text": "Password ko ay mangga2026", "expect": "PASSWORD", "tags": ["filipino"] },
+    { "text": "Ang password ng wifi namin ay kape12345", "expect": "PASSWORD", "tags": ["filipino"] },
+    { "text": "Yung password ko sa GCash ay Mangga#2026, wag mo ipasa", "expect": "PASSWORD", "tags": ["filipino"] },
+    { "text": "bakit ganto ung gcash ko, tinype ko naman ung 1234 sa password?", "expect": "PASSWORD", "tags": ["filipino", "conversational"] },
+    { "text": "ano ulit password ni lola? lola1234 ba?", "expect": "PASSWORD", "tags": ["filipino", "conversational"] },
+    { "text": "tol ano nga ung account natin, group133 ba ung password nun?", "expect": "PASSWORD", "tags": ["filipino", "conversational"] },
+    { "text": "pw: Tindahan#88 (pls don't share)", "expect": "PASSWORD" },
+    { "text": "Here's the admin passcode - 8842xx", "expect": "PASSWORD" },
+    { "text": "email password = Bakery!Open7", "expect": "PASSWORD" },
+    { "text": "The password for the shared drive is Blue-Heron-55", "expect": "PASSWORD" },
+    { "text": "DB_PASSWORD=Tindahan2026!", "expect": "PASSWORD", "tags": ["auth"] },
+
+    { "text": "Admin login namin - username: admin, password: Admin@2026", "expect": "PASSWORD", "tags": ["filipino", "rbac"] },
+    { "text": "user: ana pass: Tindahan2026", "expect": "PASSWORD", "tags": ["rbac"] },
+    { "text": "Ang super admin password ay si_Ana#2026", "expect": "PASSWORD", "tags": ["filipino", "rbac"] },
+    { "text": "root password: Tindahan!2026", "expect": "PASSWORD", "tags": ["rbac"] },
+
+    { "text": "The verification code is 482913, please don't share it", "expect": "PASSWORD", "tags": ["otp"] },
+    { "text": "Ang OTP ko ay 739204", "expect": "PASSWORD", "tags": ["otp", "filipino"] },
+    { "text": "GCash number 09171234567, MPIN is 4821", "expect": "PASSWORD", "tags": ["otp"] },
+    { "text": "PIN ko ay 5521, ayan na", "expect": "PASSWORD", "tags": ["otp", "filipino"] },
+    { "text": "my ATM PIN is 5521", "expect": "PASSWORD", "tags": ["otp"] },
+    { "text": "OTP: 104857", "expect": "PASSWORD", "tags": ["otp"] },
+    { "text": "Security code 3391 daw yung sinend ng bank, ano gagawin ko?", "expect": "PASSWORD", "tags": ["otp", "filipino"] },
+
+    { "text": "Ito yung API key ko para sa Gemini: AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "GEMINI_API_KEY=AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "eto yung secret key ng PayMongo natin: sk_live_Ab3dEf6HiJk9LmNoPq2RsTu5", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "Xendit key namin xnd_production_Ab3dEf6HiJk9LmNoPq2RsTu5VwXyZ0, wag mo ipasa", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "OPENAI_API_KEY=sk-proj-Tz9QvB3nLm8XcR2yWk5dHs7JfG1aPe4U", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0In0.c2lnbmF0dXJlLWRlbW8", "expect": "API_KEY", "tags": ["auth"] },
+    { "text": "AWS access key ko AKIAIOSFODNN7EXAMPLE", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "GitHub token: ghp_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7cF0hJ3lN6", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "Slack bot token: xoxb-1234567890-abcdefghijklmnopqrstuvwx", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "Hugging Face token ko hf_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7cF0hJ3l, pang-download lang ng model", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "HF_TOKEN=hf_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7cF0hJ3l", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "Groq key namin gsk_Ab3dEf6HiJk9LmNoPq2RsTu5VwXyZ0Ab3dEf6HiJk9LmNoPq2R", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "npm token: npm_aB3dE6gH9jK2mN5pQ8sT1vW4yZ7cF0hJ3lN6", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "SendGrid SG.Ab3dEf6HiJk9LmNoPq2RsT.Ab3dEf6HiJk9LmNoPq2RsTu5VwXyZ0Ab3dEf6HiJk9", "expect": "API_KEY", "tags": ["api-key"] },
+    { "text": "Telegram bot token ng shop 1234567890:AAE1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "api key ko ay Qm8vXz4TnL2pWc9R, gamitin mo sa POS", "expect": "API_KEY", "tags": ["api-key", "filipino"] },
+    { "text": "access token: 8f3a9c1d7b2e4f60a5d9c3b1", "expect": "API_KEY", "tags": ["auth"] },
+    { "text": "DATABASE_URL=postgres://admin:Sup3rS3cret!@db.example.com:5432/tindahan", "expect": "API_KEY", "tags": ["auth"] },
+    { "text": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEF-FAKE-EXAMPLE", "expect": "API_KEY", "tags": ["auth"] },
+
+    { "text": "Here is my card number 4242 4242 4242 4242 exp 12/28", "expect": "CARD" },
+    { "text": "card: 5555555555554444 cvv 123", "expect": "CARD" },
+    { "text": "Amex 3782 822463 10005, exp 01/29", "expect": "CARD" },
+    { "text": "pay using 6011-1111-1111-1117", "expect": "CARD" },
+
+    { "text": "Send it to maria.santos@example.com", "expect": "OTHER_PII" },
+    { "text": "Yung SSS number ko 34-1234567-8", "expect": "OTHER_PII", "tags": ["filipino", "gov-id"] },
+    { "text": "TIN ko: 123-456-789-000", "expect": "OTHER_PII", "tags": ["filipino", "gov-id"] },
+    { "text": "PhilSys number ko ay 1234-5678-9012-3456", "expect": "OTHER_PII", "tags": ["filipino", "gov-id"] },
+    { "text": "Driver's license ko N01-12-123456", "expect": "OTHER_PII", "tags": ["filipino", "gov-id"] },
+    { "text": "passport P1234567A", "expect": "OTHER_PII", "tags": ["gov-id"] },
+
+    { "text": "My number is 0917 123 4567, text me", "expect": "OTHER_PII", "tags": ["phone", "soft-warning"] },
+    { "text": "Pa-GCash na lang sa 09171234567, salamat!", "expect": "OTHER_PII", "tags": ["phone", "soft-warning", "filipino"] },
+    { "text": "Account no. 0012345678 BDO, name Juan Dela Cruz", "expect": "OTHER_PII", "tags": ["bank-account", "soft-warning"] },
+    { "text": "BDO account no. 0012345678, Juan Dela Cruz", "expect": "OTHER_PII", "tags": ["bank-account", "soft-warning", "manual"] },
+    { "text": "Pa-deposit na lang sa BPI 1234 5678 90, salamat po", "expect": "OTHER_PII", "tags": ["bank-account", "soft-warning", "filipino", "manual"] },
+    { "text": "Magkano ang bank transfer fee?", "expect": "none", "tags": ["bank-account", "near-miss", "filipino", "manual"] },
+
+    { "text": "Anak, eto yung code na pinadala sa akin: 482913", "expect": "PASSWORD", "tags": ["everyday", "otp", "filipino", "manual"] },
+    { "text": "May dumating na code sa akin, 739204 daw", "expect": "PASSWORD", "tags": ["everyday", "otp", "filipino", "manual"] },
+    { "text": "the code they sent me is 551203", "expect": "PASSWORD", "tags": ["everyday", "otp", "manual"] },
+    { "text": "Ma'am eto po yung OTP: 902114, para ma-claim ko na yung premyo", "expect": "PASSWORD", "tags": ["everyday", "otp", "scam", "filipino", "manual"] },
+    { "text": "PIN ng ATM ko 1234, pakikuha mo na lang yung pera", "expect": "PASSWORD", "tags": ["everyday", "otp", "filipino", "manual"] },
+    { "text": "Password ng ML account ko: Lodi1234", "expect": "PASSWORD", "tags": ["everyday", "kids", "filipino", "manual"] },
+    { "text": "Password ng Roblox ko ay Robux2026", "expect": "PASSWORD", "tags": ["everyday", "kids", "filipino", "manual"] },
+    { "text": "pass ng FB ko: Kitty123", "expect": "PASSWORD", "tags": ["everyday", "filipino", "manual"] },
+    { "text": "Lola, ano yung code na dumating sa text mo?", "expect": "none", "tags": ["everyday", "near-miss", "filipino", "manual"] },
+    { "text": "We sent you a promo code 2468 for 20% off", "expect": "none", "tags": ["everyday", "near-miss", "manual"] },
+    { "text": "Ang pass ng bus ay libre ngayon", "expect": "none", "tags": ["everyday", "near-miss", "filipino", "manual"] },
+    { "text": "Nag-text yung bangko, huwag daw ibigay ang OTP", "expect": "none", "tags": ["everyday", "near-miss", "filipino", "manual"] },
+    { "text": "Na-receive ko na yung padala, salamat!", "expect": "none", "tags": ["everyday", "near-miss", "filipino", "manual"] },
+    { "text": "Tracking code na natanggap ko: 7421339855", "expect": "none", "tags": ["everyday", "near-miss", "filipino", "manual"] },
+    { "text": "Kumain ka na ba? Ingat pauwi!", "expect": "none", "tags": ["everyday", "filipino", "manual"] },
+
+    { "text": "ssh root@203.0.113.10 password: Server#2026", "expect": "PASSWORD", "tags": ["ssh", "manual"] },
+    { "text": "Eto yung SSH key ng server: -----BEGIN OPENSSH PRIVATE KEY-----", "expect": "API_KEY", "tags": ["ssh", "filipino", "manual"] },
+    { "text": "Eto yung public key ko: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleOnlyNotARealKey ana-laptop", "expect": "none", "tags": ["ssh", "near-miss", "filipino", "manual"] },
+    { "text": "Eto po yung authentication code: 739204", "expect": "PASSWORD", "tags": ["otp", "filipino", "manual"] },
+    { "text": "GCash MPIN ko ay 4821", "expect": "PASSWORD", "tags": ["otp", "filipino", "manual"] },
+    { "text": "2FA code ng Facebook ko: 104857", "expect": "PASSWORD", "tags": ["otp", "filipino", "manual"] },
+    { "text": "Yung CVV sa likod ng card ko 123", "expect": "CARD", "tags": ["card", "filipino", "manual"] },
+    { "text": "Ano ang CVV? Nasa likod ba ng card?", "expect": "none", "tags": ["card", "near-miss", "filipino", "manual"] },
+
+    { "text": "The code is 482916", "expect": "PASSWORD", "tags": ["team-case-2", "otp"] },
+    { "text": "4532 1234 5678 9012", "expect": "none", "tags": ["team-case-3", "fails-luhn"] },
+    { "text": "4532 0151 1283 0366", "expect": "CARD", "tags": ["team-case-3-fixed"] },
+    { "text": "My card number is 4111111111111111", "expect": "CARD", "tags": ["team-case-4"] },
+    { "text": "Send money to 09171234567", "expect": "OTHER_PII", "tags": ["team-case-5", "phone", "soft-warning"] },
+    { "text": "pw: hunter2", "expect": "PASSWORD", "tags": ["team-case-6"] },
+    { "text": "Hello, how are you today?", "expect": "none", "tags": ["team-case-9"] },
+    { "text": "Let's meet at 3pm tomorrow", "expect": "none", "tags": ["team-case-10"] },
+    { "text": "The price is 4999 pesos", "expect": "none", "tags": ["team-case-11"] },
+    { "text": "I scored 123456 points in the game", "expect": "none", "tags": ["team-case-12"] },
+    { "text": "My email is test@example.com", "expect": "OTHER_PII", "tags": ["team-case-14", "soft-warning"] },
+    { "text": "OTP mo ay 5832, ibigay mo kay Juan", "expect": "PASSWORD", "tags": ["team-case-15", "otp", "filipino"] },
+    { "text": "ZIP code is 1630", "expect": "none", "tags": ["near-miss", "otp"] },
+    { "text": "Promo code is 123456 hanggang Friday lang", "expect": "none", "tags": ["near-miss", "otp", "filipino"] },
+
+    { "text": "See you at 7, I'll bring the 123456 pesos we agreed", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Room 204 rent is 4500 due on the 5th", "expect": "none" },
+    { "text": "Thanks! Let's celebrate on Friday", "expect": "none" },
+    { "text": "Order 482913 has shipped", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Kumain ka na ba?", "expect": "none", "tags": ["filipino"] },
+    { "text": "Please reset your password today", "expect": "none", "tags": ["near-miss"] },
+    { "text": "My password is required for login", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Card 4242 4242 4242 4241 was declined", "expect": "none", "tags": ["near-miss"] },
+    { "text": "I forgot my password, can you help me reset it?", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Don't share your OTP with anyone!", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Your OTP will arrive in 5 minutes", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Meet at 3:30, bring PHP 15000 for the deposit", "expect": "none" },
+    { "text": "Invoice 20261009 is attached", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Tracking no. 7421 3398 5510 2264 for the parcel", "expect": "none", "tags": ["near-miss"] },
+    { "text": "Mama, send mo na yung bayad sa GCash mamaya", "expect": "none", "tags": ["filipino"] },
+    { "text": "The wifi is down again, restarting the router", "expect": "none" },
+    { "text": "Happy birthday! Ingat ka palagi", "expect": "none", "tags": ["filipino"] },
+    { "text": "Can you send the invoice for room 204?", "expect": "none" },
+
+    { "text": "Gumawa ka ng token sa Hugging Face settings tapos i-paste mo sa .env", "expect": "none", "tags": ["api-key", "filipino", "near-miss"] },
+    { "text": "Paano ko makukuha yung API key sa Google AI Studio?", "expect": "none", "tags": ["api-key", "filipino", "near-miss"] },
+    { "text": "I-regenerate mo na lang yung token mo kapag nag-expire", "expect": "none", "tags": ["auth", "filipino", "near-miss"] },
+    { "text": "Ang API key ay nasa .env file, huwag i-commit sa GitHub", "expect": "none", "tags": ["api-key", "filipino", "near-miss"] },
+    { "text": "May rate limit ang API key, 60 requests per minute lang", "expect": "none", "tags": ["api-key", "filipino", "near-miss"] },
+    { "text": "Ang bearer token ay kailangan sa header", "expect": "none", "tags": ["auth", "filipino", "near-miss"] },
+    { "text": "Expired na yung token, pa-refresh na lang", "expect": "none", "tags": ["auth", "filipino", "near-miss"] },
+    { "text": "Ang password ay hindi dapat ishare sa kahit sino", "expect": "none", "tags": ["filipino", "near-miss"] },
+    { "text": "Pa-send ng password ng admin account please", "expect": "none", "tags": ["rbac", "filipino", "near-miss"] },
+    { "text": "Nakalimutan ko yung password ko, pa-reset naman", "expect": "none", "tags": ["filipino", "near-miss"] },
+    { "text": "Ano ang role mo sa app, admin o viewer?", "expect": "none", "tags": ["rbac", "filipino"] },
+    { "text": "Si Ana ang admin, si Ben ang staff, ako ang owner", "expect": "none", "tags": ["rbac", "filipino"] },
+    { "text": "Binigyan na kita ng editor access sa Google Sheet", "expect": "none", "tags": ["rbac", "filipino"] },
+    { "text": "Kailangan ng 2FA para sa admin account", "expect": "none", "tags": ["rbac", "filipino"] },
+    { "text": "Dalhin mo yung SSS at TIN mo bukas sa HR", "expect": "none", "tags": ["gov-id", "filipino", "near-miss"] },
+    { "text": "Nawala yung passport ko", "expect": "none", "tags": ["gov-id", "filipino", "near-miss"] },
+
+    { "text": "Passcode ko 0517, ikaw na bahala", "expect": "PASSWORD", "tags": ["gcash", "pin", "filipino", "everyday"] },
+    { "text": "MPIN ko sa GCash 4821, pa-check naman ng balance ko", "expect": "PASSWORD", "tags": ["gcash", "pin", "filipino", "everyday"] },
+    { "text": "Yung PIN ng GCash ko ay 4821", "expect": "PASSWORD", "tags": ["gcash", "pin", "filipino", "everyday"] },
+    { "text": "Maya passcode ko ay 112233", "expect": "PASSWORD", "tags": ["gcash", "pin", "filipino", "everyday"] },
+    { "text": "Bagong MPIN ko: 482100", "expect": "PASSWORD", "tags": ["gcash", "pin", "filipino", "everyday"] },
+    { "text": "GCash code ko 553201, ikaw na mag-verify", "expect": "PASSWORD", "tags": ["gcash", "otp", "filipino", "everyday"] },
+    { "text": "Eto yung code galing GCash: 482913", "expect": "PASSWORD", "tags": ["gcash", "otp", "filipino", "everyday"] },
+    { "text": "Yung 6-digit code 739204 daw sabi ng agent", "expect": "PASSWORD", "tags": ["gcash", "otp", "filipino", "everyday"] },
+    { "text": "Yung code ko: 553201", "expect": "PASSWORD", "tags": ["otp", "filipino", "everyday"] },
+    { "text": "Forwarded: Your GCash authentication code is 482913. Never share this code with anyone.", "expect": "PASSWORD", "tags": ["gcash", "otp", "everyday"] },
+    { "text": "mpin q: 4821", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'q' for 'ko'" },
+    { "text": "pin q 5521", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'pin q 5521'" },
+    { "text": "mpin q 4821 paki check", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'mpin q' with trailing text" },
+    { "text": "pin mu 1234", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'mu' for 'mo'" },
+    { "text": "eto pin q 4821 wag mu bbgay", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "Dial shortcut warning" },
+    { "text": "atm pin q 1234 pakikuha pera", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'atm pin q'" },
+    { "text": "pin ng atm q: 1234", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'atm q:'" },
+    { "text": "mpin ng gcash q 4821", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak", "gcash"], "desc": "'gcash q'" },
+    { "text": "pin q ay 5521", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "'pin q ay'" },
+    { "text": "cge nak 4821 mpin q", "expect": "PASSWORD", "tags": ["nokia-pronouns", "pin", "textspeak"], "desc": "Elderly text format (number first)" },
+    { "text": "pano palitan pin q sa gcash?", "expect": "none", "tags": ["nokia-pronouns", "textspeak", "near-miss"], "desc": "question, no value" },
+    { "text": "pin q mali daw, na-lock aq", "expect": "none", "tags": ["nokia-pronouns", "textspeak", "near-miss"], "desc": "complaint, no value" },
+    { "text": "may 2500 aq sa gcash, pin q wag mu itanong", "expect": "none", "tags": ["nokia-pronouns", "textspeak", "near-miss"], "desc": "amount, not a PIN" },
+    { "text": "Fwd: 482913 is your GRAB verification code. Do not share it with anyone.", "expect": "PASSWORD", "tags": ["otp", "code-first", "forwarded"], "desc": "code first (real PH SMS format)" },
+    { "text": "G-739204 is your Google verification code.", "expect": "PASSWORD", "tags": ["otp", "code-first", "forwarded"], "desc": "G- prefix" },
+    { "text": "553 201 is your Instagram code. Don't share it.", "expect": "PASSWORD", "tags": ["otp", "code-first", "split-code"], "desc": "3+3 split code" },
+    { "text": "Your WhatsApp code: 687-781", "expect": "PASSWORD", "tags": ["otp", "split-code"], "desc": "3-3 dashed code" },
+    { "text": "Your One-Time PIN for your BDO Securities login is 482100.", "expect": "PASSWORD", "tags": ["otp", "long-gap"], "desc": "code word far from the code" },
+    { "text": "Use 551203 for two-factor authentication on Facebook.", "expect": "PASSWORD", "tags": ["otp", "code-first"], "desc": "'Use <code> for 2FA'" },
+    { "text": "Your parcel PH4532015112830366 with COD 0 PHP is out for delivery.", "expect": "none", "tags": ["near-miss", "tracking"], "desc": "tracking number glued to letters, not a card" },
+    { "text": "Paano palitan ang MPIN sa GCash?", "expect": "none", "tags": ["gcash", "filipino", "near-miss"] },
+    { "text": "Na-lock yung GCash ko, mali daw yung MPIN", "expect": "none", "tags": ["gcash", "filipino", "near-miss"] },
+    { "text": "Huwag ibigay ang PIN mo kahit kanino, kahit taga-GCash pa", "expect": "none", "tags": ["gcash", "filipino", "near-miss"] },
+    { "text": "Bayad na po via GCash. Ref No. 1023 4567 89016, salamat!", "expect": "none", "tags": ["gcash", "seller", "near-miss"] },
+    { "text": "Sent PHP 1,500 via GCash, ref 5012345678908", "expect": "none", "tags": ["gcash", "seller", "near-miss"] },
+    { "text": "May 4,821 pesos pa ako sa GCash", "expect": "none", "tags": ["gcash", "filipino", "near-miss"] },
+    { "text": "GCash promo code 2468 para sa discount", "expect": "none", "tags": ["gcash", "near-miss"] },
+    { "text": "Enter the 6-digit code we sent to your number", "expect": "none", "tags": ["otp", "near-miss"] }
+  ],
+
+  "_taught": "Teach me (secret values): 'teach' is what the user types into the Teach box. kind = secret (one word, or a value the rules recognise: only a fingerprint is kept, matched exactly anywhere) or fact (a sentence: matched by meaning + names, see 'notes'). positives must be caught by the taught-secret matcher, negatives must not. Reference numbers 1023 4567 89016 and 5012345678908 above are Luhn-valid on purpose: the 'Ref No.' guard keeps them quiet.",
+  "taught": [
+    {
+      "label": "GCash MPIN",
+      "teach": "4821",
+      "kind": "secret",
+      "positives": ["eto na yung 4821, bilisan mo", "Sige 4821 na lang", "MPIN:4821", "(4821)", "Nak, 4821 yung sa GCash"],
+      "negatives": ["Room 48210 tayo bukas", "4822 po yung sa akin", "May 4,821 pesos pa ako", "Kumain ka na ba?"]
+    },
+    {
+      "label": "ML password",
+      "teach": "Password ng ML account ko: Lodi1234",
+      "kind": "secret",
+      "positives": ["lodi1234 yung pass, wag mo ipagkalat", "Try mo: Lodi1234!", "user: kidML pw=Lodi1234"],
+      "negatives": ["Lodi12345 yung bago", "lodi 1234", "Lodi ka talaga!"]
+    },
+    {
+      "label": "Card ni Mama",
+      "teach": "4532 0151 1283 0366",
+      "kind": "secret",
+      "positives": ["card ko 4532-0151-1283-0366", "4532015112830366"],
+      "negatives": ["4532 0151 1283 0367", "4532 0151"]
+    },
+    {
+      "label": "Gemini key",
+      "teach": "AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW",
+      "kind": "secret",
+      "positives": ["key = \"AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW\""],
+      "negatives": ["AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvX"]
+    },
+    {
+      "label": "Jakim location",
+      "teach": "Si Jakim ay nakatira sa Taguig",
+      "kind": "fact",
+      "positives": [],
+      "negatives": ["Let's raid Jakim in Taguig"]
+    }
+  ],
+
+  "notes": [
+    {
+      "id": "sunflower",
+      "label": "Project Sunflower",
+      "text": "Our client is buying the bakery next door. The project is called Sunflower.",
+      "positives": [
+        "We should celebrate after the bakery acquisition closes!",
+        "The deal for the shop next to ours is almost done",
+        "Sunflower launch is next week",
+        "Our client is purchasing the bakery beside us",
+        "Pwede na ba natin ianunsyo yung Sunflower deal?",
+        "Heard the bakery next door is getting sold to your client"
+      ],
+      "negatives": [
+        "I'm buying bread at the bakery later",
+        "Sunflowers look nice in the garden",
+        "Can you send the invoice for room 204?",
+        "Let's grab lunch tomorrow",
+        "The deal on groceries was great today",
+        "The bakery next door has great pandesal",
+        "Our client called about the invoice"
+      ]
+    },
+    {
+      "id": "marco",
+      "label": "Marco layoff",
+      "text": "Marco from accounting is getting laid off next month. Do not tell the team.",
+      "positives": [
+        "Please keep quiet but Marco won't be with us after next month",
+        "Accounting is letting Marco go in November",
+        "Did you hear Marco is being let go?"
+      ],
+      "negatives": [
+        "Marco from accounting sent the report",
+        "Next month we have the team outing",
+        "Can we move the accounting meeting to Friday?",
+        "Don't tell the team about the surprise party"
+      ]
+    },
+    {
+      "id": "pricing",
+      "label": "Price increase",
+      "text": "We are raising our prices by 20 percent next month. Do not tell customers yet.",
+      "positives": [
+        "Prices will go up by 20% next month",
+        "We're increasing our rates next month, keep it quiet for now",
+        "Heads up: everything gets more expensive starting next month"
+      ],
+      "negatives": [
+        "Prices at the grocery went up again",
+        "We have a big sale next month",
+        "Can you send me the price list?",
+        "Next month we open a new branch"
+      ]
+    },
+    {
+      "id": "jakim",
+      "label": "Jakim location",
+      "text": "Si Jakim ay nakatira sa Taguig",
+      "positives": [
+        "Let's raid Jakim in Taguig",
+        "Jakim's address is in Taguig City",
+        "Pumunta tayo kay Jakim sa Taguig bukas"
+      ],
+      "negatives": [
+        "Jakim is a great developer",
+        "Hello Jakim, kumusta?",
+        "Taguig has nice malls",
+        "Let's meet at the mall tomorrow"
+      ]
+    },
+    {
+      "id": "vault",
+      "label": "Vault phrase",
+      "text": "The vault door phrase is 'blue heron at midnight'. Only the owner knows it.",
+      "positives": [
+        "the phrase is blue heron at midnight",
+        "tell him the code words: blue heron, midnight",
+        "what was the vault phrase again, blue heron something?"
+      ],
+      "negatives": [
+        "A blue heron was by the river at midnight",
+        "I saw a heron at the lake",
+        "Midnight snack tayo mamaya"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+local.properties
+.gradle/
+build/
+app/build/
+.idea/
+*.apk
+*.log
+hs_err_pid*.log
+.kotlin/
+.cxx/
+*.iml

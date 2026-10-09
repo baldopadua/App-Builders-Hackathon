@@ -1,0 +1,29 @@
+# Dependencies, build output, and local machine files are ignored by the repo-root
+# .gitignore as well. Keep these explicit here so this module remains safe when
+# copied into another repository.
+node_modules/
+.venv*/
+.jdk*/
+__pycache__/
+build/
+.gradle/
+.kotlin/
+.cxx/
+*.apk
+*.aab
+local.properties
+*.iml
+.idea/
+.vscode/
+*.log
+
+# Not part of the submission: the old Node harness and the candidate models from experiments
+# (the lab pages in web-demo need lab-models: run scripts/download-lab-models.ps1).
+eval/
+lab-models/
+
+# Gate 3 training and evaluation corpora, checkpoints, and scratch runs
+gate3/data/
+gate3/runs/
+
+# assets/models is intentionally committed so the app builds offline.

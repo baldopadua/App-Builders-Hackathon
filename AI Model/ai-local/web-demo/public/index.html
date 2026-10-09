@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecondLook AI test (browser)</title>
+<style>
+  :root { --bg:#f4f5f7; --card:#fff; --line:#ddd; --text:#212121; --muted:#757575; --ok:#1b5e20; --bad:#b71c1c; --hl:#ffcdd2; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14161a; --card:#1e2127; --line:#333; --text:#eceff1; --muted:#9aa0a6; --ok:#81c784; --bad:#ef9a9a; --hl:#5d2b2b; } }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:4px 0; }
+  .muted { color:var(--muted); font-size:13px; }
+  .good { color:var(--ok); } .bad { color:var(--bad); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; margin-top:12px; }
+  textarea, input[type=text] { width:100%; box-sizing:border-box; padding:8px; font:inherit; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); margin-top:8px; }
+  button { font:inherit; padding:6px 10px; margin:6px 6px 0 0; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); cursor:pointer; }
+  #samples { display:flex; overflow-x:auto; padding-bottom:4px; } #samples button { white-space:nowrap; }
+  .verdict { font-weight:600; font-size:16px; } .verdict.ok { color:var(--ok); } .verdict.risk { color:var(--bad); } .verdict.idle { color:var(--muted); }
+  .verdict.soft { color:var(--soft); }
+  :root { --soft:#9a5b00; } @media (prefers-color-scheme: dark) { :root { --soft:#ffcc80; } }
+  .reason { font-weight:400; }
+  mark { background:var(--hl); color:inherit; border-radius:3px; padding:0 2px; }
+  pre { white-space:pre-wrap; font-size:12px; margin:8px 0 0; color:var(--muted); }
+  .noterow { display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
+  #net { font-size:12px; margin-top:8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>SecondLook AI test <span class="muted">(browser)</span></h1>
+  <div class="muted">Same models as the phone app, running in this page. Synthetic text only.</div>
+  <div id="status" class="muted">Loading models…</div>
+  <div id="net" class="muted"></div>
+
+  <textarea id="input" rows="3" placeholder="Type a message…"></textarea>
+  <div id="samples"></div>
+
+  <div class="card">
+    <div id="verdict" class="verdict idle">Type a message above, or tap a sample.</div>
+    <div id="tip" class="muted"></div>
+    <button id="hideBtn" hidden>🙈 Itago (hide it)</button>
+    <div id="preview"></div>
+    <pre id="details"></pre>
+  </div>
+
+  <div class="card">
+    <b>Teach me what's private</b>
+    <div class="muted">Up to 5. One secret value (your MPIN, passcode, password, API key) is kept only as a fingerprint and caught anywhere, even with no clue words. A sentence is a private fact, compared by meaning + names. Browser demo: kept in this browser, <b>not encrypted</b> (the phone app encrypts them).</div>
+    <textarea id="noteText" rows="2" placeholder="e.g. 4821   or   Si Jakim ay nakatira sa Taguig"></textarea>
+    <input id="noteLabel" type="text" placeholder="Short label shown in warnings, e.g. GCash MPIN">
+    <button id="save">Save</button><button id="fillMpin">Fill MPIN example (4821)</button><button id="fill">Fill Sunflower example</button>
+    <button id="fillJakim">Fill Jakim example</button><button id="fillPrice">Fill price-increase example (no names)</button>
+    <div id="notes"></div>
+    <button id="delAll">Delete ALL notes</button>
+    <div id="thLabel" class="muted" style="margin-top:8px">Similarity needed when no private word appears: 0.75 (lower = warns more)</div>
+    <input id="th" type="range" min="0" max="70" value="55" style="width:100%">
+  </div>
+
+  <div class="card"><b>Debug</b><pre id="debug"></pre></div>
+  <pre id="selftest"></pre>
+</main>
+<script type="module" src="/app.js"></script>
+</body>
+</html>
