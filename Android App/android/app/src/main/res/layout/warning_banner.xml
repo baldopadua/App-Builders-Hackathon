@@ -1,6 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/banner_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#FEE2E2">
+    <!-- Default background is light red (High Alert) -->
+    <!-- Yellow background for Medium Alert will be set dynamically via Kotlin to #FEF08A -->
+
+    <TextView
+        android:id="@+id/banner_headline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Headline Text Placeholder"
+        android:textStyle="bold"
+        android:textColor="#991B1B"
+        android:textSize="16sp"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/banner_tip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Reason/Tip Text Placeholder"
+        android:textColor="#B91C1C"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/btn_dismiss"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dismiss"
+            style="?android:attr/borderlessButtonStyle"
+            android:textColor="#991B1B"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btn_review"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Review"
+            style="?android:attr/borderlessButtonStyle"
+            android:textColor="#991B1B"
+            android:layout_marginEnd="8dp"/>
+
+        <Button
+            android:id="@+id/btn_itago"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Itago"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#EF4444"/>
+    </LinearLayout>
 </LinearLayout>
