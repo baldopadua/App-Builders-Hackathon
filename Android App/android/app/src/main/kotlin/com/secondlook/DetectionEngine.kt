@@ -23,6 +23,13 @@ object DetectionEngine {
                         tip = "This looks like a verification code or password. Sharing it could compromise your account."
                     )
                 }
+                SecretManager.containsProtectedSecret(text) -> {
+                    Warning(
+                        type = WarningType.HIGH,
+                        headline = "Teka! Sikreto mo ito — itinuro mong protektahan.",
+                        tip = "This matches a private note you protected in SecondLook."
+                    )
+                }
                 lower.contains("gcash") || Regex("""\b09\d{9}\b""").containsMatchIn(lower) -> {
                     Warning(
                         type = WarningType.MEDIUM,
