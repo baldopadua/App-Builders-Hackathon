@@ -71,6 +71,10 @@ class AnnieAiAdapter : AiDetectionAdapter {
                 val pii = AssetModels.piiDetector(appContext)
                 val embedder = AssetModels.embeddingModel(appContext)
                 val store = EncryptedNotesStore(appContext, embedder)
+                val migration = store.migrate()
+                if (migration.migratedCount > 0) {
+                    Log.i(TAG, "Migrated ${migration.migratedCount} private note vectors to model version ${embedder.modelVersion}")
+                }
                 val matcher = NoteMatcher(embedder, store, threshold = 0.75f, anchorFloor = 0.60f)
                 val taught = TaughtSecretMatcher(store)
 

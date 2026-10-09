@@ -5,7 +5,7 @@ Owner: Annie (AI Lead). Everything here runs **on the phone**: rules, two small 
 - How to test: [TESTING.md](TESTING.md)
 - How to download models: [HOW_TO_DOWNLOAD_MODELS.md](HOW_TO_DOWNLOAD_MODELS.md)
 - How to put this into the Flutter app: [docs/integration.md](docs/integration.md)
-- Gate 3 Filipino measurement and training experiment: [gate3/README.md](gate3/README.md) (Candidate v2 passed all shipping gates and was promoted)
+- Gate 3 Filipino measurement and training experiment: [gate3/README.md](gate3/README.md) (candidate treated as prototype; shipped model retained with background vector migration)
 
 ## Download models on Linux or macOS
 

@@ -16,6 +16,7 @@ class EmbeddingModel(
     private val maxTokens: Int = 128,
 ) : AutoCloseable {
 
+    val modelVersion: String = computeModelVersion(modelBytes)
     private val tokenizer = WordPieceTokenizer(vocab)
     private val env = OrtEnvironment.getEnvironment()
     private val session: OrtSession = env.createSession(modelBytes, OrtSession.SessionOptions())
@@ -66,6 +67,12 @@ class EmbeddingModel(
             var s = 0f
             for (i in a.indices) s += a[i] * b[i]
             return s
+        }
+
+        fun computeModelVersion(bytes: ByteArray): String {
+            val md = java.security.MessageDigest.getInstance("SHA-256")
+            val d = md.digest(bytes)
+            return d.take(6).joinToString("") { "%02x".format(it) }
         }
     }
 }

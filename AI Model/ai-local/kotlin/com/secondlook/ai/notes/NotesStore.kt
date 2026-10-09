@@ -19,6 +19,7 @@ class StoredNote(
     val vectors: List<FloatArray>,
     val anchors: List<Anchor> = emptyList(),
     val fingerprints: Set<String> = emptySet(),
+    val modelVersion: String = "legacy",
 )
 
 class NoteLimitException : IllegalStateException("You can keep at most $MAX_NOTES private notes.")
