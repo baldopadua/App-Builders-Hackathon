@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Palawan Pangolin Brand Palette -->
+    <color name="brand_primary">#7C3AED</color>
+    <color name="brand_primary_dark">#6D28D9</color>
+    <color name="brand_deep_violet">#4C1D95</color>
+    <color name="brand_lavender">#DDD6FE</color>
+    <color name="brand_light_bg">#F5F3FF</color>
+    <color name="brand_near_black">#111827</color>
+
+    <!-- Alert / Detection Severity Colors -->
+    <color name="alert_high_bg">#FEE2E2</color>
+    <color name="alert_high_accent">#EF4444</color>
+    <color name="alert_high_text">#991B1B</color>
+
+    <color name="alert_med_bg">#FEF08A</color>
+    <color name="alert_med_accent">#F59E0B</color>
+    <color name="alert_med_text">#854D0E</color>
+
+    <color name="status_calm_green">#10B981</color>
+
+    <!-- Keyboard Surface & Gboard Ergonomics -->
+    <color name="keyboard_bg">#D7DCE2</color>
+    <color name="top_strip_bg">#ECEFF3</color>
+    <color name="top_strip_divider">#CBD5E1</color>
+
+    <!-- Standard Key Colors -->
+    <color name="key_normal_face">#FFFFFF</color>
+    <color name="key_normal_shadow">#B0BEC5</color>
+    <color name="key_normal_pressed">#E2E8F0</color>
+
+    <!-- Functional Key Colors (Shift, Del, ?123) -->
+    <color name="key_functional_face">#C9D1DA</color>
+    <color name="key_functional_shadow">#9AA8B6</color>
+    <color name="key_functional_pressed">#BAC3CD</color>
+    <color name="key_functional_active_face">#DDD6FE</color>
+
+    <!-- Action Key Colors (Enter) -->
+    <color name="key_action_face">#7C3AED</color>
+    <color name="key_action_shadow">#5B21B6</color>
+    <color name="key_action_pressed">#6D28D9</color>
+
+    <!-- Key Text & Icons -->
+    <color name="key_text_primary">#1E293B</color>
+    <color name="key_text_secondary">#64748B</color>
+    <color name="key_text_action">#FFFFFF</color>
+</resources>

@@ -2,28 +2,55 @@
 <resources>
     <!-- Theme applied to the Android Window while the process is starting when the OS's Dark Mode setting is off -->
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
-        <!-- Show a splash screen on the activity. Automatically removed when
-             the Flutter engine draws its first frame -->
         <item name="android:windowBackground">@drawable/launch_background</item>
     </style>
-    <!-- Theme applied to the Android Window as soon as the process has started.
-         This theme determines the color of the Android Window while your
-         Flutter UI initializes, as well as behind your Flutter UI while its
-         running.
 
-         This Theme is only used starting with V2 of Flutter's Android embedding. -->
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
 
+    <!-- Base Key Button with Gboard Tactile Styling -->
     <style name="KeyButton" parent="@android:style/Widget.Button">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">1</item>
         <item name="android:textSize">20sp</item>
-        <item name="android:background">@android:color/white</item>
-        <item name="android:layout_margin">2dp</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:background">@drawable/bg_keyboard_key</item>
+        <item name="android:layout_marginStart">2.5dp</item>
+        <item name="android:layout_marginEnd">2.5dp</item>
+        <item name="android:layout_marginTop">3dp</item>
+        <item name="android:layout_marginBottom">3dp</item>
         <item name="android:stateListAnimator">@null</item>
-        <item name="android:textColor">@android:color/black</item>
+        <item name="android:textColor">@color/key_text_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <!-- Functional Key Style (Shift, Del, ?123, Comma, Period) -->
+    <style name="KeyButton.Functional">
+        <item name="android:background">@drawable/bg_keyboard_key_functional</item>
+        <item name="android:textColor">@color/key_text_primary</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Action Key Style (Enter / Return Button) in Brand Accent -->
+    <style name="KeyButton.Action">
+        <item name="android:background">@drawable/bg_keyboard_key_action</item>
+        <item name="android:textColor">@color/key_text_action</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!-- Space Bar Style -->
+    <style name="KeyButton.Space">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/key_text_secondary</item>
+        <item name="android:letterSpacing">0.05</item>
     </style>
 </resources>

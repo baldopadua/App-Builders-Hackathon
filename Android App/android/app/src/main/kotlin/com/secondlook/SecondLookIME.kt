@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.TextView
 import com.secondlook.secondlook.R
 
 class SecondLookIME : InputMethodService() {
@@ -28,8 +29,14 @@ class SecondLookIME : InputMethodService() {
                     warningBanner.hide()
                 }
             }
+            updatePangolinState(warning)
         }
     }
+
+    private var isShifted = false
+    private val letterButtons = mutableListOf<Button>()
+    private var pangolinStatusDot: View? = null
+    private var pangolinStatusLabel: TextView? = null
 
     override fun onCreateInputView(): View {
         val keyboardView = layoutInflater.inflate(R.layout.keyboard_layout, null)
@@ -46,14 +53,38 @@ class SecondLookIME : InputMethodService() {
             replaceCurrentText(masked)
             warningBanner.hide()
             currentWarning = null
+            updatePangolinState(null)
         }
         warningBanner.setOnDismissClickListener {
             currentWarning = null
+            updatePangolinState(null)
             Log.d("SecondLookIME", "Warning dismissed by user")
         }
 
+        pangolinStatusDot = keyboardView.findViewById<View>(R.id.pangolin_status_indicator)
+        pangolinStatusLabel = keyboardView.findViewById<TextView>(R.id.tv_pangolin_label)
+
         setupKeys(keyboardView)
         return keyboardView
+    }
+
+    private fun updatePangolinState(warning: Warning?) {
+        val dot = pangolinStatusDot ?: return
+        val label = pangolinStatusLabel ?: return
+        when (warning?.type) {
+            WarningType.HIGH -> {
+                dot.setBackgroundColor(android.graphics.Color.parseColor("#EF4444"))
+                label.text = "Ingat!"
+            }
+            WarningType.MEDIUM -> {
+                dot.setBackgroundColor(android.graphics.Color.parseColor("#F59E0B"))
+                label.text = "Intended?"
+            }
+            null -> {
+                dot.setBackgroundResource(R.drawable.bg_status_dot)
+                label.text = "SecondLook"
+            }
+        }
     }
 
     private fun replaceCurrentText(newText: String) {
@@ -105,11 +136,36 @@ class SecondLookIME : InputMethodService() {
             "z", "x", "c", "v", "b", "n", "m"
         )
         
+        letterButtons.clear()
         for (key in keys) {
-            view.findViewWithTag<Button>(key)?.setOnClickListener {
-                currentInputConnection?.commitText(key, 1)
-                onTextChanged()
+            val btn = view.findViewWithTag<Button>(key)
+            if (btn != null) {
+                letterButtons.add(btn)
+                btn.setOnClickListener {
+                    val charToCommit = if (isShifted) key.uppercase() else key
+                    currentInputConnection?.commitText(charToCommit, 1)
+                    if (isShifted) {
+                        isShifted = false
+                        updateShiftUi(view)
+                    }
+                    onTextChanged()
+                }
             }
+        }
+
+        view.findViewWithTag<Button>("SHIFT")?.setOnClickListener {
+            isShifted = !isShifted
+            updateShiftUi(view)
+        }
+
+        view.findViewWithTag<Button>(",")?.setOnClickListener {
+            currentInputConnection?.commitText(",", 1)
+            onTextChanged()
+        }
+
+        view.findViewWithTag<Button>(".")?.setOnClickListener {
+            currentInputConnection?.commitText(".", 1)
+            onTextChanged()
         }
 
         view.findViewWithTag<Button>("DEL")?.setOnClickListener {
@@ -128,6 +184,19 @@ class SecondLookIME : InputMethodService() {
             currentInputConnection?.sendKeyEvent(eventDown)
             currentInputConnection?.sendKeyEvent(eventUp)
             onTextChanged()
+        }
+    }
+
+    private fun updateShiftUi(view: View) {
+        for (btn in letterButtons) {
+            val tag = btn.tag?.toString() ?: continue
+            btn.text = if (isShifted) tag.uppercase() else tag.lowercase()
+        }
+        val shiftBtn = view.findViewWithTag<Button>("SHIFT")
+        if (isShifted) {
+            shiftBtn?.setTextColor(android.graphics.Color.parseColor("#7C3AED"))
+        } else {
+            shiftBtn?.setTextColor(android.graphics.Color.parseColor("#1E293B"))
         }
     }
 }

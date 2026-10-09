@@ -1,79 +1,198 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/keyboard_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="#D1D5DB"
-    android:paddingBottom="4dp">
+    android:background="@color/keyboard_bg"
+    android:paddingHorizontal="3dp"
+    android:paddingBottom="6dp">
 
-    <!-- Top Banner Placeholder (Pangolin Strip) -->
+    <!-- Top Banner Placeholder (Warning Banner expands here dynamically) -->
     <FrameLayout
         android:id="@+id/warning_banner_container"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:background="#E5E7EB">
-        <!-- Will be replaced dynamically later -->
-        <TextView
+        android:layout_height="wrap_content" />
+
+    <!-- Top Strip: Grammarly-style Pangolin Brand & Status Strip -->
+    <LinearLayout
+        android:id="@+id/keyboard_top_strip"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_keyboard_top_strip"
+        android:paddingHorizontal="6dp"
+        android:layout_marginBottom="2dp">
+
+        <!-- Pangolin Brand Button -->
+        <LinearLayout
+            android:id="@+id/btn_pangolin"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_pangolin_button"
+            android:paddingHorizontal="8dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/iv_pangolin_icon"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_pangolin"
+                android:contentDescription="Pangolin Brand Icon" />
+
+            <View
+                android:id="@+id/pangolin_status_indicator"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:layout_marginStart="5dp"
+                android:background="@drawable/bg_status_dot" />
+
+            <TextView
+                android:id="@+id/tv_pangolin_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="SecondLook"
+                android:textColor="@color/brand_deep_violet"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+
+        <!-- Flexible Spacer -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Security / Mode Status Chip -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="SecondLook Keyboard"
-            android:textStyle="bold"
-            android:textColor="#6B7280"/>
-    </FrameLayout>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingEnd="4dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:layout_marginTop="4dp">
-        <Button android:text="Q" android:tag="q" style="@style/KeyButton"/>
-        <Button android:text="W" android:tag="w" style="@style/KeyButton"/>
-        <Button android:text="E" android:tag="e" style="@style/KeyButton"/>
-        <Button android:text="R" android:tag="r" style="@style/KeyButton"/>
-        <Button android:text="T" android:tag="t" style="@style/KeyButton"/>
-        <Button android:text="Y" android:tag="y" style="@style/KeyButton"/>
-        <Button android:text="U" android:tag="u" style="@style/KeyButton"/>
-        <Button android:text="I" android:tag="i" style="@style/KeyButton"/>
-        <Button android:text="O" android:tag="o" style="@style/KeyButton"/>
-        <Button android:text="P" android:tag="p" style="@style/KeyButton"/>
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_shield_privacy"
+                android:contentDescription="Privacy Shield" />
+
+            <TextView
+                android:id="@+id/tv_privacy_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="Protected locally"
+                android:textColor="@color/key_text_secondary"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- Row 1: Q W E R T Y U I O P (10 keys, 10.0 weight) -->
     <LinearLayout
+        android:id="@+id/row_1"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
-        <Button android:text="A" android:tag="a" style="@style/KeyButton"/>
-        <Button android:text="S" android:tag="s" style="@style/KeyButton"/>
-        <Button android:text="D" android:tag="d" style="@style/KeyButton"/>
-        <Button android:text="F" android:tag="f" style="@style/KeyButton"/>
-        <Button android:text="G" android:tag="g" style="@style/KeyButton"/>
-        <Button android:text="H" android:tag="h" style="@style/KeyButton"/>
-        <Button android:text="J" android:tag="j" style="@style/KeyButton"/>
-        <Button android:text="K" android:tag="k" style="@style/KeyButton"/>
-        <Button android:text="L" android:tag="l" style="@style/KeyButton"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="48dp"
         android:orientation="horizontal">
-        <Button android:text="DEL" android:tag="DEL" style="@style/KeyButton" android:layout_weight="1.5"/>
-        <Button android:text="Z" android:tag="z" style="@style/KeyButton"/>
-        <Button android:text="X" android:tag="x" style="@style/KeyButton"/>
-        <Button android:text="C" android:tag="c" style="@style/KeyButton"/>
-        <Button android:text="V" android:tag="v" style="@style/KeyButton"/>
-        <Button android:text="B" android:tag="b" style="@style/KeyButton"/>
-        <Button android:text="N" android:tag="n" style="@style/KeyButton"/>
-        <Button android:text="M" android:tag="m" style="@style/KeyButton"/>
-        <Button android:text="ENT" android:tag="ENTER" style="@style/KeyButton" android:layout_weight="1.5"/>
+        <Button android:text="Q" android:tag="q" style="@style/KeyButton" />
+        <Button android:text="W" android:tag="w" style="@style/KeyButton" />
+        <Button android:text="E" android:tag="e" style="@style/KeyButton" />
+        <Button android:text="R" android:tag="r" style="@style/KeyButton" />
+        <Button android:text="T" android:tag="t" style="@style/KeyButton" />
+        <Button android:text="Y" android:tag="y" style="@style/KeyButton" />
+        <Button android:text="U" android:tag="u" style="@style/KeyButton" />
+        <Button android:text="I" android:tag="i" style="@style/KeyButton" />
+        <Button android:text="O" android:tag="o" style="@style/KeyButton" />
+        <Button android:text="P" android:tag="p" style="@style/KeyButton" />
     </LinearLayout>
 
+    <!-- Row 2: A S D F G H J K L (9 keys + 0.5 spacers = 10.0 weight) -->
     <LinearLayout
+        android:id="@+id/row_2"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="48dp"
         android:orientation="horizontal">
-        <Button android:text="SPACE" android:tag="SPACE" style="@style/KeyButton"/>
+        <Space android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
+        <Button android:text="A" android:tag="a" style="@style/KeyButton" />
+        <Button android:text="S" android:tag="s" style="@style/KeyButton" />
+        <Button android:text="D" android:tag="d" style="@style/KeyButton" />
+        <Button android:text="F" android:tag="f" style="@style/KeyButton" />
+        <Button android:text="G" android:tag="g" style="@style/KeyButton" />
+        <Button android:text="H" android:tag="h" style="@style/KeyButton" />
+        <Button android:text="J" android:tag="j" style="@style/KeyButton" />
+        <Button android:text="K" android:tag="k" style="@style/KeyButton" />
+        <Button android:text="L" android:tag="l" style="@style/KeyButton" />
+        <Space android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="0.5" />
+    </LinearLayout>
+
+    <!-- Row 3: Shift + Z X C V B N M + DEL (1.5 + 7.0 + 1.5 = 10.0 weight) -->
+    <LinearLayout
+        android:id="@+id/row_3"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal">
+        <Button
+            android:text="⇧"
+            android:tag="SHIFT"
+            style="@style/KeyButton.Functional"
+            android:layout_weight="1.5"
+            android:textSize="18sp" />
+        <Button android:text="Z" android:tag="z" style="@style/KeyButton" />
+        <Button android:text="X" android:tag="x" style="@style/KeyButton" />
+        <Button android:text="C" android:tag="c" style="@style/KeyButton" />
+        <Button android:text="V" android:tag="v" style="@style/KeyButton" />
+        <Button android:text="B" android:tag="b" style="@style/KeyButton" />
+        <Button android:text="N" android:tag="n" style="@style/KeyButton" />
+        <Button android:text="M" android:tag="m" style="@style/KeyButton" />
+        <Button
+            android:text="⌫"
+            android:tag="DEL"
+            style="@style/KeyButton.Functional"
+            android:layout_weight="1.5"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <!-- Row 4: ?123 + , + SPACE + . + ENTER (1.4 + 1.0 + 4.6 + 1.0 + 2.0 = 10.0 weight) -->
+    <LinearLayout
+        android:id="@+id/row_4"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal">
+        <Button
+            android:text="\?123"
+            android:tag="\?123"
+            style="@style/KeyButton.Functional"
+            android:layout_weight="1.4"
+            android:textSize="14sp" />
+        <Button
+            android:text=","
+            android:tag=","
+            style="@style/KeyButton"
+            android:layout_weight="1.0"
+            android:textSize="18sp" />
+        <Button
+            android:text="SecondLook"
+            android:tag="SPACE"
+            style="@style/KeyButton.Space"
+            android:layout_weight="4.6" />
+        <Button
+            android:text="."
+            android:tag="."
+            style="@style/KeyButton"
+            android:layout_weight="1.0"
+            android:textSize="18sp" />
+        <Button
+            android:text="↵"
+            android:tag="ENTER"
+            style="@style/KeyButton.Action"
+            android:layout_weight="2.0"
+            android:textSize="20sp" />
     </LinearLayout>
 </LinearLayout>
