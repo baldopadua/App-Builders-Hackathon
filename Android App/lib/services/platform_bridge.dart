@@ -51,7 +51,7 @@ class PlatformBridge {
         return PrivateSecret.fromMap(result);
       }
       return null;
-    } on PlatformException catch (e) {
+    } on PlatformException catch (_) {
       return null;
     }
   }
@@ -68,7 +68,7 @@ class PlatformBridge {
             .toList();
       }
       return [];
-    } on PlatformException catch (e) {
+    } on PlatformException catch (_) {
       return [];
     }
   }
@@ -79,7 +79,51 @@ class PlatformBridge {
       final bool? success =
           await _channel.invokeMethod<bool>('deleteSecret', {'id': id});
       return success ?? false;
-    } on PlatformException catch (e) {
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
+
+  /// Opens the Android system Input Method / Keyboard settings page
+  static Future<bool> openInputMethodSettings() async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('openInputMethodSettings');
+      return result ?? true;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
+
+  /// Triggers the Android system Input Method Picker dialog
+  static Future<bool> showInputMethodPicker() async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('showInputMethodPicker');
+      return result ?? true;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
+
+  /// Checks if Tanggolin / SecondLook keyboard is enabled in Android settings
+  static Future<bool> isKeyboardEnabled() async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('isKeyboardEnabled');
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
+
+  /// Checks if Tanggolin / SecondLook keyboard is selected as the default input method
+  static Future<bool> isKeyboardSelected() async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('isKeyboardSelected');
+      return result ?? false;
+    } on PlatformException catch (_) {
       return false;
     }
   }

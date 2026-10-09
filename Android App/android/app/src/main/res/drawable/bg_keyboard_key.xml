@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="5dp" />
+            <solid android:color="@color/key_normal_pressed" />
+        </shape>
+    </item>
+
+    <!-- Default state: Tactile key with subtle bottom shadow -->
+    <item>
+        <layer-list>
+            <!-- Shadow Layer -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="5dp" />
+                    <solid android:color="@color/key_normal_shadow" />
+                </shape>
+            </item>
+            <!-- Key Surface Layer -->
+            <item android:bottom="1.5dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="5dp" />
+                    <solid android:color="@color/key_normal_face" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

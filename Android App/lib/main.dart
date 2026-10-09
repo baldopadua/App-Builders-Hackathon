@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/practice_screen.dart';
+import 'screens/onboarding_screen.dart';
 
 void main() {
   runApp(const SecondLookApp());
@@ -16,7 +16,7 @@ class SecondLookApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const PracticeScreen(),
+      home: const OnboardingScreen(),
     );
   }
 }
