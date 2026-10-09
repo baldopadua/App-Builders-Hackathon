@@ -379,41 +379,43 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         ),
                       );
                     },
-                    child: Column(
+                    child: SingleChildScrollView(
                       key: ValueKey<int>(_currentIndex),
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title Line 1
-                        Text(
-                          currentStep.titleLine1,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1F2937),
-                            letterSpacing: -0.2,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title Line 1
+                          Text(
+                            currentStep.titleLine1,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1F2937),
+                              letterSpacing: -0.2,
+                            ),
                           ),
-                        ),
-                        // Title Line 2 (Brand Purple)
-                        Text(
-                          currentStep.titleLine2,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: brandPurple,
-                            letterSpacing: -0.3,
+                          // Title Line 2 (Brand Purple)
+                          Text(
+                            currentStep.titleLine2,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: brandPurple,
+                              letterSpacing: -0.3,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Description
-                        Text(
-                          currentStep.description,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            height: 1.45,
-                            color: Color(0xFF4B5563),
+                          const SizedBox(height: 12),
+                          // Description
+                          Text(
+                            currentStep.description,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              height: 1.45,
+                              color: Color(0xFF4B5563),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

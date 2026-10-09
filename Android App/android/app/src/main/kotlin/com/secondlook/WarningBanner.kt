@@ -2,7 +2,11 @@ package com.secondlook
 
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
@@ -37,16 +41,26 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     private val btnReview: Button = view.findViewById(R.id.btn_review)
     private val btnDismiss: Button = view.findViewById(R.id.btn_dismiss)
 
+    private val holdHandler = Handler(Looper.getMainLooper())
+    private var isHolding = false
+    private var holdStartTime = 0L
+    private val holdDurationMs = 2000L
+    private var isInterceptActive = false
+
     init {
         // Start hidden by default
         container.visibility = View.GONE
     }
 
     private var onDismissListener: (() -> Unit)? = null
+    private var onReviewListener: (() -> Unit)? = null
 
     fun showWarning(warning: Warning) {
+        cancelHold()
+        isInterceptActive = false
         headlineText.text = warning.headline
         tipText.text = warning.tip
+        btnDismiss.setOnTouchListener(null)
         btnDismiss.text = "Dismiss"
         btnDismiss.setOnClickListener {
             hide()
@@ -67,16 +81,90 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
 
     /**
      * Transforms the banner UI for intercepted Send events: [Itago] [Review] [Send anyway]
+     * In Ingat Mode, requires a 2-second press & hold to prevent accidental sends.
      */
-    fun showSendIntercept(warning: Warning, onSendAnyway: () -> Unit) {
+    fun showSendIntercept(warning: Warning, isIngatMode: Boolean = true, onSendAnyway: () -> Unit) {
+        cancelHold()
+        isInterceptActive = true
         headlineText.text = "Ipadala pa rin? ${warning.headline}"
-        tipText.text = warning.tip
         applyHighAlertStyle()
 
-        btnDismiss.text = "Send anyway"
-        btnDismiss.setOnClickListener {
+        if (isIngatMode) {
+            tipText.text = "Ingat Mode: Idiin ang 'Hold 2s to send' nang 2 segundo."
+            btnDismiss.text = "Hold 2s to send"
+
+            val holdProgressRunnable = object : Runnable {
+                override fun run() {
+                    if (!isHolding) return
+                    val elapsed = System.currentTimeMillis() - holdStartTime
+                    val remaining = ((holdDurationMs - elapsed + 999) / 1000).coerceAtLeast(0).toInt()
+                    if (elapsed >= holdDurationMs) {
+                        isHolding = false
+                        btnDismiss.text = "Pinadala!"
+                        btnDismiss.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        hide()
+                        onSendAnyway()
+                    } else {
+                        btnDismiss.text = "Hold (${remaining}s)..."
+                        holdHandler.postDelayed(this, 100)
+                    }
+                }
+            }
+
+            btnDismiss.setOnTouchListener { v, event ->
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        isHolding = true
+                        holdStartTime = System.currentTimeMillis()
+                        btnDismiss.text = "Hold (2s)..."
+                        btnDismiss.isPressed = true
+                        v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        holdHandler.removeCallbacks(holdProgressRunnable)
+                        holdHandler.postDelayed(holdProgressRunnable, 100)
+                        true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        if (isHolding) {
+                            val x = event.x
+                            val y = event.y
+                            if (x < 0 || x > v.width || y < 0 || y > v.height) {
+                                isHolding = false
+                                holdHandler.removeCallbacks(holdProgressRunnable)
+                                btnDismiss.isPressed = false
+                                btnDismiss.text = "Hold 2s to send"
+                                tipText.text = "Kinansela ang pagpadala. Protektado ang iyong impormasyon."
+                            }
+                        }
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        if (isHolding) {
+                            isHolding = false
+                            holdHandler.removeCallbacks(holdProgressRunnable)
+                            btnDismiss.isPressed = false
+                            btnDismiss.text = "Hold 2s to send"
+                            tipText.text = "Kinansela ang pagpadala. Protektado ang iyong impormasyon."
+                        }
+                        true
+                    }
+                    else -> false
+                }
+            }
+        } else {
+            tipText.text = warning.tip
+            btnDismiss.setOnTouchListener(null)
+            btnDismiss.text = "Send anyway"
+            btnDismiss.setOnClickListener {
+                hide()
+                onSendAnyway()
+            }
+        }
+
+        btnReview.visibility = View.VISIBLE
+        btnReview.text = "Review"
+        btnReview.setOnClickListener {
             hide()
-            onSendAnyway()
+            onReviewListener?.invoke()
         }
 
         if (container.visibility != View.VISIBLE) {
@@ -86,7 +174,26 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
         }
     }
 
+    fun isInterceptActive(): Boolean = isInterceptActive
+
+    fun showHoldPrompt() {
+        if (isInterceptActive) {
+            headlineText.text = "Teka! Ingat Mode is active."
+            tipText.text = "Idiin ang 'Hold 2s to send' nang buong 2 segundo para ipadala."
+            btnDismiss.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            val anim = AnimationUtils.loadAnimation(container.context, R.anim.banner_slide_up)
+            container.startAnimation(anim)
+        }
+    }
+
+    fun cancelHold() {
+        isHolding = false
+        holdHandler.removeCallbacksAndMessages(null)
+    }
+
     fun hide() {
+        cancelHold()
+        isInterceptActive = false
         if (container.visibility == View.VISIBLE) {
             val anim = AnimationUtils.loadAnimation(container.context, R.anim.banner_slide_down)
             anim.setAnimationListener(object : Animation.AnimationListener {
@@ -101,6 +208,7 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
             container.visibility = View.GONE
         }
         btnDismiss.text = "Dismiss"
+        btnDismiss.setOnTouchListener(null)
     }
 
     fun setOnItagoClickListener(listener: () -> Unit) {
@@ -108,7 +216,11 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     }
 
     fun setOnReviewClickListener(listener: () -> Unit) {
-        btnReview.setOnClickListener { listener() }
+        onReviewListener = listener
+        btnReview.setOnClickListener {
+            hide()
+            listener()
+        }
     }
 
     fun setOnDismissClickListener(listener: () -> Unit) {

@@ -23,6 +23,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   bool _isMaskedApplied = false;
   String _maskedSecretType = 'OTP';
   String? _activeQuickTestKey;
+  bool _isIngatMode = true;
 
   // Shared Brand Palette aligned with SecretsScreen
   static const Color _brandPurple = Color(0xFF581C87); // Deep rich violet
@@ -35,7 +36,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void initState() {
     super.initState();
     _loadSecrets();
+    _loadIngatMode();
     _textController.addListener(_onTextChanged);
+  }
+
+  Future<void> _loadIngatMode() async {
+    final enabled = await PlatformBridge.isIngatModeEnabled();
+    if (mounted) {
+      setState(() => _isIngatMode = enabled);
+    }
   }
 
   @override
@@ -289,6 +298,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
                       // ✈️ 100% On-Device AI • Offline Active Status Chip
                       Center(child: _buildStatusBadge()),
 
+                      const SizedBox(height: 14),
+
+                      // Ingat Mode Setting Card
+                      _buildIngatModeToggle(),
+
                       const SizedBox(height: 20),
 
                       // Scratchpad Title
@@ -437,6 +451,43 @@ class _PracticeScreenState extends State<PracticeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 🛡️ Ingat Mode (2s Send-Key Hold) Toggle Card
+  Widget _buildIngatModeToggle() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _surfaceLavender,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _borderLavender, width: 1.0),
+      ),
+      child: SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        value: _isIngatMode,
+        activeThumbColor: _accentPurple,
+        title: const Text(
+          'Ingat Mode (2s Send Hold)',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        subtitle: const Padding(
+          padding: EdgeInsets.only(top: 2.0),
+          child: Text(
+            'High Alert red warnings require a 2-second press & hold on Send to prevent accidental leaks.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          ),
+        ),
+        onChanged: (val) async {
+          await PlatformBridge.setIngatModeEnabled(val);
+          if (mounted) {
+            setState(() => _isIngatMode = val);
+          }
+        },
       ),
     );
   }

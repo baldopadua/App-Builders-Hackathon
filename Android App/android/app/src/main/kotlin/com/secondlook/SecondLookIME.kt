@@ -199,12 +199,18 @@ class SecondLookIME : InputMethodService() {
         super.onFinishInput()
         deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
+        if (::warningBanner.isInitialized) {
+            warningBanner.cancelHold()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
+        if (::warningBanner.isInitialized) {
+            warningBanner.cancelHold()
+        }
     }
 
     private fun setupKeys(view: View) {
@@ -399,6 +405,14 @@ class SecondLookIME : InputMethodService() {
 
     private fun handleEnterClick() {
         debounceHandler.removeCallbacks(debounceRunnable)
+
+        // If intercept banner is already active and user taps Enter on keyboard, prompt them to hold the button
+        if (::warningBanner.isInitialized && warningBanner.isInterceptActive()) {
+            Log.d("SecondLookIME", "Intercept already active, showing hold prompt on Enter tap")
+            warningBanner.showHoldPrompt()
+            return
+        }
+
         val draft = getCurrentText()
         val warning = DetectionEngine.detectSync(draft)
         currentWarning = warning
@@ -408,10 +422,11 @@ class SecondLookIME : InputMethodService() {
 
         // Intercept if Red Warning (High Alert) is active: Hold send/submit and transform banner UI
         if (warning?.type == WarningType.HIGH && (actionInfo.isSendOrSubmit || actionInfo.targetAction == EditorInfo.IME_ACTION_SEND)) {
-            Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Send anyway]")
+            val isIngatMode = SettingsManager.isIngatModeEnabled(this)
+            Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Hold 2s to send] (IngatMode=$isIngatMode)")
             if (::warningBanner.isInitialized) {
-                warningBanner.showSendIntercept(warning) {
-                    Log.i("SecondLookIME", "User selected [Send anyway]. Dispatching held action.")
+                warningBanner.showSendIntercept(warning, isIngatMode) {
+                    Log.i("SecondLookIME", "User authorized send. Dispatching held action.")
                     currentWarning = null
                     dispatchAction(actionInfo)
                 }
