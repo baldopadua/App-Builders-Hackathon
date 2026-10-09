@@ -24,7 +24,12 @@ enum class WarningType {
 data class Warning(
     val type: WarningType,
     val headline: String,
-    val tip: String
+    val tip: String,
+    val category: String = "Data protection",
+    val matchedText: String = "",
+    val start: Int = 0,
+    val end: Int = 0,
+    val canHide: Boolean = true
 )
 
 class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
@@ -66,6 +71,7 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
             hide()
             onDismissListener?.invoke()
         }
+        btnItago.visibility = if (warning.canHide) View.VISIBLE else View.GONE
 
         when (warning.type) {
             WarningType.HIGH -> applyHighAlertStyle()

@@ -42,7 +42,9 @@ class MainActivity : FlutterActivity() {
                     val warning = DetectionEngine.detectSync(text)
                     if (warning != null) {
                         val lower = text.lowercase()
-                        val category = when {
+                        val category = if (warning.category != "Data protection") {
+                            warning.category
+                        } else when {
                             lower.contains("otp") || lower.contains("pin") || Regex("""\b\d{4,8}\b""").containsMatchIn(text) || text.contains("482913") -> "OTP / PIN protection"
                             lower.contains("password") || lower.contains("hunter2") -> "Password protection"
                             lower.contains("aiza") || lower.contains("api key") || lower.contains("gemini") -> "API Key protection"

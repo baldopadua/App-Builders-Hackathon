@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Model files must stay byte-for-byte identical on every machine (no line-ending conversion).
+**/assets/models/** -text
+*.onnx binary

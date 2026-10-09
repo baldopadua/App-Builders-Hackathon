@@ -131,15 +131,29 @@ object SecretManager {
         )
         cachedSecrets.add(note)
         persist(context)
+
+        // Sync with Annie's AI core so Candidate v2 embeddings and HMAC fingerprints are trained
+        try {
+            com.secondlook.ai.AnnieAiAdapter.instance?.saveTaughtSecret(value, label)
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not sync new secret to AnnieAiAdapter", e)
+        }
+
         return note
     }
 
     @Synchronized
     fun deleteSecret(context: Context, id: String): Boolean {
         getSecrets(context) // Ensure loaded
+        val secretToDelete = cachedSecrets.find { it.id == id }
         val removed = cachedSecrets.removeAll { it.id == id }
         if (removed) {
             persist(context)
+            try {
+                com.secondlook.ai.AnnieAiAdapter.instance?.deleteTaughtSecret(id)
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not delete secret from AnnieAiAdapter", e)
+            }
         }
         return removed
     }

@@ -51,8 +51,14 @@ object DetectionEngine {
                 Log.i(TAG, "Initializing DetectionEngine on background thread...")
                 fallbackAdapter.init(context.applicationContext)
 
-                // Dynamic plug-and-play discovery for Annie's AI core
-                val annieAdapter = discoverAnnieAiAdapter(context.applicationContext)
+                // Initialize Annie's AI core adapter directly with reflection fallback
+                val annieAdapter: AiDetectionAdapter? = try {
+                    com.secondlook.ai.AnnieAiAdapter().also { it.init(context.applicationContext) }
+                } catch (t: Throwable) {
+                    Log.w(TAG, "Direct AnnieAiAdapter instantiation threw error; using reflection discovery", t)
+                    discoverAnnieAiAdapter(context.applicationContext)
+                }
+
                 if (annieAdapter != null) {
                     Log.i(TAG, "Successfully plugged into Annie's AI Core: ${annieAdapter.engineName}")
                     activeAdapter = annieAdapter
