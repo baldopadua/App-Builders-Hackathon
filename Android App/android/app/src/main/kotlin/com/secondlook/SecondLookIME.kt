@@ -515,7 +515,8 @@ class SecondLookIME : InputMethodService() {
             actionInfo.label.length > 4 -> btn.textSize = 12f
             actionInfo.label.length > 2 -> btn.textSize = 13f
             actionInfo.label == "GO" -> btn.textSize = 15f
-            else -> btn.textSize = 20f
+            actionInfo.label == "↵" || actionInfo.label == "⏎" -> btn.textSize = 28f
+            else -> btn.textSize = 26f
         }
     }
 
@@ -594,6 +595,7 @@ class SecondLookIME : InputMethodService() {
         if (sBtn != null) {
             when (keyboardMode) {
                 KeyboardMode.QWERTY -> {
+                    sBtn.textSize = 26f
                     when (shiftState) {
                         ShiftState.UNSHIFTED -> {
                             sBtn.text = "⇧"
@@ -613,11 +615,13 @@ class SecondLookIME : InputMethodService() {
                     }
                 }
                 KeyboardMode.SYMBOLS -> {
+                    sBtn.textSize = 14f
                     sBtn.text = "=\\<"
                     sBtn.setTextColor(android.graphics.Color.parseColor("#1E293B"))
                     sBtn.setBackgroundResource(R.drawable.bg_keyboard_key_functional)
                 }
                 KeyboardMode.SYMBOLS_ALT -> {
+                    sBtn.textSize = 14f
                     sBtn.text = "?123"
                     sBtn.setTextColor(android.graphics.Color.parseColor("#1E293B"))
                     sBtn.setBackgroundResource(R.drawable.bg_keyboard_key_functional)
