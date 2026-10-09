@@ -82,7 +82,10 @@ kotlin/com/secondlook/
    └─ bridge/AiMethodChannel.kt    Flutter MethodChannel "secondlook/ai" (commented; paste into the Flutter app)
 assets/models/{pii,embedding}/     quantized .onnx + tokenizer files (committed, ~50 MB)
 test-data/samples.json             synthetic messages, private-note sets, taught secrets
-jvm-check/                         laptop check: same Kotlin + real models, scores everything
+test-data/gate3/                   held-out private-note set (36 invented notes, EN / TL / Taglish) for Gate 3
+gate3/                             Gate 3: Tagalog private-note matching, measured + one trained candidate (README, results/)
+handoff/android-app/               copy-in package for the keyboard app: OnnxAiAdapter, SecretManagerNotesStore, install.ps1
+jvm-check/                         laptop check: same Kotlin + real models, scores everything (gradlew run | gate3 | fallbackCheck)
 web-demo/                          browser demo + scorer, fully local (Transformers.js 3.8.1)
 test-app/                          Android test app: compiles ../kotlin and ../assets directly
 scripts/                           download-models.ps1 (re-download the bundled models), download-lab-models.ps1 (experiments only)

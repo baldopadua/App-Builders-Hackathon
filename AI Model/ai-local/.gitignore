@@ -19,3 +19,7 @@ eval/
 lab-models/
 
 # assets/models is intentionally committed so the app builds offline.
+
+# Gate 3 training scripts (Python): bytecode cache. Data, venv and checkpoints live outside the repo ($GATE3_WORK).
+__pycache__/
+*.pyc

@@ -1,0 +1,11 @@
+// Android App/android/app/src/main/kotlin/com/secondlook/DetectionEngine.kt
+// In detectSync AND in detectAsync, change
+//
+//     activeAdapter.detectSync(text) ?: fallbackAdapter.detectSync(text)
+// to
+//     activeAdapter.detectSync(text)
+//
+// That is all. While the models load, activeAdapter IS the regex fallback, so it still runs; if the AI core throws,
+// the existing catch blocks still call fallbackAdapter. Once the AI core is active it answers alone.
+// Why: `gradlew fallbackCheck` (AI Model/ai-local/jvm-check) on 3,630 real PH SMS + 169 synthetic messages:
+//   the regex fallback adds 105 + 9 red false alarms and catches 0 risky messages the AI core misses.

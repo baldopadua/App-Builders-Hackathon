@@ -1,5 +1,7 @@
 # Putting `ai-local` into the Flutter app (Klarenz)
 
+> **Current way: [`handoff/android-app/README.md`](../handoff/android-app/README.md).** The keyboard app already has its own `DetectionEngine` (plug-and-play adapters) and `SecretManager`, so do NOT copy ai-local's `DetectionEngine.kt` / `SecretManager.kt`. The handoff copies only `com/secondlook/ai/**` plus `OnnxAiAdapter` (found by name by the keyboard's `DetectionEngine`) and `SecretManagerNotesStore` (the AI matchers read the notes saved in the Flutter "Teach me" screen). The steps below are the original plan, kept for reference.
+
 The team manual (`ARCHITECTURE.md`, sections 4, 9 and 10) has the full code. In short, inside the Flutter project (`flutter create --org com.secondlook secondlook`):
 
 1. **Kotlin sources**: copy `kotlin/com/secondlook/` (`DetectionEngine.kt`, `SecretManager.kt` and the `ai/` folder) to `android/app/src/main/kotlin/com/secondlook/`. Don't edit them; ask Annie for changes.

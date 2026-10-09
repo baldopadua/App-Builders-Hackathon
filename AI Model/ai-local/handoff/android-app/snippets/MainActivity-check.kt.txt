@@ -1,0 +1,42 @@
+// Android App/android/app/src/main/kotlin/com/secondlook/secondlook/MainActivity.kt
+// Optional but recommended: run "check" off the main thread (the AI core runs two models) and label the result
+// with what the AI core actually found. The Flutter side (PlatformBridge.check) does not change.
+
+// 1. Add these imports:
+import android.os.Handler
+import android.os.Looper
+import com.secondlook.ai.OnnxAiAdapter
+import java.util.concurrent.Executors
+
+// 2. Add these two fields to the class (next to CHANNEL):
+    private val checkWorker = Executors.newSingleThreadExecutor()
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+// 3. Replace the whole "check" -> { ... } branch with:
+                "check" -> {
+                    val text = call.argument<String>("text") ?: ""
+                    checkWorker.execute {
+                        val warning = DetectionEngine.detectSync(text)
+                        val reply = warning?.let {
+                            mapOf(
+                                "type" to it.type.name,
+                                "headline" to it.headline,
+                                "tip" to it.tip,
+                                "category" to (OnnxAiAdapter.categoryFor(text) ?: legacyCategory(text)),
+                            )
+                        }
+                        mainHandler.post { result.success(reply) }
+                    }
+                }
+
+// 4. Add this function to the class (the old keyword guess, kept for the rule-based fallback):
+    private fun legacyCategory(text: String): String {
+        val lower = text.lowercase()
+        return when {
+            lower.contains("otp") || lower.contains("pin") || Regex("""\b\d{4,8}\b""").containsMatchIn(text) -> "OTP / PIN protection"
+            lower.contains("password") -> "Password protection"
+            lower.contains("aiza") || lower.contains("api key") || lower.contains("gemini") -> "API Key protection"
+            SecretManager.containsProtectedSecret(text) -> "Vault Secret protection"
+            else -> "Data protection"
+        }
+    }

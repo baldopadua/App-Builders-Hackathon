@@ -1,0 +1,10 @@
+# Gate 3 training environment (laptop only, never shipped). Installed by setup-env.ps1 into a venv OUTSIDE the repo.
+# CPU build of PyTorch: the team laptops have no CUDA GPU. Exact pins so a rerun gives the same model (seed 42).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+transformers==4.46.3
+huggingface_hub==0.26.5
+pyarrow==18.1.0
+numpy==2.1.3
+onnx==1.17.0
+onnxruntime==1.20.1

@@ -24,6 +24,17 @@
   pre { white-space:pre-wrap; font-size:12px; margin:8px 0 0; color:var(--muted); }
   .noterow { display:flex; justify-content:space-between; align-items:center; margin-top:6px; }
   #net { font-size:12px; margin-top:8px; }
+  #embedderSelector { margin-top:8px; display:flex; flex-wrap:wrap; gap:8px; }
+  #embedderSelector label { display:flex; align-items:center; cursor:pointer; }
+  #embedderSelector input { margin:0; cursor:pointer; }
+  #embedderStatus { margin-top:4px; }
+  .quickTestsContainer { margin-top:8px; }
+  .testrow { display:flex; align-items:center; gap:8px; margin-top:6px; padding:6px; background:var(--bg); border-radius:4px; }
+  .testrow code { font-size:12px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .testrow button { margin:0; padding:4px 8px; font-size:12px; }
+  .result { font-weight:600; min-width:20px; text-align:center; }
+  .result.pass { color:var(--ok); }
+  .result.fail { color:var(--bad); }
 </style>
 </head>
 <body>
@@ -32,6 +43,12 @@
   <div class="muted">Same models as the phone app, running in this page. Synthetic text only.</div>
   <div id="status" class="muted">Loading models…</div>
   <div id="net" class="muted"></div>
+  <div id="embedderStatus" class="muted"></div>
+  
+  <div class="card">
+    <b>Embedding Model</b>
+    <div id="embedderSelector"></div>
+  </div>
 
   <textarea id="input" rows="3" placeholder="Type a message…"></textarea>
   <div id="samples"></div>
@@ -57,7 +74,14 @@
     <input id="th" type="range" min="0" max="70" value="55" style="width:100%">
   </div>
 
-  <div class="card"><b>Debug</b><pre id="debug"></pre></div>
+  <div class="card">
+    <b>Debug</b><pre id="debug"></pre></div>
+  
+  <div class="card">
+    <b>Quick Tests</b>
+    <div id="quickTests" class="quickTestsContainer"></div>
+  </div>
+  
   <pre id="selftest"></pre>
 </main>
 <script type="module" src="/app.js"></script>

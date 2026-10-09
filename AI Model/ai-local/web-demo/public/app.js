@@ -1,7 +1,8 @@
-import { loadModels, modelsReady, noteVectors, checkDetailed, hide, tipFor, headlineFor, teachValues, fingerprint } from '/core.js';
+import { loadModels, modelsReady, noteVectors, checkDetailed, hide, tipFor, headlineFor, teachValues, fingerprint, useEmbedder } from '/core.js';
 
 const $ = (id) => document.getElementById(id);
 const MAX_NOTES = 5;
+const AVAILABLE_EMBEDDERS = ['embedding', 'paraphrase-multi', 'bge-small', 'minilm-l12'];  // models available in assets/models and lab-models
 
 const SAMPLES = [   // all synthetic. Everyday Filipinos first; developer secrets last (secondary audience)
   ['GCash MPIN', 'GCash MPIN ko ay 4821'],
@@ -24,11 +25,43 @@ const SAMPLES = [   // all synthetic. Everyday Filipinos first; developer secret
   ['Dev: SSH key', 'Eto yung SSH key ng server: -----BEGIN OPENSSH PRIVATE KEY-----'],
 ];
 
+// Quick test cases (subset of samples.json for quick verification)
+const QUICK_TESTS = [
+  { input: 'My password is mango72.', expect: 'PASSWORD' },
+  { input: 'PIN ng ATM ko 1234', expect: 'PASSWORD' },
+  { input: 'GEMINI_API_KEY=AIzaSyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW', expect: 'API_KEY' },
+  { input: 'card: 4532 0151 1283 0366 cvv 123', expect: 'CARD' },
+  { input: 'TIN ko: 123-456-789-000', expect: 'OTHER_PII' },
+  { input: 'email: juan@example.com', expect: 'OTHER_PII' },
+  { input: 'Kumain ka na ba? Ingat pauwi!', expect: 'none' },
+];
+
 let notes = loadNotes();           // [{id, label, text, vectors:[[...]]}]  (demo only: NOT encrypted)
 let version = 0;
+let currentEmbedder = 'embedding';  // default embedder model
 
 function loadNotes() { try { return JSON.parse(localStorage.getItem('sl_notes') ?? '[]'); } catch { return []; } }
 function saveNotes() { try { localStorage.setItem('sl_notes', JSON.stringify(notes)); } catch { /* storage blocked */ } }
+
+/** Parse URL parameters to get requested embedder model */
+function getEmbedderFromURL() {
+  const params = new URLSearchParams(location.search);
+  const model = params.get('embedder');
+  return model && AVAILABLE_EMBEDDERS.includes(model) ? model : 'embedding';
+}
+
+/** Re-embed all private notes with the new embedder model */
+async function reEmbedNotes(embedder) {
+  const notesWithText = notes.filter((n) => n.text && !n.fps);
+  if (!notesWithText.length) return;
+  
+  for (const note of notesWithText) {
+    note.vectors = await noteVectors(note.text);
+  }
+  saveNotes();
+  renderNotes();
+  schedule();
+}
 
 // ---- UI ---------------------------------------------------------------------------------------------
 
@@ -112,7 +145,84 @@ async function saveNote() {
   schedule();
 }
 
+function renderQuickTests(testCases) {
+  const testsBox = $('quickTests');
+  if (!testsBox || !testCases || testCases.length === 0) return;
+  
+  testsBox.innerHTML = '';
+  const results = {};
+  
+  for (const test of testCases) {
+    const row = document.createElement('div');
+    row.className = 'testrow';
+    row.innerHTML = `<code>${esc(test.input.substring(0, 40))}</code> → <span class="muted">${test.expect}</span>`;
+    const runBtn = document.createElement('button');
+    runBtn.textContent = 'Run';
+    runBtn.onclick = async () => {
+      $('input').value = test.input;
+      schedule();
+      // Wait for result to be rendered
+      await new Promise(r => setTimeout(r, 350));
+      const resultSpan = runBtn.nextElementSibling;
+      // Check what we got
+      const resultCategory = shown?.result?.category;
+      const passed = test.expect === 'none' 
+        ? !shown?.result 
+        : resultCategory === test.expect;
+      resultSpan.textContent = passed ? '✓' : '✗';
+      resultSpan.className = 'result ' + (passed ? 'pass' : 'fail');
+    };
+    const resultSpan = document.createElement('span');
+    resultSpan.className = 'result';
+    resultSpan.textContent = '–';
+    row.append(runBtn, resultSpan);
+    testsBox.append(row);
+  }
+}
+
+function renderEmbedderSelector() {
+  const selectorBox = $('embedderSelector');
+  if (!selectorBox) return;
+  
+  selectorBox.innerHTML = '';
+  for (const model of AVAILABLE_EMBEDDERS) {
+    const label = document.createElement('label');
+    label.style.marginRight = '12px';
+    label.innerHTML = `<input type="radio" name="embedder" value="${model}" ${model === currentEmbedder ? 'checked' : ''}>
+      <span style="margin-left:4px">${model === 'embedding' ? 'English (default)' : model === 'paraphrase-multi' ? 'Tagalog (paraphrase-multi)' : model}</span>`;
+    label.onchange = async (e) => {
+      if (!e.target.checked) return;
+      const oldEmbedder = currentEmbedder;
+      currentEmbedder = e.target.value;
+      try {
+        const ms = await useEmbedder(currentEmbedder);
+        $('embedderStatus').textContent = `Model switched to ${currentEmbedder} (${ms} ms)`;
+        $('embedderStatus').className = 'good';
+        // Re-embed all private notes
+        await reEmbedNotes(currentEmbedder);
+        schedule();
+        // Update URL
+        const url = new URL(location);
+        url.searchParams.set('embedder', currentEmbedder);
+        history.replaceState({}, '', url);
+      } catch (e) {
+        currentEmbedder = oldEmbedder;
+        e.target.checked = false;
+        $('embedderStatus').textContent = `Failed to load ${e.target.value}: ${e?.message ?? e}`;
+        $('embedderStatus').className = 'bad';
+      }
+    };
+    selectorBox.append(label);
+  }
+}
+
 function init() {
+  // Initialize embedder selector
+  renderEmbedderSelector();
+  
+  // Initialize quick tests
+  renderQuickTests(QUICK_TESTS);
+  
   for (const [name, t] of SAMPLES) {
     const b = document.createElement('button'); b.textContent = name;
     b.onclick = () => { $('input').value = t; schedule(); };
@@ -132,15 +242,31 @@ function init() {
   $('fillMpin').onclick = () => { $('noteText').value = '4821'; $('noteLabel').value = 'GCash MPIN'; };
   $('delAll').onclick = () => { notes = []; saveNotes(); renderNotes(); schedule(); };
   renderNotes();
+  
+  // Load embedder from URL if specified
+  currentEmbedder = getEmbedderFromURL();
 }
 
 init();
-try {
-  const t = await loadModels();
-  $('status').textContent = `Models loaded from this machine: PII ${t.pii} ms, embeddings ${t.emb} ms.`;
-  $('status').className = 'good';
-  schedule();
-} catch (e) {
-  $('status').textContent = `Model load FAILED: ${e?.message ?? e}`;
-  $('status').className = 'bad';
+
+async function startup() {
+  try {
+    const t = await loadModels();
+    $('status').textContent = `Models loaded from this machine: PII ${t.pii} ms, embeddings ${t.emb} ms.`;
+    $('status').className = 'good';
+    
+    // Load the requested embedder model if not the default
+    if (currentEmbedder !== 'embedding') {
+      const ms = await useEmbedder(currentEmbedder);
+      $('embedderStatus').textContent = `Using ${currentEmbedder} embedder (${ms} ms)`;
+      $('embedderStatus').className = 'good';
+    }
+    
+    schedule();
+  } catch (e) {
+    $('status').textContent = `Model load FAILED: ${e?.message ?? e}`;
+    $('status').className = 'bad';
+  }
 }
+
+startup();

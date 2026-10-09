@@ -1,0 +1,474 @@
+{
+  "_note": "Gate 3 held-out private-note set. Every note, name and situation is INVENTED (Rule Zero): no real person, secret or message. Each note has 4 disclosures (the draft reveals the note's private fact) and 4 non-disclosures (same people or topic, nothing private revealed). Never used for training. Thresholds may only be tuned on split=dev; split=test is scored once for the final gates.",
+  "_balance": "36 notes: 12 written in English, 12 in Tagalog, 12 in Taglish. Drafts per note: one each in en / tl / taglish plus one rotating language, so every language has 48 disclosures and 48 non-disclosures. dev = 4 notes per note language (12), test = 8 per note language (24).",
+  "_review": { "status": "pending", "reviewer": null, "date": null, "instructions": "A Filipino speaker checks every draft: (1) the language tag is right, (2) each disclosure really reveals the private fact, (3) each non-disclosure reveals nothing private. Fix labels here, set status to 'reviewed' with your name and date, then rerun the evaluation." },
+  "notes": [
+    { "id": "n01", "split": "dev", "lang": "en", "label": "Carla's pregnancy",
+      "text": "My sister Carla is pregnant, but she hasn't told our parents yet.",
+      "disclosures": [
+        { "lang": "en", "text": "Guess what, my sister is expecting a baby! Mom and Dad don't know yet though." },
+        { "lang": "tl", "text": "Buntis pala si Carla, pero huwag mo munang sabihin kina Mama." },
+        { "lang": "taglish", "text": "Sis ko is pregnant na, secret pa sa parents namin ha." },
+        { "lang": "en", "text": "Carla is having a baby but our parents are still in the dark." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Carla is coming over for dinner on Sunday." },
+        { "lang": "tl", "text": "Pupunta kami ni ate sa mall bukas para bumili ng sapatos." },
+        { "lang": "taglish", "text": "Si Carla daw yung mag-aayos ng birthday ni Mama." },
+        { "lang": "en", "text": "My parents just got back from their trip to Baguio." } ] },
+
+    { "id": "n02", "split": "dev", "lang": "en", "label": "Leaving Northwind",
+      "text": "I'm resigning from Northwind next month to join a competitor. No one at work knows yet.",
+      "disclosures": [
+        { "lang": "en", "text": "I'm handing in my resignation soon, I already accepted an offer from a rival company." },
+        { "lang": "tl", "text": "Aalis na ako sa Northwind sa susunod na buwan, lilipat ako sa kakumpitensya nila." },
+        { "lang": "taglish", "text": "Mag-resign na ko next month, lipat ako sa competitor, wag mo muna ikalat sa office." },
+        { "lang": "tl", "text": "Huwag kang maingay ha, magbibitiw na ako at sa ibang kumpanya na ako papasok." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Northwind is hiring more drivers this quarter." },
+        { "lang": "tl", "text": "Ang dami naming trabaho sa opisina ngayong linggo." },
+        { "lang": "taglish", "text": "Ang toxic ng traffic papuntang office kanina, grabe." },
+        { "lang": "tl", "text": "May team building kami sa Northwind sa Biyernes." } ] },
+
+    { "id": "n03", "split": "dev", "lang": "en", "label": "Dad's diagnosis",
+      "text": "Dad was diagnosed with early-stage diabetes and he doesn't want the relatives to know.",
+      "disclosures": [
+        { "lang": "en", "text": "My father has diabetes now, but please don't tell our aunts and uncles." },
+        { "lang": "tl", "text": "May diabetes na pala si Papa, ayaw lang niyang malaman ng mga kamag-anak." },
+        { "lang": "taglish", "text": "Dad has diabetes daw, early stage, pero secret lang sa relatives ha." },
+        { "lang": "taglish", "text": "Na-diagnose si Papa ng diabetes, ayaw niya ipaalam sa mga tita." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Dad wants to go fishing this weekend." },
+        { "lang": "tl", "text": "Bibili ako ng gamot ni Lola sa botika mamaya." },
+        { "lang": "taglish", "text": "Family reunion namin sa Batangas next month, sama ka?" },
+        { "lang": "taglish", "text": "Pinapa-check up ko si Dad sa dentist bukas, masakit daw ngipin niya." } ] },
+
+    { "id": "n04", "split": "dev", "lang": "en", "label": "Ben's salary",
+      "text": "Ben earns twice as much as everyone else on the design team.",
+      "disclosures": [
+        { "lang": "en", "text": "Did you know Ben makes double what the rest of the designers get?" },
+        { "lang": "tl", "text": "Doble pala ang sweldo niya kumpara sa ibang designer sa grupo namin." },
+        { "lang": "taglish", "text": "Grabe, yung isang designer namin, doble ng sahod namin ang sweldo niya." },
+        { "lang": "en", "text": "One of our designers is paid twice as much as the rest of us." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Ben finished the new logo for the client." },
+        { "lang": "tl", "text": "Sana tumaas na ang sweldo naming lahat ngayong taon." },
+        { "lang": "taglish", "text": "Si Ben yung naka-assign sa presentation bukas, ready na daw siya." },
+        { "lang": "en", "text": "The design team is getting new laptops next week." } ] },
+
+    { "id": "n05", "split": "test", "lang": "en", "label": "Mika and Paolo",
+      "text": "Mika and Paolo secretly broke up last week, and they're pretending to still be together for the wedding.",
+      "disclosures": [
+        { "lang": "en", "text": "Those two split up a week ago but they're acting like a couple until the wedding." },
+        { "lang": "tl", "text": "Hiwalay na pala sina Mika at Paolo, nagpapanggap lang sila hanggang sa kasal." },
+        { "lang": "taglish", "text": "Break na sila actually, pero kunwari okay pa sila for the wedding." },
+        { "lang": "tl", "text": "Naghiwalay na yung dalawa noong isang linggo, palabas na lang yung lambingan nila." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Mika and Paolo are bringing the cake to the wedding." },
+        { "lang": "tl", "text": "Ang ganda ng pagdarausan ng kasal sa Tagaytay." },
+        { "lang": "taglish", "text": "Sino ka-partner mo sa wedding entourage, si Paolo ba?" },
+        { "lang": "tl", "text": "Pupunta ba sina Mika at Paolo sa lakad natin?" } ] },
+
+    { "id": "n06", "split": "test", "lang": "en", "label": "Lot beside the church",
+      "text": "We're secretly buying the empty lot beside the church to build a second branch.",
+      "disclosures": [
+        { "lang": "en", "text": "We're getting the vacant land next to the church for our new store." },
+        { "lang": "tl", "text": "Bibilhin na namin yung bakanteng lote sa tabi ng simbahan para sa bagong sangay." },
+        { "lang": "taglish", "text": "Yung empty lot beside the church, sa amin na yan soon, magbubukas kami ng second branch." },
+        { "lang": "taglish", "text": "Secret muna ha, kukunin namin yung lote malapit sa simbahan for expansion." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "The church is holding a fiesta next Sunday." },
+        { "lang": "tl", "text": "Ang daming nakaparadang sasakyan sa bakanteng lote kanina." },
+        { "lang": "taglish", "text": "Busy kami sa branch today, ang daming customers." },
+        { "lang": "taglish", "text": "Magsisimba kami mamayang gabi, sama ka?" } ] },
+
+    { "id": "n07", "split": "test", "lang": "en", "label": "Liza's board exam",
+      "text": "Liza failed the nursing board exam, and she asked me not to tell anyone.",
+      "disclosures": [
+        { "lang": "en", "text": "Liza didn't pass the boards, keep it between us please." },
+        { "lang": "tl", "text": "Hindi pumasa si Liza sa board exam ng nursing, sikreto lang daw." },
+        { "lang": "taglish", "text": "Bumagsak siya sa nursing boards, ayaw niya ipaalam sa iba." },
+        { "lang": "en", "text": "She failed her nursing licensure exam and doesn't want people to know." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Liza is reviewing for her driving test." },
+        { "lang": "tl", "text": "Ang hirap daw ng board exam ngayong taon sabi ng mga nars." },
+        { "lang": "taglish", "text": "Congrats sa mga bagong nurses na pumasa sa boards!" },
+        { "lang": "en", "text": "Liza bought a new stethoscope yesterday." } ] },
+
+    { "id": "n08", "split": "test", "lang": "en", "label": "Surprise party for Tess",
+      "text": "We're throwing Tess a surprise party at Kuya Jun's house on Saturday.",
+      "disclosures": [
+        { "lang": "en", "text": "Don't tell Tess, but we're celebrating her at Jun's place this weekend." },
+        { "lang": "tl", "text": "May sorpresa kami para kay Tess sa bahay ni Kuya Jun sa Sabado." },
+        { "lang": "taglish", "text": "Secret lang, may surprise party tayo for her this Saturday ha." },
+        { "lang": "tl", "text": "Huwag mong sasabihin sa kanya, may handaan tayo para sa kanya sa Sabado." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Tess said she's busy this Saturday." },
+        { "lang": "tl", "text": "Nagluto si Kuya Jun ng adobo kagabi." },
+        { "lang": "taglish", "text": "Ang saya ng party kagabi, sana maulit." },
+        { "lang": "tl", "text": "Pupunta ka ba sa kaarawan ng pinsan ko sa Linggo?" } ] },
+
+    { "id": "n09", "split": "test", "lang": "en", "label": "Husband's gambling debt",
+      "text": "My husband owes a big amount to an online casino and is hiding it from his family.",
+      "disclosures": [
+        { "lang": "en", "text": "My husband is deep in debt from online gambling and his family has no idea." },
+        { "lang": "tl", "text": "May malaking utang ang asawa ko sa online casino, tinatago niya sa pamilya niya." },
+        { "lang": "taglish", "text": "Si hubby may utang sa online sugal, di alam ng family niya." },
+        { "lang": "taglish", "text": "Lubog sa utang si mister dahil sa online casino, secret pa sa in-laws." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "My husband is cooking dinner tonight." },
+        { "lang": "tl", "text": "Ang dami nang naglalaro ng sugal sa cellphone ngayon." },
+        { "lang": "taglish", "text": "Nag-ipon kami ni hubby para sa vacation next year." },
+        { "lang": "taglish", "text": "Birthday ng biyenan ko bukas, ano kaya magandang regalo?" } ] },
+
+    { "id": "n10", "split": "test", "lang": "en", "label": "Psychiatrist visits",
+      "text": "I'm seeing a psychiatrist every Thursday for my anxiety.",
+      "disclosures": [
+        { "lang": "en", "text": "I go to a psychiatrist weekly because of my anxiety." },
+        { "lang": "tl", "text": "Nagpapatingin ako sa psychiatrist tuwing Huwebes dahil sa anxiety ko." },
+        { "lang": "taglish", "text": "Every Thursday may session ako sa psychiatrist, for my anxiety." },
+        { "lang": "en", "text": "I've been in treatment for anxiety, I see my doctor every week." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "I'm free every Thursday afternoon if you want to meet." },
+        { "lang": "tl", "text": "Nakakapagod ang trabaho, parang kailangan ko ng bakasyon." },
+        { "lang": "taglish", "text": "Ang daming nag-uusap about mental health awareness online." },
+        { "lang": "en", "text": "My doctor said I should drink more water." } ] },
+
+    { "id": "n11", "split": "test", "lang": "en", "label": "Andrea's promotion",
+      "text": "Andrea is getting promoted to branch manager, but HR won't announce it until June.",
+      "disclosures": [
+        { "lang": "en", "text": "Andrea will be the new branch manager, it's not public yet." },
+        { "lang": "tl", "text": "Si Andrea na ang magiging branch manager, hindi pa lang inaanunsyo." },
+        { "lang": "taglish", "text": "May bagong branch manager na tayo soon, siya yung napili, wait lang sa announcement." },
+        { "lang": "tl", "text": "Napromote na pala siya bilang tagapamahala ng sangay, sa Hunyo pa ang anunsyo." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Andrea is on leave until Monday." },
+        { "lang": "tl", "text": "Sino kaya ang papalit sa dating manager natin?" },
+        { "lang": "taglish", "text": "HR sent a memo about the new dress code, basahin niyo ha." },
+        { "lang": "tl", "text": "Nag-email si Andrea tungkol sa imbentaryo." } ] },
+
+    { "id": "n12", "split": "test", "lang": "en", "label": "Miguel is adopted",
+      "text": "Our youngest son Miguel is adopted, and he doesn't know it yet.",
+      "disclosures": [
+        { "lang": "en", "text": "Miguel isn't our biological child, and we haven't told him." },
+        { "lang": "tl", "text": "Ampon lang si bunso, hindi pa namin sinasabi sa kanya." },
+        { "lang": "taglish", "text": "Adopted pala si Miguel, di pa niya alam." },
+        { "lang": "taglish", "text": "Yung bunso namin is adopted, pero wala pa siyang idea." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Miguel won first place in the spelling bee!" },
+        { "lang": "tl", "text": "Ang kulit ng bunso namin ngayong araw." },
+        { "lang": "taglish", "text": "Enrollment ni Miguel next week, kailangan ko pa ng birth certificate." },
+        { "lang": "taglish", "text": "Nag-ampon ng aso yung kapitbahay namin, ang cute!" } ] },
+
+    { "id": "n13", "split": "dev", "lang": "tl", "label": "Utang ni Tito Ramon",
+      "text": "May utang si Tito Ramon na malaking halaga kay Aling Nena at hindi pa niya nababayaran.",
+      "disclosures": [
+        { "lang": "en", "text": "Uncle Ramon still owes Aling Nena a lot of money." },
+        { "lang": "tl", "text": "Hanggang ngayon hindi pa nagbabayad si Tito sa inutangan niya." },
+        { "lang": "taglish", "text": "Si Tito Ramon, may malaking utang pa kay Aling Nena, di pa bayad." },
+        { "lang": "en", "text": "My uncle borrowed a huge sum from our neighbor and never paid it back." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Tito Ramon is visiting us this Christmas." },
+        { "lang": "tl", "text": "Bumili ako ng tinapay sa tindahan ni Aling Nena." },
+        { "lang": "taglish", "text": "Ang mahal na ng bilihin, kailangan talaga mag-budget." },
+        { "lang": "en", "text": "I need to pay my credit card bill tomorrow." } ] },
+
+    { "id": "n14", "split": "dev", "lang": "tl", "label": "Lipat sa Cebu",
+      "text": "Lilipat na kami sa Cebu sa susunod na buwan pero lihim pa ito sa opisina.",
+      "disclosures": [
+        { "lang": "en", "text": "We're moving to Cebu next month, but my office doesn't know yet." },
+        { "lang": "tl", "text": "Lilipat na kami ng Cebu sa susunod na buwan, huwag mo munang sabihin sa trabaho ko." },
+        { "lang": "taglish", "text": "Relocate na kami sa Cebu soon, secret pa sa work." },
+        { "lang": "tl", "text": "Sa isang buwan aalis na kami papuntang Visayas, wala pang alam ang mga katrabaho ko." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "The flight to Cebu was delayed for two hours." },
+        { "lang": "tl", "text": "Lilipat na kami ng bahay sa kabilang kanto." },
+        { "lang": "taglish", "text": "Super ganda ng beaches sa Cebu, balik tayo next year." },
+        { "lang": "tl", "text": "Ang daming trabaho sa opisina ngayong buwan." } ] },
+
+    { "id": "n15", "split": "dev", "lang": "tl", "label": "Operasyon ni Mama",
+      "text": "Ooperahan si Mama sa puso sa Disyembre, ayaw niyang malaman ng mga kapatid niya.",
+      "disclosures": [
+        { "lang": "en", "text": "My mom is having heart surgery in December and doesn't want her siblings to know." },
+        { "lang": "tl", "text": "Magpapaopera si Mama sa puso sa Disyembre, sikreto lang sa mga tita ko." },
+        { "lang": "taglish", "text": "Heart surgery ni Mama this December, ayaw niya ipaalam sa mga tita." },
+        { "lang": "taglish", "text": "Si mommy may scheduled na operation sa heart, wag daw sabihin sa relatives." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Mama is baking cookies for the holidays." },
+        { "lang": "tl", "text": "Ang daming pasyente sa ospital kahapon." },
+        { "lang": "taglish", "text": "Si Mama yung mag-host ng Noche Buena sa Disyembre." },
+        { "lang": "taglish", "text": "Na-check up na ba yung BP mo? Ingat sa puso ha." } ] },
+
+    { "id": "n16", "split": "dev", "lang": "tl", "label": "Grado ni Jomar",
+      "text": "Bagsak si Jomar sa tatlong subject ngayong sem at hindi pa alam ng tatay niya.",
+      "disclosures": [
+        { "lang": "en", "text": "Jomar failed three subjects this semester and his dad doesn't know." },
+        { "lang": "tl", "text": "Tatlong asignatura ang ibinagsak ni Jomar, hindi pa sinasabi sa tatay niya." },
+        { "lang": "taglish", "text": "Bagsak si Jomar sa three subjects, di pa alam ni tito." },
+        { "lang": "en", "text": "He flunked three classes this term and is hiding it from his father." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Jomar is joining the basketball tryouts." },
+        { "lang": "tl", "text": "Ang hirap ng pagsusulit namin sa Matematika kanina." },
+        { "lang": "taglish", "text": "Si Jomar ang top sa quiz namin kanina, galing!" },
+        { "lang": "en", "text": "Report cards will be released next Friday." } ] },
+
+    { "id": "n17", "split": "test", "lang": "tl", "label": "Alok ng Banco Silangan",
+      "text": "Tinanggap ko ang alok ng Banco Silangan, doble ang magiging sahod ko roon.",
+      "disclosures": [
+        { "lang": "en", "text": "I accepted the offer from Banco Silangan, and my salary will double." },
+        { "lang": "tl", "text": "Pumayag na ako sa trabaho sa bangko, dalawang beses ng sweldo ko ngayon ang ibibigay nila." },
+        { "lang": "taglish", "text": "Na-accept ko na yung offer, double ang sahod ko dun." },
+        { "lang": "tl", "text": "Lilipat na ako sa Banco Silangan, doble ang kikitain ko." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Banco Silangan has a new branch near the mall." },
+        { "lang": "tl", "text": "Kailan kaya ang sahod natin ngayong buwan?" },
+        { "lang": "taglish", "text": "Need ko mag-open ng savings account, saan maganda?" },
+        { "lang": "tl", "text": "Mahaba ang pila sa Banco Silangan kanina." } ] },
+
+    { "id": "n18", "split": "test", "lang": "tl", "label": "Pagbubuntis ni Ate Joy",
+      "text": "Buntis si Ate Joy pero hindi pa kasal, kaya ayaw muna niyang ipaalam kina Lolo.",
+      "disclosures": [
+        { "lang": "en", "text": "Joy is pregnant and isn't married yet, so she's keeping it from our grandparents." },
+        { "lang": "tl", "text": "Nagdadalang-tao si Ate Joy, hindi pa sila kasal ng nobyo niya." },
+        { "lang": "taglish", "text": "Preggy si Ate Joy, pero secret muna kay Lolo kasi di pa sila kasal." },
+        { "lang": "taglish", "text": "May baby na on the way yung pinsan ko, wala pang kasal kaya tahimik muna." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Ate Joy is going to Manila for a seminar." },
+        { "lang": "tl", "text": "Ikakasal na ang kapitbahay namin sa Mayo." },
+        { "lang": "taglish", "text": "Ang cute ng baby ng officemate ko!" },
+        { "lang": "taglish", "text": "Bibisitahin namin si Lolo sa probinsya next week." } ] },
+
+    { "id": "n19", "split": "test", "lang": "tl", "label": "Tanggalan sa kumpanya",
+      "text": "Magtatanggal ng limampung empleyado ang kumpanya namin bago mag-Pasko.",
+      "disclosures": [
+        { "lang": "en", "text": "Our company is laying off fifty people before Christmas." },
+        { "lang": "tl", "text": "Limampung tao ang aalisin sa kumpanya namin bago mag-Pasko." },
+        { "lang": "taglish", "text": "May layoff sa company namin before Christmas, mga fifty employees daw." },
+        { "lang": "en", "text": "Management plans to cut about fifty jobs before the holidays." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Our company Christmas party is on the twentieth." },
+        { "lang": "tl", "text": "Maraming bagong empleyado ang nagsanay kahapon." },
+        { "lang": "taglish", "text": "Grabe yung bonus season, excited na ko sa 13th month." },
+        { "lang": "en", "text": "The company is renovating the third floor." } ] },
+
+    { "id": "n20", "split": "test", "lang": "tl", "label": "Relasyon ni Kuya Dennis",
+      "text": "May karelasyon si Kuya Dennis na lalaki, at hindi pa niya inaamin sa pamilya.",
+      "disclosures": [
+        { "lang": "en", "text": "Kuya Dennis has a boyfriend, but he hasn't come out to the family yet." },
+        { "lang": "tl", "text": "May nobyo pala si Kuya, hindi pa niya sinasabi kina Mama at Papa." },
+        { "lang": "taglish", "text": "Si Kuya Dennis may jowa na guy, di pa siya out sa family." },
+        { "lang": "tl", "text": "Lalaki ang kasintahan ng kuya ko, lihim pa sa buong pamilya." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Kuya Dennis fixed our water heater." },
+        { "lang": "tl", "text": "Ang daming bisita sa bahay nina Tita kahapon." },
+        { "lang": "taglish", "text": "Si Kuya Dennis yung driver natin papuntang airport bukas." },
+        { "lang": "tl", "text": "Masaya ang pamilya namin noong reunion." } ] },
+
+    { "id": "n21", "split": "test", "lang": "tl", "label": "Kaso ni Engr. Villanueva",
+      "text": "May isinampang kaso laban kay Engr. Villanueva dahil sa pekeng permit ng gusali.",
+      "disclosures": [
+        { "lang": "en", "text": "Engineer Villanueva is being sued over a fake building permit." },
+        { "lang": "tl", "text": "Kinasuhan si Engr. Villanueva dahil peke raw ang permit ng gusali." },
+        { "lang": "taglish", "text": "May case na against sa engineer namin, fake daw yung permit ng building." },
+        { "lang": "taglish", "text": "Na-sue si Villanueva dahil sa pekeng building permit, wag mo ikalat." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Engr. Villanueva will inspect the site on Monday." },
+        { "lang": "tl", "text": "Kailangan pa naming kumuha ng permit para sa negosyo sa munisipyo." },
+        { "lang": "taglish", "text": "Grabe yung traffic sa construction site kanina." },
+        { "lang": "taglish", "text": "Ang galing ng design ni Engr. Villanueva sa bagong mall." } ] },
+
+    { "id": "n22", "split": "test", "lang": "tl", "label": "Lupa ni Lola",
+      "text": "Ibinenta ko nang palihim ang lupa ni Lola para may pang-placement fee ako papuntang Canada.",
+      "disclosures": [
+        { "lang": "en", "text": "I secretly sold Lola's land to pay my placement fee for Canada." },
+        { "lang": "tl", "text": "Nabenta ko na yung lupa ni Lola, walang nakakaalam, pambayad ko sa ahensya papuntang Canada." },
+        { "lang": "taglish", "text": "Binenta ko yung lupa ng lola ko para sa placement fee abroad, secret lang." },
+        { "lang": "en", "text": "I sold my grandmother's property without telling anyone so I could pay the agency fee." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Lola is turning ninety this year." },
+        { "lang": "tl", "text": "Ang dami nang kakilala kong nangibang-bansa ngayong taon." },
+        { "lang": "taglish", "text": "Mag-a-apply ako ng visa for Canada next month, tourist lang." },
+        { "lang": "en", "text": "The land prices in our province have gone up." } ] },
+
+    { "id": "n23", "split": "test", "lang": "tl", "label": "Proposal ni Rico",
+      "text": "Magpo-propose si Rico kay Anna sa Baguio sa anibersaryo nila.",
+      "disclosures": [
+        { "lang": "en", "text": "Rico is going to propose to Anna in Baguio on their anniversary." },
+        { "lang": "tl", "text": "Mag-aalok na ng kasal si Rico sa anibersaryo nila, sa Baguio pa." },
+        { "lang": "taglish", "text": "Si Rico, magpo-propose na kay Anna! Shh lang." },
+        { "lang": "tl", "text": "Hihingin na niya ang kamay ng kasintahan niya sa anibersaryo nila sa bundok." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Rico and Anna went hiking last weekend." },
+        { "lang": "tl", "text": "Ang lamig sa Baguio ngayong Enero." },
+        { "lang": "taglish", "text": "Anna said she wants strawberry taho pag-uwi from Baguio." },
+        { "lang": "tl", "text": "Kailan ang anibersaryo ng mga magulang mo?" } ] },
+
+    { "id": "n24", "split": "test", "lang": "tl", "label": "Sakit ni Boss Lito",
+      "text": "May stage three cancer si Boss Lito pero ayaw niyang malaman ng mga empleyado.",
+      "disclosures": [
+        { "lang": "en", "text": "Our boss has stage three cancer and is hiding it from the staff." },
+        { "lang": "tl", "text": "May kanser pala si Sir Lito, ayaw niyang ipaalam sa mga tauhan niya." },
+        { "lang": "taglish", "text": "Si Boss Lito may cancer, stage three na daw, secret sa employees." },
+        { "lang": "taglish", "text": "Yung may-ari ng company namin, may malubhang sakit pala, ayaw niya ipaalam sa staff." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Lito approved our leave requests." },
+        { "lang": "tl", "text": "Libre ang pagpapasuri sa kanser sa health center sa Sabado." },
+        { "lang": "taglish", "text": "Si Boss Lito ang magbibigay ng speech sa anniversary party." },
+        { "lang": "taglish", "text": "Ang daming employees na naka-sick leave ngayong linggo." } ] },
+
+    { "id": "n25", "split": "dev", "lang": "taglish", "label": "Joanna's school",
+      "text": "Ita-transfer na namin si Joanna sa public school next year kasi di na namin kaya ang tuition.",
+      "disclosures": [
+        { "lang": "en", "text": "We're moving Joanna to a public school next year because we can't afford the tuition anymore." },
+        { "lang": "tl", "text": "Ililipat na namin si Joanna sa pampublikong paaralan, hindi na kaya ang matrikula." },
+        { "lang": "taglish", "text": "Next year public school na si Joanna, di na kaya ng budget yung tuition." },
+        { "lang": "en", "text": "Our daughter is switching to public school since the tuition is too much for us now." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Joanna got a medal in the science fair." },
+        { "lang": "tl", "text": "Mahal na talaga ang matrikula sa mga pribadong paaralan." },
+        { "lang": "taglish", "text": "Si Joanna yung muse ng section nila this year." },
+        { "lang": "en", "text": "School supplies are on sale at the mall this week." } ] },
+
+    { "id": "n26", "split": "dev", "lang": "taglish", "label": "Ella's side business",
+      "text": "Si Ella may online selling business on the side, bawal kasi yun sa company policy nila.",
+      "disclosures": [
+        { "lang": "en", "text": "Ella runs an online shop on the side even though her company doesn't allow it." },
+        { "lang": "tl", "text": "May tindahan pala online si Ella, kahit bawal sa kumpanya nila." },
+        { "lang": "taglish", "text": "May side hustle siya na online selling, pero against sa company policy nila." },
+        { "lang": "tl", "text": "Nagbebenta siya online nang palihim, ipinagbabawal kasi iyon sa trabaho niya." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Ella sent me the meeting notes." },
+        { "lang": "tl", "text": "Ang dami nang nagbebenta online ngayon." },
+        { "lang": "taglish", "text": "Na-receive mo na ba yung order mo from Shopee?" },
+        { "lang": "tl", "text": "Mabait si Ella sa mga bagong empleyado." } ] },
+
+    { "id": "n27", "split": "dev", "lang": "taglish", "label": "Marvin in rehab",
+      "text": "Si Marvin naka-rehab ngayon for drug addiction, sinasabi lang namin na nasa abroad siya.",
+      "disclosures": [
+        { "lang": "en", "text": "Marvin is actually in rehab for drugs; we just tell people he's working abroad." },
+        { "lang": "tl", "text": "Nasa rehab si Marvin dahil sa droga, ang alam ng iba nasa ibang bansa siya." },
+        { "lang": "taglish", "text": "Yung pinsan ko, nasa rehab for drugs, kunwari nasa abroad daw siya." },
+        { "lang": "taglish", "text": "Hindi talaga OFW yung kuya ni Ana, naka-rehab siya for addiction." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Marvin sent a postcard from Dubai." },
+        { "lang": "tl", "text": "Maraming kabataan ang nalululong sa droga ayon sa balita." },
+        { "lang": "taglish", "text": "Si Marvin yung mag-aasikaso ng papers for the reunion." },
+        { "lang": "taglish", "text": "Ang dami ng OFW na umuuwi this Christmas." } ] },
+
+    { "id": "n28", "split": "dev", "lang": "taglish", "label": "Annulment",
+      "text": "Nag-file na ako ng annulment against kay Jerome, pero di pa alam ng parents ko.",
+      "disclosures": [
+        { "lang": "en", "text": "I filed for annulment from Jerome and my parents don't know yet." },
+        { "lang": "tl", "text": "Nagsampa na ako ng annulment laban kay Jerome, lihim pa sa mga magulang ko." },
+        { "lang": "taglish", "text": "Annulment process na kami ni Jerome, secret pa sa parents ko." },
+        { "lang": "en", "text": "I'm ending my marriage legally, and I haven't told my mom and dad." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Jerome is picking up the kids from school today." },
+        { "lang": "tl", "text": "Mahal pala ang abogado para sa annulment, sabi ng katrabaho ko." },
+        { "lang": "taglish", "text": "Si Jerome yung nag-ayos ng aircon namin kahapon." },
+        { "lang": "en", "text": "My parents are celebrating their thirtieth anniversary." } ] },
+
+    { "id": "n29", "split": "test", "lang": "taglish", "label": "Kidney for Bea",
+      "text": "Magdo-donate ako ng kidney kay Bea sa March, pero ayaw ni Mommy kaya di ko pa sinasabi.",
+      "disclosures": [
+        { "lang": "en", "text": "I'm donating one of my kidneys to Bea in March, but I haven't told Mom." },
+        { "lang": "tl", "text": "Ibibigay ko ang isang bato ko kay Bea sa Marso, hindi pa alam ni Mommy." },
+        { "lang": "taglish", "text": "Kidney donor na ko for Bea this March, secret muna kay Mommy." },
+        { "lang": "tl", "text": "Ako ang magiging donor ng bato ng kaibigan ko, lihim pa sa nanay ko." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Bea is coming home from Singapore in March." },
+        { "lang": "tl", "text": "Uminom ka ng maraming tubig para sa bato mo." },
+        { "lang": "taglish", "text": "Si Mommy at si Bea nag-shopping kanina sa mall." },
+        { "lang": "tl", "text": "May blood donation drive sa barangay hall bukas." } ] },
+
+    { "id": "n30", "split": "test", "lang": "taglish", "label": "House in Laguna",
+      "text": "May naipon na kaming down payment para sa house and lot sa Laguna, wag muna ipagsabi sa relatives.",
+      "disclosures": [
+        { "lang": "en", "text": "We've saved enough for a down payment on a house in Laguna, don't tell the relatives." },
+        { "lang": "tl", "text": "May sapat na kaming ipon para sa paunang bayad ng bahay sa Laguna." },
+        { "lang": "taglish", "text": "Ready na yung DP namin for a house and lot, secret muna sa mga kamag-anak." },
+        { "lang": "taglish", "text": "Kukuha na kami ng bahay sa south, may pang-down na kami, wag mo ikwento sa pamilya." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "The traffic going to Laguna was terrible this morning." },
+        { "lang": "tl", "text": "Ang mahal na ng mga bahay ngayon." },
+        { "lang": "taglish", "text": "Nag-swimming kami sa resort sa Laguna last weekend." },
+        { "lang": "taglish", "text": "Need ko mag-ipon for my birthday trip next year." } ] },
+
+    { "id": "n31", "split": "test", "lang": "taglish", "label": "Physics answer key",
+      "text": "Nakuha ni Carlo ang answer key ng final exam sa Physics bago pa ito ibigay.",
+      "disclosures": [
+        { "lang": "en", "text": "Carlo got hold of the Physics final answer key before the exam." },
+        { "lang": "tl", "text": "May hawak na palang sagot si Carlo sa huling pagsusulit bago pa ito ibinigay." },
+        { "lang": "taglish", "text": "Si Carlo may copy ng answer key sa Physics finals, shh ka lang." },
+        { "lang": "en", "text": "Someone in our class had the answers to the final exam ahead of time." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Carlo is the best in our Physics class." },
+        { "lang": "tl", "text": "Ang hirap ng pagsusulit sa Kimika kahapon." },
+        { "lang": "taglish", "text": "Pa-share naman ng reviewer mo sa Physics." },
+        { "lang": "en", "text": "The final exam schedule was posted today." } ] },
+
+    { "id": "n32", "split": "test", "lang": "taglish", "label": "Sir Gary in Tagaytay",
+      "text": "Nakita ko si Sir Gary na may kasamang ibang babae sa Tagaytay, eh kasal siya kay Ma'am Liza.",
+      "disclosures": [
+        { "lang": "en", "text": "I saw Sir Gary in Tagaytay with a woman who isn't his wife." },
+        { "lang": "tl", "text": "May kasamang ibang babae si Sir Gary sa Tagaytay, hindi si Ma'am Liza." },
+        { "lang": "taglish", "text": "Grabe, nakita ko yung boss namin with another girl, eh may asawa siya." },
+        { "lang": "tl", "text": "Nahuli ko ang may-asawang manager namin na may kasamang ibang babae noong Sabado." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Sir Gary and Ma'am Liza celebrated their anniversary in Tagaytay." },
+        { "lang": "tl", "text": "Ang sarap ng bulalo sa Tagaytay." },
+        { "lang": "taglish", "text": "Si Sir Gary ang mag-a-approve ng budget natin." },
+        { "lang": "tl", "text": "Ang ganda ng damit ni Ma'am Liza kanina." } ] },
+
+    { "id": "n33", "split": "test", "lang": "taglish", "label": "Restaurant closing",
+      "text": "Lugi na yung restaurant namin sa Maginhawa, isasara na namin by end of the month.",
+      "disclosures": [
+        { "lang": "en", "text": "Our restaurant on Maginhawa is losing money and we're closing it at the end of the month." },
+        { "lang": "tl", "text": "Nalulugi na ang kainan namin sa Maginhawa, magsasara na kami sa katapusan." },
+        { "lang": "taglish", "text": "Lugi na talaga yung resto namin sa Maginhawa, close na kami this month." },
+        { "lang": "taglish", "text": "Yung business namin, malapit na mag-close kasi palugi na, wag mo muna ipagkalat." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "There's a new milk tea shop on Maginhawa." },
+        { "lang": "tl", "text": "Ang daming kumain sa amin noong Sabado." },
+        { "lang": "taglish", "text": "Try mo yung sisig sa Maginhawa, ang sarap!" },
+        { "lang": "taglish", "text": "Ang mahal ng rent ng commercial spaces ngayon." } ] },
+
+    { "id": "n34", "split": "test", "lang": "taglish", "label": "Gwen's test",
+      "text": "Positive yung pregnancy test ni Gwen kahapon pero di pa niya sinasabi sa boyfriend niya.",
+      "disclosures": [
+        { "lang": "en", "text": "Gwen took a pregnancy test yesterday and it was positive, her boyfriend doesn't know yet." },
+        { "lang": "tl", "text": "Buntis pala si Gwen, hindi pa niya sinasabi sa nobyo niya." },
+        { "lang": "taglish", "text": "Si Gwen, positive sa PT kahapon, wala pang alam yung bf niya." },
+        { "lang": "en", "text": "My friend just found out she's expecting, and she hasn't told her partner." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Gwen tested positive for flu last week." },
+        { "lang": "tl", "text": "Bumili ako ng bitamina sa botika kahapon." },
+        { "lang": "taglish", "text": "Si Gwen yung bagong intern sa marketing team." },
+        { "lang": "en", "text": "My cousin just had her baby shower." } ] },
+
+    { "id": "n35", "split": "test", "lang": "taglish", "label": "Nestor's record",
+      "text": "Nakulong dati si Nestor for estafa, kaya ayaw niyang malaman ng bago niyang employer.",
+      "disclosures": [
+        { "lang": "en", "text": "Nestor served time for estafa before, and his new employer doesn't know." },
+        { "lang": "tl", "text": "Nakulong pala si Nestor dahil sa estafa, lihim iyon sa bago niyang amo." },
+        { "lang": "taglish", "text": "May record si Nestor, nakulong for estafa dati, wag mong sabihin sa company nila." },
+        { "lang": "tl", "text": "Dating bilanggo ang bago naming kasama sa trabaho, kaso ng panloloko." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Nestor is a great cook, you should try his kare-kare." },
+        { "lang": "tl", "text": "Napanood mo ba yung balita tungkol sa estafa sa bayan?" },
+        { "lang": "taglish", "text": "Si Nestor yung bagong supervisor sa warehouse." },
+        { "lang": "tl", "text": "Mahigpit ang pagsusuri ng background sa bago kong trabaho." } ] },
+
+    { "id": "n36", "split": "test", "lang": "taglish", "label": "Uncle Ben's lotto",
+      "text": "Nanalo si Uncle Ben ng lotto, mga ilang milyon, pero tinatago niya para walang mangutang.",
+      "disclosures": [
+        { "lang": "en", "text": "Uncle Ben won millions in the lotto but he's keeping it quiet so nobody borrows money." },
+        { "lang": "tl", "text": "Milyonaryo na pala si Uncle Ben dahil sa lotto, tinatago lang niya." },
+        { "lang": "taglish", "text": "Nanalo sa lotto si tito, milyones daw, secret para walang mangutang." },
+        { "lang": "taglish", "text": "Yung tito ko instant millionaire dahil sa lotto, pero hush hush lang." } ],
+      "nonDisclosures": [
+        { "lang": "en", "text": "Uncle Ben is fixing our gate this afternoon." },
+        { "lang": "tl", "text": "Tumaya ako sa lotto kahapon, sana manalo." },
+        { "lang": "taglish", "text": "Si Uncle Ben yung nag-sponsor ng liga sa barangay." },
+        { "lang": "taglish", "text": "Ang laki ng jackpot ng lotto ngayon, grabe." } ] }
+  ]
+}

@@ -26,6 +26,11 @@ import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import com.secondlook.DetectionEngine
+import com.secondlook.SecretManager
+import com.secondlook.Warning
+import com.secondlook.WarningType
+import com.secondlook.ai.OnnxAiAdapter
 import com.secondlook.ai.Redactor
 import com.secondlook.ai.RiskCategory
 import com.secondlook.ai.RiskResult
@@ -72,6 +77,17 @@ class MainActivity : Activity() {
     private var shownText: String? = null       // what the verdict on screen is about, for "Itago"
     private var shownResult: RiskResult? = null
 
+    // Keyboard mirror: the keyboard's own DetectionEngine + SecretManager (copied from Android App at build time)
+    private lateinit var kbStatus: TextView
+    private lateinit var kbVerdict: TextView
+    private lateinit var kbTip: TextView
+    private lateinit var kbCategory: TextView
+    private lateinit var kbVaultBox: LinearLayout
+    private lateinit var kbLabel: EditText
+    private lateinit var kbValue: EditText
+    private var kbText: String? = null
+    private var kbWarning: Warning? = null
+
     private val checkRunnable = Runnable { runCheck() }
 
     private val samples = listOf(   // all synthetic. Everyday Filipinos first; developer secrets last (secondary)
@@ -98,7 +114,9 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         buildUi()
+        DetectionEngine.init(applicationContext)   // the keyboard's engine: finds OnnxAiAdapter by name, loads it in the background
         loadModels()
+        refreshVault()
     }
 
     override fun onDestroy() {
@@ -151,9 +169,14 @@ class MainActivity : Activity() {
     }
 
     private fun runCheck() {
-        val c = checker ?: return
         val text = input.text.toString()
         val v = ++version
+        worker.execute {   // what the keyboard shows: its DetectionEngine (OnnxAiAdapter once loaded, its regex until then)
+            val w = DetectionEngine.detectSync(text)
+            val category = w?.let { OnnxAiAdapter.categoryFor(text) }
+            if (v == version) ui.post { renderKeyboard(text, w, category) }
+        }
+        val c = checker ?: return
         worker.execute {
             val t0 = SystemClock.elapsedRealtime()
             val report = c.checkDetailed(text)
@@ -212,6 +235,55 @@ class MainActivity : Activity() {
                 "  ${it.noteLabel}: ${"%.3f".format(it.score)}" + if (it.anchors.isNotEmpty()) "  [private word in draft: ${it.anchors.joinToString()}]" else ""
             })
     }
+
+    // ---- keyboard mirror ------------------------------------------------------------------------------
+
+    private fun renderKeyboard(text: String, w: Warning?, category: String?) {
+        kbText = text
+        kbWarning = w
+        kbStatus.text = "Engine: ${DetectionEngine.getActiveEngineName()}" + if (DetectionEngine.isReady) "" else " (loading…)"
+        when {
+            text.isBlank() -> { kbVerdict.text = "Type above or tap a quick test."; kbVerdict.setTextColor(Color.GRAY); kbTip.text = ""; kbCategory.text = "" }
+            w == null -> { kbVerdict.text = "✓ No banner"; kbVerdict.setTextColor(Color.parseColor("#1B5E20")); kbTip.text = ""; kbCategory.text = "" }
+            else -> {
+                val high = w.type == WarningType.HIGH
+                kbVerdict.text = "${if (high) "🔴" else "🟡"} ${w.headline}"
+                kbVerdict.setTextColor(Color.parseColor(if (high) "#B71C1C" else "#9A5B00"))
+                kbTip.text = w.tip
+                kbCategory.text = category ?: "(regex fallback: no AI category)"
+            }
+        }
+    }
+
+    /** The Flutter "Teach me" screen's storage: SecretManager.addSecret(label, value), 5 notes max. */
+    private fun refreshVault() {
+        worker.execute {
+            val list = SecretManager.getSecrets(this)
+            ui.post {
+                kbVaultBox.removeAllViews()
+                if (list.isEmpty()) kbVaultBox.addView(text("Vault is empty.", 13f, color = Color.GRAY))
+                for (s in list) {
+                    val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+                    row.addView(text("🔒 ${s.label}", 15f, true), LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+                    row.addView(button("Delete") { worker.execute { SecretManager.deleteSecret(this, s.id); ui.post { refreshVault(); scheduleCheck() } } })
+                    kbVaultBox.addView(row)
+                }
+            }
+        }
+    }
+
+    private fun saveVault() {
+        val label = kbLabel.text.toString().trim()
+        val value = kbValue.text.toString().trim()
+        if (label.isEmpty() || value.isEmpty()) return toast("Pakilagay ang label at ang sikreto.")
+        worker.execute {
+            if (SecretManager.getSecrets(this).size >= 5) { ui.post { toast("Vault is full (5)") }; return@execute }
+            SecretManager.addSecret(this, label, value)
+            ui.post { kbLabel.setText(""); kbValue.setText(""); refreshVault(); scheduleCheck(); toast("Protektado na ang \"$label\"!") }
+        }
+    }
+
+    private fun setDraft(t: String) { input.setText(t); input.setSelection(t.length) }
 
     // ---- notes ----------------------------------------------------------------------------------------
 
@@ -300,6 +372,44 @@ class MainActivity : Activity() {
         result.addView(verdict); result.addView(tipView); result.addView(hideBtn); result.addView(preview); result.addView(details)
         col.addView(result)
 
+        // Keyboard mirror: exactly what the keyboard app runs (its DetectionEngine + SecretManager + the handoff adapter)
+        val kb = card()
+        kb.addView(text("Keyboard mirror", 16f, true))
+        kb.addView(text("Klarenz's DetectionEngine and SecretManager (copied from Android App when this app is built) with OnnxAiAdapter: the banner the keyboard would show for the draft above.", 12f, color = Color.DKGRAY))
+        kbStatus = text("Engine: loading…", 12f, color = Color.DKGRAY)
+        kbVerdict = text("Type above or tap a quick test.", 16f, true, Color.GRAY)
+        kbTip = text("", 13f, color = Color.DKGRAY)
+        kbCategory = text("", 12f, true, Color.parseColor("#5B21B6"))
+        kb.addView(kbStatus); kb.addView(kbCategory); kb.addView(kbVerdict); kb.addView(kbTip)
+        kb.addView(button("🙈 Itago (keyboard)") {
+            val t = kbText ?: return@button
+            if (input.text.toString() != t) return@button
+            val w = kbWarning
+            worker.execute { val masked = DetectionEngine.hide(t, w); ui.post { if (input.text.toString() == t) setDraft(masked) } }
+        })
+        val quick = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        for ((name, t) in listOf(   // the Flutter Practice screen's quick tests
+            "Lola OTP" to "Anak, eto yung code na pinadala sa akin:\n482913",
+            "ML Password" to "Pre, ito yung ML password ko: hunter2",
+            "Gemini Key" to "Here is my Gemini API key: AIzaSyD3x920Kla82HjK981qWe",
+            "GCash No." to "Pa-GCash na lang sa 09171234567",
+        )) quick.addView(button(name) { setDraft(t) })
+        quick.addView(button("Private Note") {
+            worker.execute {
+                val first = SecretManager.getSecrets(this).firstOrNull()?.value
+                ui.post { setDraft(if (first != null) "My secret passcode is: $first" else "My secret note: secretpin88") }
+            }
+        })
+        kb.addView(HorizontalScrollView(this).apply { addView(quick); isHorizontalScrollBarEnabled = false })
+        kb.addView(text("Vault (the Flutter \"Teach me\" screen)", 14f, true))
+        kbLabel = EditText(this).apply { hint = "Label (e.g., Jakim's Location, GCash MPIN)"; setSingleLine() }
+        kbValue = EditText(this).apply { hint = "Enter the sensitive details to protect..." }
+        kb.addView(kbLabel); kb.addView(kbValue)
+        kb.addView(button("Save to vault") { saveVault() })
+        kbVaultBox = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        kb.addView(kbVaultBox)
+        col.addView(kb)
+
         // Private notes ("Teach me what's private")
         val notes = card()
         notes.addView(text("Teach me what's private", 16f, true))
@@ -351,6 +461,26 @@ class MainActivity : Activity() {
         thresholdLabel.text = "Similarity needed when no private word appears: 0.75  (lower = warns more)"
         notes.addView(thresholdLabel); notes.addView(thresholdBar)
         col.addView(notes)
+
+        // Gate 3 phone gate: private-note check speed (see gate3/README.md)
+        val bench = card()
+        bench.addView(text("Gate 3 speed test (private notes)", 16f, true))
+        bench.addView(text("Times the private-note check with 5 notes, after warm-up. Keep the phone in airplane mode and write down p95.", 12f, color = Color.DKGRAY))
+        val benchOut = text("", 13f)
+        bench.addView(button("Run speed test") {
+            benchOut.text = "Running… (about a minute per model)"
+            worker.execute {
+                val lines = Gate3Bench.models(this).map { dir ->
+                    runCatching { Gate3Bench.run(this, dir) }.fold(
+                        { r -> "${r.model}: load ${r.loadMs} ms, p50 ${"%.1f".format(r.p50)} ms, p95 ${"%.1f".format(r.p95)} ms (${r.checks} checks)" },
+                        { e -> "$dir: FAILED ${e.javaClass.simpleName}: ${e.message}" },
+                    )
+                }
+                ui.post { benchOut.text = lines.joinToString("\n") + "\n" + permissionLine() }
+            }
+        })
+        bench.addView(benchOut)
+        col.addView(bench)
 
         val dbg = card()
         dbg.addView(text("Debug", 14f, true))

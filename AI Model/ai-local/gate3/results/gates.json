@@ -1,0 +1,392 @@
+{
+  "date": "2026-10-10",
+  "verdict": "FAIL: keep the current model",
+  "gates": [
+    {
+      "gate": "Tagalog/Taglish disclosure recall (test)",
+      "baseline": 0.4696969696969697,
+      "candidate": 0.48484848484848486,
+      "required": ">= baseline + 10 points",
+      "pass": false
+    },
+    {
+      "gate": "False-alarm rate (test)",
+      "baseline": 0.14583333333333334,
+      "candidate": 0.13541666666666666,
+      "required": "<= baseline and <= 10%",
+      "pass": false
+    },
+    {
+      "gate": "English disclosure recall (test)",
+      "baseline": 0.3333333333333333,
+      "candidate": 0.3333333333333333,
+      "required": ">= baseline - 2 points",
+      "pass": true
+    },
+    {
+      "gate": "Tatoeba tgl-eng top-1 (mean of both directions)",
+      "baseline": 0.046,
+      "candidate": 0.0465,
+      "required": ">= baseline + 10 points",
+      "pass": false
+    },
+    {
+      "gate": "Quantized model size (MB)",
+      "baseline": 23.0,
+      "candidate": 23.0,
+      "required": "< 30 MB",
+      "pass": true
+    },
+    {
+      "gate": "Warmed-up Gate 3 p95 on the Tecno Spark (ms)",
+      "baseline": null,
+      "candidate": null,
+      "required": "< 10 ms (run the test app's speed test)",
+      "pass": null
+    }
+  ],
+  "checks": {
+    "parity_token_mismatches": 0,
+    "parity_cosine_min": 0.9999994039535522,
+    "alt_pairs_overlapping_eval_sets": 0,
+    "notes_set_review": "pending"
+  },
+  "baseline": {
+    "name": "shipped",
+    "modelBytes": 22972370,
+    "tatoeba": {
+      "enToTl": 0.06,
+      "mean": 0.046,
+      "tlToEn": 0.032,
+      "pairs": 1000
+    },
+    "thresholds": {
+      "default": {
+        "high": 0.75,
+        "floor": 0.35
+      },
+      "devTuned": {
+        "high": 0.61,
+        "rule": "max dev recall with dev false alarms <= 10%",
+        "floor": 0.58
+      }
+    },
+    "latencyPcMs": {
+      "checks": 576,
+      "p50": 3.7842,
+      "p95": 5.8259
+    },
+    "test": {
+      "default": {
+        "all": {
+          "recall": 0.4270833333333333,
+          "fn": 55,
+          "falseAlarmRate": 0.19791666666666666,
+          "fp": 19,
+          "tn": 77,
+          "tp": 41
+        },
+        "lang_en": {
+          "recall": 0.4666666666666667,
+          "fn": 16,
+          "falseAlarmRate": 0.3,
+          "fp": 9,
+          "tn": 21,
+          "tp": 14
+        },
+        "lang_tl": {
+          "recall": 0.48484848484848486,
+          "fn": 17,
+          "falseAlarmRate": 0.06060606060606061,
+          "fp": 2,
+          "tn": 31,
+          "tp": 16
+        },
+        "lang_taglish": {
+          "recall": 0.3333333333333333,
+          "fn": 22,
+          "falseAlarmRate": 0.24242424242424243,
+          "fp": 8,
+          "tn": 25,
+          "tp": 11
+        },
+        "lang_tl_or_taglish": {
+          "recall": 0.4090909090909091,
+          "fn": 39,
+          "falseAlarmRate": 0.15151515151515152,
+          "fp": 10,
+          "tn": 56,
+          "tp": 27
+        },
+        "anchor_present": {
+          "recall": 0.9473684210526315,
+          "fn": 2,
+          "falseAlarmRate": 0.6551724137931034,
+          "fp": 19,
+          "tn": 10,
+          "tp": 36
+        },
+        "anchor_absent": {
+          "recall": 0.08620689655172414,
+          "fn": 53,
+          "falseAlarmRate": 0,
+          "fp": 0,
+          "tn": 67,
+          "tp": 5
+        }
+      },
+      "devTuned": {
+        "all": {
+          "recall": 0.4270833333333333,
+          "fn": 55,
+          "falseAlarmRate": 0.14583333333333334,
+          "fp": 14,
+          "tn": 82,
+          "tp": 41
+        },
+        "lang_en": {
+          "recall": 0.3333333333333333,
+          "fn": 20,
+          "falseAlarmRate": 0.03333333333333333,
+          "fp": 1,
+          "tn": 29,
+          "tp": 10
+        },
+        "lang_tl": {
+          "recall": 0.45454545454545453,
+          "fn": 18,
+          "falseAlarmRate": 0.21212121212121213,
+          "fp": 7,
+          "tn": 26,
+          "tp": 15
+        },
+        "lang_taglish": {
+          "recall": 0.48484848484848486,
+          "fn": 17,
+          "falseAlarmRate": 0.18181818181818182,
+          "fp": 6,
+          "tn": 27,
+          "tp": 16
+        },
+        "lang_tl_or_taglish": {
+          "recall": 0.4696969696969697,
+          "fn": 35,
+          "falseAlarmRate": 0.19696969696969696,
+          "fp": 13,
+          "tn": 53,
+          "tp": 31
+        },
+        "anchor_present": {
+          "recall": 0.631578947368421,
+          "fn": 14,
+          "falseAlarmRate": 0.13793103448275862,
+          "fp": 4,
+          "tn": 25,
+          "tp": 24
+        },
+        "anchor_absent": {
+          "recall": 0.29310344827586204,
+          "fn": 41,
+          "falseAlarmRate": 0.14925373134328357,
+          "fp": 10,
+          "tn": 57,
+          "tp": 17
+        }
+      },
+      "auc": {
+        "all": 0.6928168402777778,
+        "tl": 0.660238751147842,
+        "en": 0.7144444444444444,
+        "taglish": 0.7327823691460055
+      },
+      "ownNoteTop1": 0.625
+    },
+    "dev": {
+      "default": {
+        "recall": 0.3541666666666667,
+        "fn": 31,
+        "falseAlarmRate": 0.1875,
+        "fp": 9,
+        "tn": 39,
+        "tp": 17
+      },
+      "devTuned": {
+        "recall": 0.4791666666666667,
+        "fn": 25,
+        "falseAlarmRate": 0.0625,
+        "fp": 3,
+        "tn": 45,
+        "tp": 23
+      }
+    }
+  },
+  "candidate": {
+    "name": "control",
+    "modelBytes": 23019416,
+    "tatoeba": {
+      "enToTl": 0.058,
+      "mean": 0.0465,
+      "tlToEn": 0.035,
+      "pairs": 1000
+    },
+    "thresholds": {
+      "default": {
+        "high": 0.75,
+        "floor": 0.35
+      },
+      "devTuned": {
+        "high": 0.61,
+        "rule": "max dev recall with dev false alarms <= 10%",
+        "floor": 0.59
+      }
+    },
+    "latencyPcMs": {
+      "checks": 576,
+      "p50": 6.0841,
+      "p95": 11.0519
+    },
+    "test": {
+      "default": {
+        "all": {
+          "recall": 0.4166666666666667,
+          "fn": 56,
+          "falseAlarmRate": 0.20833333333333334,
+          "fp": 20,
+          "tn": 76,
+          "tp": 40
+        },
+        "lang_en": {
+          "recall": 0.43333333333333335,
+          "fn": 17,
+          "falseAlarmRate": 0.3,
+          "fp": 9,
+          "tn": 21,
+          "tp": 13
+        },
+        "lang_tl": {
+          "recall": 0.48484848484848486,
+          "fn": 17,
+          "falseAlarmRate": 0.06060606060606061,
+          "fp": 2,
+          "tn": 31,
+          "tp": 16
+        },
+        "lang_taglish": {
+          "recall": 0.3333333333333333,
+          "fn": 22,
+          "falseAlarmRate": 0.2727272727272727,
+          "fp": 9,
+          "tn": 24,
+          "tp": 11
+        },
+        "lang_tl_or_taglish": {
+          "recall": 0.4090909090909091,
+          "fn": 39,
+          "falseAlarmRate": 0.16666666666666666,
+          "fp": 11,
+          "tn": 55,
+          "tp": 27
+        },
+        "anchor_present": {
+          "recall": 0.9473684210526315,
+          "fn": 2,
+          "falseAlarmRate": 0.6896551724137931,
+          "fp": 20,
+          "tn": 9,
+          "tp": 36
+        },
+        "anchor_absent": {
+          "recall": 0.06896551724137931,
+          "fn": 54,
+          "falseAlarmRate": 0,
+          "fp": 0,
+          "tn": 67,
+          "tp": 4
+        }
+      },
+      "devTuned": {
+        "all": {
+          "recall": 0.4375,
+          "fn": 54,
+          "falseAlarmRate": 0.13541666666666666,
+          "fp": 13,
+          "tn": 83,
+          "tp": 42
+        },
+        "lang_en": {
+          "recall": 0.3333333333333333,
+          "fn": 20,
+          "falseAlarmRate": 0.03333333333333333,
+          "fp": 1,
+          "tn": 29,
+          "tp": 10
+        },
+        "lang_tl": {
+          "recall": 0.48484848484848486,
+          "fn": 17,
+          "falseAlarmRate": 0.21212121212121213,
+          "fp": 7,
+          "tn": 26,
+          "tp": 16
+        },
+        "lang_taglish": {
+          "recall": 0.48484848484848486,
+          "fn": 17,
+          "falseAlarmRate": 0.15151515151515152,
+          "fp": 5,
+          "tn": 28,
+          "tp": 16
+        },
+        "lang_tl_or_taglish": {
+          "recall": 0.48484848484848486,
+          "fn": 34,
+          "falseAlarmRate": 0.18181818181818182,
+          "fp": 12,
+          "tn": 54,
+          "tp": 32
+        },
+        "anchor_present": {
+          "recall": 0.6052631578947368,
+          "fn": 15,
+          "falseAlarmRate": 0.10344827586206896,
+          "fp": 3,
+          "tn": 26,
+          "tp": 23
+        },
+        "anchor_absent": {
+          "recall": 0.3275862068965517,
+          "fn": 39,
+          "falseAlarmRate": 0.14925373134328357,
+          "fp": 10,
+          "tn": 57,
+          "tp": 19
+        }
+      },
+      "auc": {
+        "all": 0.6881510416666666,
+        "tl": 0.6629935720844812,
+        "en": 0.7055555555555556,
+        "taglish": 0.7235996326905417
+      },
+      "ownNoteTop1": 0.6041666666666666
+    },
+    "dev": {
+      "default": {
+        "recall": 0.3333333333333333,
+        "fn": 32,
+        "falseAlarmRate": 0.16666666666666666,
+        "fp": 8,
+        "tn": 40,
+        "tp": 16
+      },
+      "devTuned": {
+        "recall": 0.4583333333333333,
+        "fn": 26,
+        "falseAlarmRate": 0.0625,
+        "fp": 3,
+        "tn": 45,
+        "tp": 22
+      }
+    }
+  }
+}

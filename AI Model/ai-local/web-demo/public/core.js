@@ -40,10 +40,10 @@ export async function loadModels() {
 }
 export const modelsReady = () => Boolean(piiModel && embedder);
 
-/** Swap the embedding model (lab experiments). Name = folder under assets/models or lab-models. Returns load ms. */
-export async function useEmbedder(name) {
+/** Swap the embedding model (lab experiments, gate3-eval.mjs). Name = folder under assets/models or lab-models. Returns load ms. */
+export async function useEmbedder(name, device = 'wasm') {
   const t = performance.now();
-  embedder = await pipeline('feature-extraction', name, { dtype: 'q8', device: 'wasm' });
+  embedder = await pipeline('feature-extraction', name, { dtype: 'q8', device });
   return Math.round(performance.now() - t);
 }
 

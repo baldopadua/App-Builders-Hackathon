@@ -17,8 +17,9 @@ object AssetModels {
         id2label = ModelConfig.parseId2Label(text(context, "models/pii/config.json")),
     )
 
-    fun embeddingModel(context: Context): EmbeddingModel = EmbeddingModel(
-        modelBytes = bytes(context, "models/embedding/model_quantized.onnx"),
-        vocab = vocab(context, "embedding"),
+    /** [dir] = folder under assets/models; the test app's Gate 3 speed test also times "embedding-candidate". */
+    fun embeddingModel(context: Context, dir: String = "embedding"): EmbeddingModel = EmbeddingModel(
+        modelBytes = bytes(context, "models/$dir/model_quantized.onnx"),
+        vocab = vocab(context, dir),
     )
 }
