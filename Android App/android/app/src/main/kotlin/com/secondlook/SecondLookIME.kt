@@ -89,10 +89,39 @@ class SecondLookIME : InputMethodService() {
     private val deleteRepeatRunnable = object : Runnable {
         override fun run() {
             FeedbackManager.vibrateKeyPress(applicationContext)
-            currentInputConnection?.deleteSurroundingText(1, 0)
-            onTextChanged()
+            handleBackspace()
             deleteRepeatHandler.postDelayed(this, 50)
         }
+    }
+
+    private fun handleBackspace() {
+        val ic = currentInputConnection ?: return
+
+        // 1. If text is currently selected, replace the entire selection with an empty string
+        val selectedText = ic.getSelectedText(0)
+        if (!selectedText.isNullOrEmpty()) {
+            ic.commitText("", 1)
+            onTextChanged()
+            return
+        }
+
+        // 2. Secondary check via ExtractedText for custom editors where getSelectedText returns null
+        try {
+            val extracted = ic.getExtractedText(android.view.inputmethod.ExtractedTextRequest(), 0)
+            if (extracted != null && extracted.selectionStart != extracted.selectionEnd) {
+                ic.commitText("", 1)
+                onTextChanged()
+                return
+            }
+        } catch (_: Exception) {
+            // Ignore if extracted text request is unsupported
+        }
+
+        // 3. No selection: delete 1 character before cursor, with fallback to KEYCODE_DEL
+        if (!ic.deleteSurroundingText(1, 0)) {
+            sendDownUpKeyEvents(KeyEvent.KEYCODE_DEL)
+        }
+        onTextChanged()
     }
 
     private var pangolinStatusDot: View? = null
@@ -135,10 +164,10 @@ class SecondLookIME : InputMethodService() {
         pangolinBtn?.setOnClickListener { v ->
             FeedbackManager.vibrateKeyPress(applicationContext, v)
             try {
-                val intent = packageManager.getLaunchIntentForPackage(packageName)
-                if (intent != null) {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
+                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                if (launchIntent != null) {
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(launchIntent)
                 }
             } catch (e: Exception) {
                 Log.e("SecondLookIME", "Failed to launch main app from header: ${e.message}")
@@ -366,8 +395,7 @@ class SecondLookIME : InputMethodService() {
                 MotionEvent.ACTION_DOWN -> {
                     v.isPressed = true
                     FeedbackManager.vibrateKeyPress(applicationContext, v)
-                    currentInputConnection?.deleteSurroundingText(1, 0)
-                    onTextChanged()
+                    handleBackspace()
                     deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
                     deleteRepeatHandler.postDelayed(deleteRepeatRunnable, 400)
                     true

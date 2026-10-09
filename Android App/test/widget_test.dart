@@ -15,7 +15,8 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const TanggolinApp());
 
-    // Verify that Tanggolin Keyboard title or practice screen renders.
+    // Verify that Tanggolin MaterialApp renders.
     expect(find.byType(MaterialApp), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 100));
   });
 }

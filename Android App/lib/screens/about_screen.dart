@@ -61,7 +61,7 @@ class AboutScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Curled Pangolin Mascot Avatar
+                      // Tanggolin Mascot Avatar using official SVG
                       Center(
                         child: Container(
                           width: 106,
@@ -70,11 +70,10 @@ class AboutScreen extends StatelessWidget {
                             color: _avatarLavender,
                             shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: CustomPaint(
-                              size: const Size(64, 64),
-                              painter: CurledPangolinMascotPainter(),
-                            ),
+                          padding: const EdgeInsets.all(18),
+                          child: Image.asset(
+                            'assets/icons/tanggolin_icon.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ),
@@ -546,70 +545,4 @@ class AboutScreen extends StatelessWidget {
   }
 }
 
-/// Custom Vector Painter for Curled Palawan Pangolin Mascot
-class CurledPangolinMascotPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    const brandColor = Color(0xFF581C87);
-    final center = Offset(size.width / 2, size.height / 2);
 
-    final shellPaint = Paint()
-      ..color = brandColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6.0
-      ..strokeCap = StrokeCap.round;
-
-    // Curled body arc
-    final rect = Rect.fromCircle(center: center, radius: size.width * 0.40);
-    canvas.drawArc(rect, 0.45, 5.0, false, shellPaint);
-
-    // Armored dorsal scales along back
-    final scaleFill = Paint()
-      ..color = brandColor
-      ..style = PaintingStyle.fill;
-
-    final scales = [
-      Offset(center.dx - 2, center.dy - 16),
-      Offset(center.dx + 10, center.dy - 14),
-      Offset(center.dx + 16, center.dy - 4),
-      Offset(center.dx + 16, center.dy + 8),
-      Offset(center.dx + 8, center.dy + 16),
-      Offset(center.dx - 4, center.dy + 18),
-      Offset(center.dx - 14, center.dy + 12),
-      Offset(center.dx - 18, center.dy - 2),
-      Offset(center.dx - 12, center.dy - 12),
-    ];
-
-    for (final pt in scales) {
-      final path = Path()
-        ..moveTo(pt.dx, pt.dy - 4)
-        ..lineTo(pt.dx + 4, pt.dy + 2)
-        ..lineTo(pt.dx - 4, pt.dy + 2)
-        ..close();
-      canvas.drawPath(path, scaleFill);
-    }
-
-    // Curled tail tip
-    final tailPaint = Paint()
-      ..color = brandColor
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(center.dx - 12, center.dy + 2), 3.5, tailPaint);
-
-    // Peaceful sleeping eye
-    final eyePaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(center.dx - 10, center.dy - 2), radius: 2.5),
-      0.2,
-      2.8,
-      false,
-      eyePaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
