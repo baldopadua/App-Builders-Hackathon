@@ -24,10 +24,14 @@ class SecondLookIME : InputMethodService() {
         Log.d("SecondLookIME", "500ms pause reached, analyzing draft: $text")
         DetectionEngine.detectAsync(text) { warning ->
             Log.d("SecondLookIME", "DetectionEngine result: $warning")
+            val isNewWarning = warning != null && (currentWarning == null || currentWarning?.type != warning.type || currentWarning?.headline != warning.headline)
             currentWarning = warning
             if (::warningBanner.isInitialized) {
                 if (warning != null) {
                     warningBanner.showWarning(warning)
+                    if (isNewWarning) {
+                        FeedbackManager.notifyWarning(applicationContext, warning.type == WarningType.HIGH)
+                    }
                 } else {
                     warningBanner.hide()
                 }
@@ -95,6 +99,7 @@ class SecondLookIME : InputMethodService() {
     override fun onCreate() {
         super.onCreate()
         DetectionEngine.init(applicationContext)
+        FeedbackManager.init(applicationContext)
     }
 
     override fun onCreateInputView(): View {
@@ -429,6 +434,7 @@ class SecondLookIME : InputMethodService() {
         if (warning?.type == WarningType.HIGH && (actionInfo.isSendOrSubmit || actionInfo.targetAction == EditorInfo.IME_ACTION_SEND)) {
             val isIngatMode = SettingsManager.isIngatModeEnabled(this)
             Log.w("SecondLookIME", "Intercepted Send action! Transforming UI to [Itago] [Review] [Hold 2s to send] (IngatMode=$isIngatMode)")
+            FeedbackManager.notifyWarning(applicationContext, isHighAlert = true)
             if (::warningBanner.isInitialized) {
                 warningBanner.showSendIntercept(warning, isIngatMode) {
                     Log.i("SecondLookIME", "User authorized send. Dispatching held action.")

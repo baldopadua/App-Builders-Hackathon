@@ -6,6 +6,7 @@ import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.NonNull
 import com.secondlook.DetectionEngine
+import com.secondlook.FeedbackManager
 import com.secondlook.SecretManager
 import com.secondlook.SettingsManager
 import io.flutter.embedding.android.FlutterActivity
@@ -18,11 +19,17 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         DetectionEngine.init(applicationContext)
+        FeedbackManager.init(applicationContext)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
                 "ping" -> {
                     result.success("pong")
+                }
+                "triggerWarningFeedback" -> {
+                    val isHigh = call.argument<Boolean>("isHigh") ?: true
+                    FeedbackManager.notifyWarning(applicationContext, isHigh)
+                    result.success(true)
                 }
                 "getAiEngineStatus" -> {
                     result.success(mapOf(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/platform_bridge.dart';
 import 'about_screen.dart';
@@ -94,6 +95,21 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
     // Synchronous Dart fallback for immediate zero-lag UX
     result ??= _detectLocally(text);
+
+    final isNewWarning = result != null &&
+        (_currentWarning == null ||
+            _currentWarning?.risk != result.risk ||
+            _currentWarning?.headline != result.headline);
+
+    if (isNewWarning) {
+      final isHigh = result.risk == DetectionRisk.high;
+      PlatformBridge.triggerWarningFeedback(isHighRisk: isHigh);
+      if (isHigh) {
+        HapticFeedback.heavyImpact();
+      } else {
+        HapticFeedback.mediumImpact();
+      }
+    }
 
     if (mounted) {
       setState(() {
@@ -261,6 +277,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       _activeQuickTestKey = key;
       _isMaskedApplied = false;
       _isDismissed = false;
+      _currentWarning = null;
       _textController.text = text;
     });
     _analyzeText(text);

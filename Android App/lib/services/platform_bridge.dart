@@ -93,6 +93,16 @@ class PlatformBridge {
     }
   }
 
+  /// Triggers distinct vibration pattern and warning ding sound based on risk
+  static Future<void> triggerWarningFeedback({required bool isHighRisk}) async {
+    try {
+      await _channel.invokeMethod<void>(
+        'triggerWarningFeedback',
+        {'isHigh': isHighRisk},
+      );
+    } on PlatformException catch (_) {}
+  }
+
   /// Masks sensitive content in text using the native engine
   static Future<String> hide(String text) async {
     try {
