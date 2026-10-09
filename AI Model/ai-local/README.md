@@ -1,0 +1,68 @@
+# ai-local — SecondLook's on-device AI core
+
+Owner: Annie (AI Lead). Everything here runs **on the phone**: rules, two small ONNX models and encrypted storage. No server, no network, no cloud.
+
+- How to test: [TESTING.md](TESTING.md)
+- How to download models: [HOW_TO_DOWNLOAD_MODELS.md](HOW_TO_DOWNLOAD_MODELS.md)
+- How to put this into the Flutter app: [docs/integration.md](docs/integration.md)
+- API contract (keyboard ↔ AI ↔ Flutter): [docs/contract.md](docs/contract.md)
+
+## How it decides (cheapest first; the first hit wins)
+
+0. **Taught secrets**: values the user taught (an MPIN, a password, a key), matched exactly through a keyed fingerprint (HMAC-SHA256). The value itself is never stored. Warning type `my_secret`.
+1. **Rules**: regex + Luhn + Filipino / Taglish phrasing. Red for PINs and passcodes, passwords, OTP / 2FA codes, API keys and tokens, SSH private keys, database URLs, cards + CVV and PH government IDs. A soft yellow "Intended?" for phone numbers, emails and bank accounts.
+2. **PII model**: `bert-small-pii-detection` (27 MB, quantized ONNX), a second net for shapes the rules don't know.
+3. **Private facts**: `all-MiniLM-L6-v2` (22 MB, quantized ONNX), matching by meaning plus the names / code words in the user's note.
+
+Then **Itago** masks the secret inside the draft (`••••••`, `AIza••••`, last 4 digits kept for cards), and every warning carries a Filipino-first headline and a Taglish tip.
+
+## Results so far (laptop, synthetic test set — not a benchmark)
+
+| Check | Result |
+| --- | --- |
+| Detection, rules + PII model (146 messages) | 146/146 |
+| Itago: risky messages masked, then checked again | 87/87 clean |
+| Taught secrets | 27/27 |
+| Private facts (5 notes, 40 drafts) | 14/18 paraphrases caught, 3/22 false alarms |
+
+Kotlin (`jvm-check`) and the browser port (`web-demo`) give the same results. **Not yet measured on the Tecno phone or inside the keyboard.** The same person wrote the rules and the test messages, so this shows the rules do what was intended, not that they generalize.
+
+## Folders
+
+```
+kotlin/com/secondlook/
+├─ DetectionEngine.kt   team-facing API: get(), detect / detectAsync, hide / hideAll, Warning
+├─ SecretManager.kt     "Teach me": save / list / delete (encrypted)
+└─ ai/
+   ├─ SecondLookChecker.kt, Detector.kt, RiskResult.kt   pipeline + hand-over format
+   ├─ rules/RuleDetector.kt        regex + Luhn + Taglish phrasing (works with no model)
+   ├─ Redactor.kt, SafetyTips.kt   Itago masking, Filipino headlines and tips
+   ├─ model/                       WordPiece tokenizer, PII detector, sentence embeddings (ONNX Runtime)
+   ├─ notes/                       private facts (meaning + anchors), taught secrets (fingerprints)
+   ├─ android/                     Keystore AES-GCM, encrypted store, model loading from assets
+   └─ bridge/AiMethodChannel.kt    Flutter MethodChannel "secondlook/ai" (commented; paste into the Flutter app)
+assets/models/{pii,embedding}/     quantized .onnx + tokenizer files (committed, ~50 MB)
+test-data/samples.json             synthetic messages, private-note sets, taught secrets
+jvm-check/                         laptop check: same Kotlin + real models, scores everything
+web-demo/                          browser demo + scorer, fully local (Transformers.js 3.8.1)
+test-app/                          Android test app: compiles ../kotlin and ../assets directly
+scripts/                           download-models.ps1 (re-download the bundled models), download-lab-models.ps1 (experiments only)
+docs/                              contract.md, integration.md, architecture-reconciled.md
+```
+
+## Models and licenses (for the submission disclosures)
+
+| Model / library | Used for | License |
+| --- | --- | --- |
+| `Xenova/all-MiniLM-L6-v2` (ONNX export of `sentence-transformers/all-MiniLM-L6-v2`), quantized | private facts | Apache-2.0 |
+| `onnx-community/bert-small-pii-detection-ONNX`, quantized | PII model | Apache-2.0 |
+| ONNX Runtime 1.26.0 (`onnxruntime-android`; `onnxruntime` for the laptop check) | runs the models | MIT |
+| Transformers.js 3.8.1 | browser demo on the laptop only | Apache-2.0 |
+
+Pretrained models, not custom-trained. Re-check each license page before submitting.
+
+## Rules
+
+- Synthetic data only. The keys in the test data are invented look-alikes (`AKIAIOSFODNN7EXAMPLE` is AWS's documentation example).
+- Never log or store the draft text. The release app has no INTERNET permission.
+- Twins must change together: `RuleDetector.kt` ↔ `web-demo/public/rules.js`; `Redactor.kt`, `SafetyTips.kt` and the notes code ↔ `web-demo/public/core.js`. Run both checks after a change.

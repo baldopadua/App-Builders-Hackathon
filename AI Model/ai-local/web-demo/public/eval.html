@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecondLook scorer</title>
+<style>
+  :root { --bg:#f4f5f7; --card:#fff; --line:#ddd; --text:#212121; --muted:#757575; --ok:#1b5e20; --bad:#b71c1c; --passbg:#e8f5e9; --failbg:#ffebee; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14161a; --card:#1e2127; --line:#333; --text:#eceff1; --muted:#9aa0a6; --ok:#81c784; --bad:#ef9a9a; --passbg:#1b2e1d; --failbg:#3a1f1f; } }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, sans-serif; }
+  main { max-width:900px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; } h2 { font-size:18px; margin-top:28px; } h3 { font-size:15px; margin-bottom:0; }
+  .muted { color:var(--muted); } .good { color:var(--ok); } .bad { color:var(--bad); }
+  table { width:100%; border-collapse:collapse; background:var(--card); margin-top:8px; }
+  td, th { border:1px solid var(--line); padding:4px 8px; text-align:left; vertical-align:top; }
+  tr.pass td { background:var(--passbg); } tr.fail td { background:var(--failbg); }
+  pre { white-space:pre-wrap; font-size:11px; color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>SecondLook scorer <span class="muted">(synthetic samples from test-data/samples.json)</span></h1>
+  <p><a href="/">← back to the demo</a></p>
+  <div id="status" class="muted">Loading models…</div>
+  <div id="detect"></div>
+  <div id="hide"></div>
+  <div id="notes"></div>
+  <div id="taught"></div>
+  <details><summary>raw result (JSON)</summary><pre id="result"></pre></details>
+</main>
+<script type="module" src="/eval.js"></script>
+</body>
+</html>
