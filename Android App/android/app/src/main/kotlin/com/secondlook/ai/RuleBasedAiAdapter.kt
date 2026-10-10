@@ -72,8 +72,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (otp != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Teka! OTP o PIN ito — huwag ibigay kahit kanino.",
-                tip = "One-time passcode detected in your draft. Never share your verification codes.",
+                headline = SafetyTips.headline("otp"),
+                tip = SafetyTips.forKind("otp"),
                 text = text,
                 secret = otp
             )
@@ -84,8 +84,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (pw != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Teka! Password ito — huwag ibigay kahit kanino.",
-                tip = "Account password detected in your draft. Legitimate services will never ask for your password.",
+                headline = SafetyTips.headline("password"),
+                tip = SafetyTips.forKind("password"),
                 text = text,
                 secret = pw
             )
@@ -96,8 +96,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (apiKey != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Caution — this looks like an API key.",
-                tip = "Critical developer key detected in draft. Never share API keys in chat.",
+                headline = SafetyTips.headline("api_key"),
+                tip = SafetyTips.forKind("api_key"),
                 text = text,
                 secret = apiKey
             )
@@ -108,8 +108,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (sshKey != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Alert! SSH Private Key detected.",
-                tip = "Private cryptographic keys give total server access. Never send them over chat.",
+                headline = SafetyTips.headline("ssh_key"),
+                tip = SafetyTips.forKind("ssh_key"),
                 text = text,
                 secret = sshKey
             )
@@ -120,8 +120,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (dbCred != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Alert! Database or server credentials detected.",
-                tip = "Database connection strings contain passwords and grant direct access to records.",
+                headline = SafetyTips.headline("db_credential"),
+                tip = SafetyTips.forKind("db_credential"),
                 text = text,
                 secret = dbCred
             )
@@ -132,8 +132,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (card != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Careful! These are payment card details.",
-                tip = "Payment card credentials detected. Ensure you are on a trusted payment portal.",
+                headline = SafetyTips.headline("credit_card"),
+                tip = SafetyTips.forKind("credit_card"),
                 text = text,
                 secret = card
             )
@@ -144,8 +144,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (govId != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Careful! Government ID number detected.",
-                tip = "National and tax IDs can be used for identity theft. Verify the recipient.",
+                headline = SafetyTips.headline("gov_id"),
+                tip = SafetyTips.forKind("gov_id"),
                 text = text,
                 secret = govId
             )
@@ -156,8 +156,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (vaultSecret != null) {
             return createWarning(
                 type = WarningType.HIGH,
-                headline = "Wait! This matches a secret you saved.",
-                tip = "This matches a private note stored securely in your vault.",
+                headline = SafetyTips.headline("my_secret"),
+                tip = SafetyTips.forKind("my_secret"),
                 text = text,
                 secret = vaultSecret
             )
@@ -168,8 +168,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (phone != null) {
             return createWarning(
                 type = WarningType.MEDIUM,
-                headline = "Phone number detected. Intended?",
-                tip = "Phone number or mobile wallet account detected. Intended to share?",
+                headline = SafetyTips.headline("phone"),
+                tip = SafetyTips.forKind("phone"),
                 text = text,
                 secret = phone
             )
@@ -180,8 +180,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (email != null) {
             return createWarning(
                 type = WarningType.MEDIUM,
-                headline = "Email address detected. Intended?",
-                tip = "Email address detected in draft. Intended to share?",
+                headline = SafetyTips.headline("email"),
+                tip = SafetyTips.forKind("email"),
                 text = text,
                 secret = email
             )
@@ -192,8 +192,8 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         if (bankAccount != null) {
             return createWarning(
                 type = WarningType.MEDIUM,
-                headline = "Bank account number detected. Intended?",
-                tip = "Bank account number detected. Double check that you trust the recipient.",
+                headline = SafetyTips.headline("bank_account"),
+                tip = SafetyTips.forKind("bank_account"),
                 text = text,
                 secret = bankAccount
             )

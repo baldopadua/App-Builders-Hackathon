@@ -148,7 +148,7 @@ class SecondLookIME : InputMethodService() {
             replaceCurrentText(masked)
             warningBanner.hide()
             currentWarning = null
-            updatePangolinState(null)
+            showMaskedConfirmation()
         }
         warningBanner.setOnDismissClickListener {
             currentWarning = null
@@ -180,17 +180,27 @@ class SecondLookIME : InputMethodService() {
         return keyboardView
     }
 
+    private fun showMaskedConfirmation() {
+        val label = pangolinStatusLabel ?: return
+        val dot = pangolinStatusDot
+        label.text = "Text masked"
+        dot?.setBackgroundColor(android.graphics.Color.parseColor("#10B981"))
+        debounceHandler.postDelayed({
+            updatePangolinState(null)
+        }, 1800)
+    }
+
     private fun updatePangolinState(warning: Warning?) {
         val dot = pangolinStatusDot ?: return
         val label = pangolinStatusLabel ?: return
         when (warning?.type) {
             WarningType.HIGH -> {
                 dot.setBackgroundColor(android.graphics.Color.parseColor("#EF4444"))
-                label.text = "Alert!"
+                label.text = "Sensitive detail found"
             }
             WarningType.MEDIUM -> {
                 dot.setBackgroundColor(android.graphics.Color.parseColor("#F59E0B"))
-                label.text = "Intended?"
+                label.text = "Check this detail"
             }
             null -> {
                 dot.setBackgroundResource(R.drawable.bg_status_dot)

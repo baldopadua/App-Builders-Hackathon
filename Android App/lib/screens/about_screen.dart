@@ -1,327 +1,313 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../main.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
-  static const Color _brandPurple = Color(0xFF581C87); // Deep rich violet
-  static const Color _accentPurple = Color(0xFF7C3AED);
-  static const Color _surfaceLavender = Color(0xFFFAF5FF);
-  static const Color _borderLavender = Color(0xFFE9D5FF);
-  static const Color _avatarLavender = Color(0xFFF3E8FF);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _brandPurple,
+      backgroundColor: AppTokens.surfaceWhite,
+      appBar: AppBar(
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          color: AppTokens.textPrimary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'About & privacy',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
+            color: AppTokens.textPrimary,
+            letterSpacing: -0.3,
+          ),
+        ),
+      ),
       body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // Top App Bar Header Area aligned with Secrets & Practice Screens
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: Colors.white,
-                      size: 20,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Pangolin Mark, Tanggolin, and Privacy keyboard
+              Center(
+                child: Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        color: AppTokens.lavenderSelected,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(14),
+                      child: Image.asset(
+                        'assets/icons/tanggolin_icon.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'About & Privacy',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tanggolin',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: AppTokens.textPrimary,
                         letterSpacing: -0.3,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 48), // Balance leading back button
-                ],
-              ),
-            ),
-
-            // White Main Body Container with Top Rounded Corners (radius: 30)
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Privacy keyboard',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTokens.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+              ),
+
+              const SizedBox(height: 20),
+
+              // 2. Short brand statement (replacing long quote)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: AppTokens.surfaceTinted,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTokens.borderLavender),
+                ),
+                child: Text(
+                  'A pangolin curls up to protect itself. Tanggolin helps you protect private details in your drafts.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    height: 1.5,
+                    fontWeight: FontWeight.w400,
+                    color: AppTokens.brandPurple,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // 3. How your privacy works (Plain fact rows separated by dividers)
+              Text(
+                'How your privacy works',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppTokens.textPrimary,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              _buildFactRow(
+                icon: Icons.smartphone_rounded,
+                title: 'Checks run on this phone',
+                description:
+                    'Draft checks run locally on your device. No text is sent to cloud servers.',
+              ),
+              const Divider(color: Color(0xFFF1F5F9), height: 20),
+
+              _buildFactRow(
+                icon: Icons.lock_outline_rounded,
+                title: 'Notes are encrypted',
+                description:
+                    'Saved private notes are encrypted using AES-GCM and stored only on this device.',
+              ),
+              const Divider(color: Color(0xFFF1F5F9), height: 20),
+
+              _buildFactRow(
+                icon: Icons.history_toggle_off_rounded,
+                title: 'Typed text is not saved',
+                description:
+                    'Keystrokes exist strictly in temporary memory during checks and are never logged or stored.',
+              ),
+              const Divider(color: Color(0xFFF1F5F9), height: 20),
+
+              const SizedBox(height: 12),
+
+              // 4. Technical details (Collapsed by default)
+              Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                ),
+                child: ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: const EdgeInsets.only(bottom: 12),
+                  title: Text(
+                    'Technical details',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTokens.textPrimary,
+                    ),
+                  ),
+                  iconColor: AppTokens.brandAccent,
+                  collapsedIconColor: AppTokens.textSecondary,
+                  children: [
+                    _buildTechItem(
+                      'Dual on-device AI models',
+                      'Runs bert-small-pii (27 MB) for entity detection and all-MiniLM-L6-v2 (22 MB) for semantic matching locally via ONNX Runtime Mobile.',
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTechItem(
+                      'Encryption & key management',
+                      'AES-GCM encryption with keys generated and secured by the Android Keystore.',
+                    ),
+                    const SizedBox(height: 10),
+                    _buildTechItem(
+                      'Zero network permissions',
+                      'android.permission.INTERNET is completely omitted from AndroidManifest.xml.',
+                    ),
+                  ],
+                ),
+              ),
+
+              const Divider(color: Color(0xFFF1F5F9), height: 20),
+
+              // 5. Terms & conditions row
+              InkWell(
+                onTap: () => showTermsAndConditionsSheet(context),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
                     children: [
-                      // Tanggolin Mascot Avatar using official SVG
-                      Center(
-                        child: Container(
-                          width: 106,
-                          height: 106,
-                          decoration: const BoxDecoration(
-                            color: _avatarLavender,
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(18),
-                          child: Image.asset(
-                            'assets/icons/tanggolin_icon.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
+                      const Icon(
+                        Icons.description_outlined,
+                        size: 20,
+                        color: AppTokens.brandAccent,
                       ),
-
-                      const SizedBox(height: 18),
-
-                      // Tanggolin Title
-                      Text(
-                        'Tanggolin',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF1E293B),
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-
-                      const SizedBox(height: 6),
-
-                      // Subtitle / Tagline
-                      Text(
-                        'Local AI Privacy Keyboard',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          color: const Color(0xFF64748B),
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.1,
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      // Palawan Pangolin Lore / Quote Card
-                      Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: _surfaceLavender,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: _borderLavender, width: 1.0),
-                        ),
+                      const SizedBox(width: 12),
+                      Expanded(
                         child: Text(
-                          '“When the Palawan pangolin senses danger, it curls into an impenetrable armored ball. Tanggolin does the same for your personal data—stepping in to seal sensitive information before it leaves your phone.”',
+                          'Terms & conditions',
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13.5,
-                            color: const Color(0xFF475569),
-                            height: 1.45,
-                            fontWeight: FontWeight.w400,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppTokens.textPrimary,
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Privacy Architecture Breakdown Section Header
-                      Text(
-                        'Privacy Architecture Breakdown',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF1E293B),
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      // Feature Card 1: No Internet Permission
-                      _buildFeatureCard(
-                        title: 'No Internet Permission',
-                        description:
-                            'Declared with zero network permissions in AndroidManifest.xml. Impossible to leak data to the cloud.',
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Feature Card 2: Dual On-Device AI Models
-                      _buildFeatureCard(
-                        title: 'Dual On-Device AI Models',
-                        description:
-                            'bert-small-pii (27 MB) and all-MiniLM-L6-v2 (22 MB) run locally via ONNX Runtime Mobile.',
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Feature Card 3: Hardware-Backed Encryption
-                      _buildFeatureCard(
-                        title: 'Hardware-Backed Encryption',
-                        description:
-                            'Saved private notes are encrypted using AES-GCM via the Android Keystore.',
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Feature Card 4: Zero Keystroke Storage
-                      _buildFeatureCard(
-                        title: 'Zero Keystroke Storage',
-                        description:
-                            'Keystrokes exist strictly in temporary memory during typing checks and are never logged or persisted.',
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      const SizedBox(height: 12),
-
-                      // Feature Card 5: Terms & Conditions
-                      InkWell(
-                        onTap: () => showTermsAndConditionsSheet(context),
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.all(16.0),
-                          decoration: BoxDecoration(
-                            color: _surfaceLavender,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: _borderLavender, width: 1.0),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: _avatarLavender,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.description_outlined,
-                                  color: _accentPurple,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'Terms & Conditions',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1E293B),
-                                      ),
-                                    ),
-                                    SizedBox(height: 3),
-                                    Text(
-                                      'How user data is handled & protected',
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 16,
-                                color: _accentPurple,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Feature Card 6: Team & Attribution
-                      Container(
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: _surfaceLavender,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: _borderLavender, width: 1.0),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Team & Attribution',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              'AppBuildersPH Hackathon 2026 entry.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF64748B),
-                                height: 1.35,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Team members: Klarenz, Annie, Charles, Jakim',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF64748B),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: Color(0xFF94A3B8),
                       ),
                     ],
                   ),
                 ),
               ),
-            ),
-          ],
+
+              const Divider(color: Color(0xFFF1F5F9), height: 20),
+
+              const SizedBox(height: 20),
+
+              // 6. Quieter footer content
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'AppBuildersPH Hackathon 2026 entry',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: AppTokens.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Version 1.0.0',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildFeatureCard({
+  /// Fact row for privacy breakdown
+  Widget _buildFactRow({
+    required IconData icon,
     required String title,
     required String description,
   }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppTokens.brandAccent),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppTokens.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                description,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13.5,
+                  height: 1.45,
+                  color: AppTokens.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Technical explanation item
+  Widget _buildTechItem(String title, String description) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _surfaceLavender,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _borderLavender, width: 1.0),
+        color: AppTokens.surfaceTinted,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.bold,
-              color: _accentPurple,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              color: AppTokens.brandPurple,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             description,
-            style: const TextStyle(
-              fontSize: 13,
-              color: Color(0xFF64748B),
-              height: 1.35,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12.5,
+              height: 1.4,
+              color: AppTokens.textSecondary,
             ),
           ),
         ],
@@ -329,8 +315,9 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  /// Displays comprehensive Terms & Conditions and Data Handling disclosure modal sheet
-  static void showTermsAndConditionsSheet(BuildContext context) {
+  /// Clean, bounded Terms & Conditions modal sheet (Section 15)
+  static void showTermsAndConditionsSheet(BuildContext context,
+      {bool isFirstTimeAcceptance = false}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -342,72 +329,57 @@ class AboutScreen extends StatelessWidget {
         builder: (_, scrollController) => Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
-              // Drag handle
+              // Pinned header with clean drag handle & close control
               Container(
-                margin: const EdgeInsets.only(top: 12, bottom: 8),
-                width: 44,
-                height: 4.5,
+                margin: const EdgeInsets.only(top: 10, bottom: 6),
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(3),
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
-              // Title Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                padding: const EdgeInsets.fromLTRB(20, 6, 12, 12),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: _avatarLavender,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.shield_outlined,
-                        color: _accentPurple,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Terms & Conditions',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1E293B),
-                            ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Terms & conditions',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppTokens.textPrimary,
                           ),
-                          const SizedBox(height: 2),
-                          const Text(
-                            'Data handling & privacy disclosure',
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: Color(0xFF64748B),
-                            ),
+                        ),
+                        Text(
+                          'Data handling and privacy disclosures',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12.5,
+                            color: AppTokens.textSecondary,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Color(0xFF64748B)),
+                      icon: const Icon(Icons.close, size: 22),
+                      color: AppTokens.textSecondary,
+                      tooltip: 'Close terms',
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+              const Divider(color: Color(0xFFF1F5F9), height: 1),
 
-              // Scrollable Terms Content
+              // Bounded Scrollable Body
               Expanded(
                 child: ListView(
                   controller: scrollController,
@@ -415,65 +387,56 @@ class AboutScreen extends StatelessWidget {
                   children: [
                     _buildTermsSection(
                       number: '1',
-                      title: '100% On-Device Processing Guarantee',
+                      title: 'On-device processing',
                       body:
-                          'All text processing, heuristic scanning, and AI inference execute exclusively on your physical phone hardware. At no point is any text, pattern, or keystroke sent to cloud servers or third-party APIs.',
+                          'All text processing and privacy scanning execute strictly on this device. Draft text is not transmitted to cloud servers.',
                     ),
                     _buildTermsSection(
                       number: '2',
-                      title: 'Zero Network Connectivity',
+                      title: 'Zero network connectivity',
                       body:
-                          'Tanggolin is deliberately engineered with zero network permissions. The android.permission.INTERNET flag is completely omitted from the application manifest, making cloud transmission technically and physically impossible.',
+                          'Tanggolin is engineered without internet permissions (android.permission.INTERNET is omitted), ensuring no network traffic can originate from the keyboard.',
                     ),
                     _buildTermsSection(
                       number: '3',
-                      title: 'Zero Keystroke Storage & Logging',
+                      title: 'No keystroke logging',
                       body:
-                          'Tanggolin does not log, record, or track your keystrokes. Input connection buffers reside strictly in volatile RAM memory during real-time privacy scanning and are discarded immediately. No typing history is ever saved to disk.',
+                          'Tanggolin does not log or persist typing history. Text buffers exist only in temporary memory during active checking.',
                     ),
                     _buildTermsSection(
                       number: '4',
-                      title: 'Hardware-Backed Encryption Vault',
+                      title: 'Encrypted private notes',
                       body:
-                          'Custom private notes and sensitive phrases you save in your Private Vault are encrypted using AES-256-GCM. Encryption keys are generated and protected by the hardware-backed Android Keystore system.',
+                          'Saved private notes are encrypted with AES-GCM using keys stored in the Android Keystore.',
                     ),
                     _buildTermsSection(
                       number: '5',
-                      title: 'User Ownership & Full Control',
+                      title: 'User ownership and control',
                       body:
-                          'You maintain total ownership of your data. You may add, edit, or permanently delete encrypted vault items at any time. Uninstalling Tanggolin completely removes all local encrypted storage.',
+                          'You maintain complete control of your saved notes. You may delete them at any time from Private notes.',
                     ),
                     _buildTermsSection(
                       number: '6',
-                      title: 'Assistive Safety Shield Disclaimer',
+                      title: 'Assistive shield disclaimer',
                       body:
-                          'Tanggolin is designed as an on-device safety net to help prevent accidental leaks of sensitive credentials, OTPs, and private data. While our rule engines and models are tuned for high precision, users remain responsible for the content they choose to send or share.',
+                          'Tanggolin assists you by flagging sensitive details before sharing. You remain responsible for the content you choose to send.',
                     ),
                     _buildTermsSection(
                       number: '7',
-                      title: 'No Advertising or Trackers',
+                      title: 'No analytics or trackers',
                       body:
-                          'Tanggolin contains zero advertising SDKs, zero behavioral trackers, and zero analytical trackers. Your phone remains clean, private, and fast.',
+                          'Tanggolin contains zero advertising SDKs, analytics tracking, or behavioral profiling.',
                     ),
                     const SizedBox(height: 16),
-
-                    // Accept button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _brandPurple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text(
-                        'I Understand & Accept',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          isFirstTimeAcceptance
+                              ? 'I Understand & Accept'
+                              : 'Done',
                         ),
                       ),
                     ),
@@ -493,24 +456,24 @@ class AboutScreen extends StatelessWidget {
     required String body,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: 22,
+            height: 22,
             alignment: Alignment.center,
             decoration: const BoxDecoration(
-              color: _surfaceLavender,
+              color: AppTokens.surfaceTinted,
               shape: BoxShape.circle,
             ),
             child: Text(
               number,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.bold,
-                color: _accentPurple,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppTokens.brandPurple,
               ),
             ),
           ),
@@ -521,19 +484,19 @@ class AboutScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 14.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                    fontWeight: FontWeight.w600,
+                    color: AppTokens.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   body,
-                  style: const TextStyle(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
-                    color: Color(0xFF475569),
-                    height: 1.4,
+                    height: 1.45,
+                    color: AppTokens.textSecondary,
                   ),
                 ),
               ],
@@ -544,5 +507,3 @@ class AboutScreen extends StatelessWidget {
     );
   }
 }
-
-

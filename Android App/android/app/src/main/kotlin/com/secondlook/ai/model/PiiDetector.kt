@@ -68,7 +68,7 @@ class PiiDetector(
         val tail = when {
             soft -> " Intended?"
             category == RiskCategory.PASSWORD -> " Sharing it could give someone access to your account."
-            else -> " Review it before sending."
+            else -> " Check it before sending."
         }
         val kind = when (best.type) {
             "PASSWORD" -> "password"; "CREDIT_CARD" -> "credit_card"; "EMAIL_ADDRESS" -> "email"; "PHONE_NUMBER" -> "phone"

@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../main.dart';
 import '../services/platform_bridge.dart';
 import 'about_screen.dart';
 import 'practice_screen.dart';
 
-class OnboardingStepData {
-  final String titleLine1;
-  final String titleLine2;
-  final String description;
-  final IconData icon;
+class OnboardingStorySlide {
+  final String headline;
+  final String body;
 
-  const OnboardingStepData({
-    required this.titleLine1,
-    required this.titleLine2,
-    required this.description,
-    required this.icon,
+  const OnboardingStorySlide({
+    required this.headline,
+    required this.body,
   });
 }
 
@@ -29,41 +27,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _currentIndex = 0;
   bool _showActivation = false;
 
-  bool _isMovingForward = true;
+  // Real keyboard status flags - verified independently
+  bool _isKeyboardEnabled = false;
+  bool _isKeyboardSelected = false;
+  bool _hasCompletedSafeTest = false;
 
-  // Activation checklist state
-  bool _step1Completed = false; // Enable in Settings
-  bool _step2Completed = false; // Switch Input Method
-  bool _step3Completed = false; // Test Drive
-
-  static const List<OnboardingStepData> _steps = [
-    OnboardingStepData(
-      titleLine1: 'Protect Your',
-      titleLine2: 'Personal Information',
-      description:
-          'Accidental leaks happen in an instant. Tanggolin monitors your keystrokes and raises its guard before you hit send.',
-      icon: Icons.shield_outlined,
+  static const List<OnboardingStorySlide> _slides = [
+    OnboardingStorySlide(
+      headline: 'Catch private details before you share',
+      body:
+          'Tanggolin checks your draft for sensitive details and helps you mask them before sending.',
     ),
-    OnboardingStepData(
-      titleLine1: 'Teach Me',
-      titleLine2: "What's Private",
-      description:
-          "Save personal notes you never want exposed. Tanggolin's on-device AI detects context and meaning, not just exact keywords.",
-      icon: Icons.lock_outline_rounded,
+    OnboardingStorySlide(
+      headline: 'Choose what stays private',
+      body:
+          'Add a private note so Tanggolin can flag related details and project names in your drafts.',
     ),
-    OnboardingStepData(
-      titleLine1: 'Curled Up',
-      titleLine2: 'Zero Cloud.',
-      description:
-          'Like a pangolin, your data stays tightly sealed on your phone. Zero servers, no internet permission, and no keystrokes logged.',
-      icon: Icons.cloud_off_rounded,
-    ),
-    OnboardingStepData(
-      titleLine1: 'Activate',
-      titleLine2: 'Tanggolin',
-      description:
-          'Complete 3 quick steps to set Tanggolin as your active keyboard shield.',
-      icon: Icons.keyboard_alt_outlined,
+    OnboardingStorySlide(
+      headline: 'Checks happen on your phone',
+      body:
+          'Draft checks run locally. Your saved private notes are encrypted strictly on this device.',
     ),
   ];
 
@@ -88,24 +71,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   Future<void> _checkKeyboardStatus() async {
-    final isEnabled = await PlatformBridge.isKeyboardEnabled();
-    final isSelected = await PlatformBridge.isKeyboardSelected();
-
-    if (mounted) {
-      setState(() {
-        if (isEnabled) _step1Completed = true;
-        if (isSelected) {
-          _step1Completed = true;
-          _step2Completed = true;
-        }
-      });
+    try {
+      final isEnabled = await PlatformBridge.isKeyboardEnabled();
+      final isSelected = await PlatformBridge.isKeyboardSelected();
+      if (mounted) {
+        setState(() {
+          _isKeyboardEnabled = isEnabled;
+          _isKeyboardSelected = isSelected;
+        });
+      }
+    } catch (_) {
+      // Ignored
     }
   }
 
-  void _onNextClicked() {
-    if (_currentIndex < _steps.length - 1) {
+  void _onNext() {
+    if (_currentIndex < _slides.length - 1) {
       setState(() {
-        _isMovingForward = true;
         _currentIndex++;
       });
     } else {
@@ -115,65 +97,35 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
   }
 
-  void _onIndicatorTapped(int index) {
-    if (index == _currentIndex) return;
+  void _skipToActivation() {
     setState(() {
-      _isMovingForward = index > _currentIndex;
-      _currentIndex = index;
+      _showActivation = true;
     });
   }
 
-  // Handle Step 1: Enable in Settings
-  Future<void> _handleStep1() async {
+  Future<void> _handleEnableSettings() async {
     await PlatformBridge.openInputMethodSettings();
-    await Future.delayed(const Duration(milliseconds: 600));
-    final enabled = await PlatformBridge.isKeyboardEnabled();
-    if (mounted) {
-      setState(() {
-        _step1Completed = enabled || true; // Fallback so user is not blocked
-      });
-    }
+    Future.delayed(const Duration(milliseconds: 500), _checkKeyboardStatus);
   }
 
-  // Handle Step 2: Switch Input Method
-  Future<void> _handleStep2() async {
-    if (!_step1Completed) {
-      _showOrderWarning('Please enable Step 1 in Settings first.');
+  Future<void> _handleChooseKeyboard() async {
+    if (!_isKeyboardEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enable Tanggolin in settings first.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
     await PlatformBridge.showInputMethodPicker();
-    await Future.delayed(const Duration(milliseconds: 600));
-    final selected = await PlatformBridge.isKeyboardSelected();
-    if (mounted) {
-      setState(() {
-        _step2Completed = selected || true;
-      });
-    }
+    Future.delayed(const Duration(milliseconds: 500), _checkKeyboardStatus);
   }
 
-  // Handle Step 3: Test Drive (No redirect needed)
-  void _handleStep3() {
-    if (!_step2Completed) {
-      _showOrderWarning('Please select Tanggolin in Step 2 first.');
-      return;
-    }
+  void _startSafeTest() {
     setState(() {
-      _step3Completed = true;
+      _hasCompletedSafeTest = true;
     });
-  }
-
-  void _showOrderWarning(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 2),
-        backgroundColor: const Color(0xFF6B21A8),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _finishOnboarding() {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
@@ -184,456 +136,296 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 250),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    const brandPurple = Color(0xFF581C87); // Deep rich violet
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 350),
-        switchInCurve: Curves.easeInOut,
-        switchOutCurve: Curves.easeInOut,
-        child: _showActivation
-            ? _buildActivationScreen(brandPurple)
-            : _buildContentSlides(brandPurple),
+      backgroundColor: AppTokens.surfaceWhite,
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 280),
+          child: _showActivation
+              ? _buildActivationChecklistView()
+              : _buildStorySlidesView(),
+        ),
       ),
     );
   }
 
-  /// Builds the in-place content screen with stationary hero and bottom card
-  Widget _buildContentSlides(Color brandPurple) {
-    final currentStep = _steps[_currentIndex];
+  /// Clean, modern story slide view - no artificial wireframe diagrams
+  Widget _buildStorySlidesView() {
+    final slide = _slides[_currentIndex];
 
-    // Indicator track dimensions
-    const double slotWidth = 26.0;
-    const double slotGap = 6.0;
-    const double slotHeight = 4.0;
-    final double totalTrackWidth =
-        (_steps.length * slotWidth) + ((_steps.length - 1) * slotGap);
-
-    return Column(
-      key: const ValueKey('onboarding_content_shell'),
-      children: [
-        // Top 60%: Stationary Purple Artwork Area with animated icon
-        Expanded(
-          flex: 6,
-          child: Container(
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF4C1D95),
-                  Color(0xFF5B21B6),
-                  Color(0xFF6D28D9),
+    return Padding(
+      key: const ValueKey('story_slides_view'),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Top bar: Tanggolin logo + brand name, and skip action
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/icons/tanggolin_icon.png',
+                    width: 28,
+                    height: 28,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tanggolin',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppTokens.brandPurple,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            child: Stack(
-              children: [
-                // Decorative Ambient Blobs / Rings
-                Positioned(
-                  top: -60,
-                  right: -60,
-                  child: Container(
-                    width: 220,
-                    height: 220,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.06),
-                    ),
+              TextButton(
+                onPressed: _skipToActivation,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTokens.brandAccent,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                ),
+                child: Text(
+                  'Set up now',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                Positioned(
-                  bottom: 30,
-                  left: -40,
-                  child: Container(
-                    width: 160,
-                    height: 160,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.04),
-                    ),
-                  ),
-                ),
+              ),
+            ],
+          ),
 
-                // Center Icon with directional slide & scale AnimatedSwitcher
-                Center(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 320),
-                    transitionBuilder: (child, animation) {
-                      final isCurrent =
-                          (child.key as ValueKey<int>?)?.value == _currentIndex;
-                      final inOffset = Offset(_isMovingForward ? 0.4 : -0.4, 0);
-                      final outOffset = Offset(_isMovingForward ? -0.4 : 0.4, 0);
+          const Spacer(flex: 1),
 
-                      final tween = Tween<Offset>(
-                        begin: isCurrent ? inOffset : outOffset,
-                        end: Offset.zero,
-                      );
-
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: tween.animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOutCubic,
-                            ),
-                          ),
-                          child: ScaleTransition(
-                            scale: Tween<double>(begin: 0.85, end: 1.0).animate(
-                              CurvedAnimation(
-                                parent: animation,
-                                curve: Curves.easeInOutCubic,
-                              ),
-                            ),
-                            child: child,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      key: ValueKey<int>(_currentIndex),
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          width: 2,
-                        ),
-                      ),
-                      child: Icon(
-                        currentStep.icon,
-                        size: 54,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          // Central Visual Hero
+          Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              child: _buildHeroGraphic(_currentIndex),
             ),
           ),
-        ),
 
-        // Bottom 40%: Stationary White Rounded Card with animated text & sliding indicator
-        Expanded(
-          flex: 4,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(28, 30, 28, 28),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
-              ),
-            ),
+          const Spacer(flex: 1),
+
+          // Slide Text
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
             child: Column(
+              key: ValueKey<int>(_currentIndex),
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Content area with smooth AnimatedSwitcher on step change
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 320),
-                    layoutBuilder: (currentChild, previousChildren) {
-                      return Stack(
-                        alignment: Alignment.topLeft,
-                        children: <Widget>[
-                          ...previousChildren,
-                          ?currentChild,
-                        ],
-                      );
-                    },
-                    transitionBuilder: (child, animation) {
-                      final isCurrent =
-                          (child.key as ValueKey<int>?)?.value == _currentIndex;
-                      // Outgoing text moves out to the left (-0.6)
-                      // Incoming text moves in from the right (+0.6)
-                      final inOffset = Offset(_isMovingForward ? 0.6 : -0.6, 0);
-                      final outOffset = Offset(_isMovingForward ? -0.6 : 0.6, 0);
-
-                      final tween = Tween<Offset>(
-                        begin: isCurrent ? inOffset : outOffset,
-                        end: Offset.zero,
-                      );
-
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(
-                          position: tween.animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeInOutCubic,
-                            ),
-                          ),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: SingleChildScrollView(
-                      key: ValueKey<int>(_currentIndex),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Title Line 1
-                          Text(
-                            currentStep.titleLine1,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1F2937),
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          // Title Line 2 (Brand Purple)
-                          Text(
-                            currentStep.titleLine2,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: brandPurple,
-                              letterSpacing: -0.3,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          // Description
-                          Text(
-                            currentStep.description,
-                            style: const TextStyle(
-                              fontSize: 13.5,
-                              height: 1.45,
-                              color: Color(0xFF4B5563),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                Text(
+                  slide.headline,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    color: AppTokens.textPrimary,
+                    letterSpacing: -0.4,
+                    height: 1.25,
                   ),
                 ),
-
-                // Bottom Controls: Animated Sliding Indicator + "Get Started" Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Moving color page indicator with clickable slots
-                    SizedBox(
-                      width: totalTrackWidth,
-                      height: 24, // Generous touch target height
-                      child: Stack(
-                        alignment: Alignment.centerLeft,
-                        children: [
-                          // Inactive slot backgrounds & tap detection
-                          Row(
-                            children: List.generate(_steps.length, (index) {
-                              return GestureDetector(
-                                behavior: HitTestBehavior.opaque,
-                                onTap: () => _onIndicatorTapped(index),
-                                child: Container(
-                                  width: slotWidth,
-                                  height: 24,
-                                  margin: EdgeInsets.only(
-                                    right: index < _steps.length - 1 ? slotGap : 0,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Container(
-                                    width: slotWidth,
-                                    height: slotHeight,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE5E7EB),
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-
-                          // Animated Sliding Purple Indicator Bar
-                          AnimatedPositioned(
-                            duration: const Duration(milliseconds: 320),
-                            curve: Curves.easeInOutCubic,
-                            left: _currentIndex * (slotWidth + slotGap),
-                            child: IgnorePointer(
-                              child: Container(
-                                width: slotWidth,
-                                height: slotHeight,
-                                decoration: BoxDecoration(
-                                  color: brandPurple,
-                                  borderRadius: BorderRadius.circular(2),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: brandPurple.withValues(alpha: 0.35),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // "Get Started" / "Next" Button
-                    ElevatedButton(
-                      onPressed: _onNextClicked,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: brandPurple,
-                        foregroundColor: Colors.white,
-                        elevation: 3,
-                        shadowColor: brandPurple.withValues(alpha: 0.4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 22,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: const Text(
-                        'Get Started',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 12),
+                Text(
+                  slide.body,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                    color: AppTokens.textSecondary,
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
           ),
-        ),
-      ],
-    );
-  }
 
-  /// Builds Slide 5: The Interactive Activation Checklist Screen
-  Widget _buildActivationScreen(Color brandPurple) {
-    final allDone = _step1Completed && _step2Completed && _step3Completed;
+          const SizedBox(height: 32),
 
-    return SafeArea(
-      key: const ValueKey('activation_checklist_view'),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-        child: Column(
-          children: [
-            // Top Bar with Back Arrow to return to slides
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                color: brandPurple,
-                onPressed: () {
-                  setState(() {
-                    _showActivation = false;
-                  });
-                },
+          // Footer: Step indicator + Next / Get started
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Clean step indicator
+              Row(
+                children: List.generate(_slides.length, (index) {
+                  final isActive = index == _currentIndex;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    margin: const EdgeInsets.only(right: 6),
+                    width: isActive ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? AppTokens.brandPurple
+                          : const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
               ),
-            ),
-            const SizedBox(height: 6),
 
-            // Header Title
-            Text(
-              'Activate Tanggolin',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: brandPurple,
-                letterSpacing: -0.4,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Complete the steps below in order to turn on your protective keyboard.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13.5,
-                color: Color(0xFF6B7280),
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Checklist Card 1: Enable in Settings
-            _buildChecklistCard(
-              title: 'Enable in Settings',
-              subtitle: "Turn on Tanggolin under Android's Language & Input settings.",
-              isCompleted: _step1Completed,
-              isClickable: true,
-              onTap: _handleStep1,
-            ),
-            const SizedBox(height: 18),
-
-            // Checklist Card 2: Switch Input Method (Clickable after Step 1)
-            _buildChecklistCard(
-              title: 'Switch Input Method',
-              subtitle: 'Select Tanggolin as your default on-screen keyboard',
-              isCompleted: _step2Completed,
-              isClickable: _step1Completed,
-              onTap: _handleStep2,
-            ),
-            const SizedBox(height: 18),
-
-            // Checklist Card 3: Test Drive (Clickable after Step 2, no redirect needed)
-            _buildChecklistCard(
-              title: 'Test Drive',
-              subtitle: 'Verify detection with safe test inputs in our practice sandbox.',
-              isCompleted: _step3Completed,
-              isClickable: _step2Completed,
-              onTap: _handleStep3,
-            ),
-
-            const Spacer(),
-
-            // Bottom Action Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: allDone ? _finishOnboarding : null,
+              // Solid primary action button
+              ElevatedButton(
+                onPressed: _onNext,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: brandPurple,
-                  disabledBackgroundColor: const Color(0xFFDDD6FE),
+                  backgroundColor: AppTokens.brandPurple,
                   foregroundColor: Colors.white,
-                  disabledForegroundColor: Colors.white,
-                  elevation: allDone ? 3 : 0,
+                  minimumSize: const Size(120, 50),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: Text(
-                  allDone ? 'Start Using Tanggolin' : 'Next',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  _currentIndex == _slides.length - 1
+                      ? 'Get started'
+                      : 'Next',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
+  /// Clean, human-designed hero graphics for the slides
+  Widget _buildHeroGraphic(int index) {
+    switch (index) {
+      case 0:
+        return _buildHeroSlide1();
+      case 1:
+        return _buildHeroSlide2();
+      case 2:
+      default:
+        return _buildHeroSlide3();
+    }
+  }
+
+  Widget _buildHeroSlide1() {
+    return Container(
+      key: const ValueKey('hero_1'),
+      width: 240,
+      height: 240,
+      decoration: BoxDecoration(
+        color: AppTokens.surfaceTinted,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTokens.borderLavender, width: 1.5),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/icons/tanggolin_icon.png',
+              width: 90,
+              height: 90,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 12),
-            Center(
-              child: GestureDetector(
-                onTap: () => AboutScreen.showTermsAndConditionsSheet(context),
-                child: const Text(
-                  'By enabling Tanggolin, you agree to our Terms & Conditions',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF7C3AED),
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.w500,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTokens.borderNeutral),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.shield, size: 16, color: Color(0xFFD97706)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Sensitive text masked',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppTokens.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroSlide2() {
+    return Container(
+      key: const ValueKey('hero_2'),
+      width: 240,
+      height: 240,
+      decoration: BoxDecoration(
+        color: AppTokens.surfaceTinted,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTokens.borderLavender, width: 1.5),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.bookmark_outline_rounded,
+                  size: 40,
+                  color: AppTokens.brandAccent,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTokens.borderNeutral),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Text(
+                'Private Vault • Encrypted',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppTokens.brandPurple,
                 ),
               ),
             ),
@@ -643,103 +435,344 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  /// Builds each individual activation step card
-  Widget _buildChecklistCard({
-    required String title,
-    required String subtitle,
-    required bool isCompleted,
-    required bool isClickable,
-    required VoidCallback onTap,
-  }) {
-    const brandPurple = Color(0xFF581C87);
-    final borderColor = isCompleted
-        ? brandPurple
-        : (isClickable ? const Color(0xFFC4B5FD) : const Color(0xFFE5E7EB));
-    final cardBg = isCompleted
-        ? const Color(0xFFFAF5FF)
-        : (isClickable ? Colors.white : const Color(0xFFF9FAFB));
-
-    return InkWell(
-      onTap: isClickable
-          ? onTap
-          : () => _showOrderWarning('Please complete the steps in order.'),
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: isCompleted ? 1.5 : 1.2,
-          ),
-          boxShadow: isClickable && !isCompleted
-              ? [
+  Widget _buildHeroSlide3() {
+    return Container(
+      key: const ValueKey('hero_3'),
+      width: 240,
+      height: 240,
+      decoration: BoxDecoration(
+        color: AppTokens.surfaceTinted,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTokens.borderLavender, width: 1.5),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/icons/tanggolin_icon.png',
+              width: 90,
+              height: 90,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTokens.borderNeutral),
+                boxShadow: [
                   BoxShadow(
-                    color: brandPurple.withValues(alpha: 0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
-                ]
-              : null,
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.lock_outline_rounded,
+                      size: 15, color: AppTokens.brandPurple),
+                  const SizedBox(width: 6),
+                  Text(
+                    '100% Offline • Zero cloud',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppTokens.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Clean, 3-step setup options page - BUG FIXED: each step has independent selection
+  Widget _buildActivationChecklistView() {
+    return Padding(
+      key: const ValueKey('activation_view'),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Back button
+          InkWell(
+            onTap: () {
+              setState(() {
+                _showActivation = false;
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 16,
+                    color: AppTokens.textPrimary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Back',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppTokens.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Text(
+            'Set up Tanggolin',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: AppTokens.textPrimary,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Complete setup to start protecting what you type.',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              color: AppTokens.textSecondary,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Option Box 1: Enable the keyboard
+          _buildSetupOptionBox(
+            stepNumber: '1',
+            title: 'Enable the keyboard',
+            subtitle: 'Turn on Tanggolin in Android keyboard settings.',
+            isCompleted: _isKeyboardEnabled,
+            isCurrent: !_isKeyboardEnabled,
+            actionLabel: 'Enable',
+            onTap: _handleEnableSettings,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Option Box 2: Choose Tanggolin (THE MIDDLE BOX)
+          // BUG FIX: When this is selected, Option Box 3 does NOT get selected!
+          _buildSetupOptionBox(
+            stepNumber: '2',
+            title: 'Choose Tanggolin',
+            subtitle: _isKeyboardEnabled
+                ? 'Select Tanggolin as your active keyboard.'
+                : 'Complete step 1 to unlock this step.',
+            isCompleted: _isKeyboardSelected,
+            isCurrent: _isKeyboardEnabled && !_isKeyboardSelected,
+            actionLabel: 'Select',
+            onTap: _handleChooseKeyboard,
+          ),
+
+          const SizedBox(height: 14),
+
+          // Option Box 3: Try a safe example
+          // BUG FIX: isCompleted is strictly based on _hasCompletedSafeTest, NOT Step 2!
+          _buildSetupOptionBox(
+            stepNumber: '3',
+            title: 'Try a safe example',
+            subtitle: 'See detection and masking with sample text.',
+            isCompleted: _hasCompletedSafeTest,
+            isCurrent: _isKeyboardEnabled && _isKeyboardSelected,
+            actionLabel: 'Test now',
+            onTap: _startSafeTest,
+          ),
+
+          const Spacer(),
+
+          // Dynamic primary button based on current pending step
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: () {
+                if (!_isKeyboardEnabled) {
+                  _handleEnableSettings();
+                } else if (!_isKeyboardSelected) {
+                  _handleChooseKeyboard();
+                } else {
+                  _startSafeTest();
+                }
+              },
+              child: Text(
+                !_isKeyboardEnabled
+                    ? '1. Open keyboard settings'
+                    : (!_isKeyboardSelected
+                        ? '2. Choose Tanggolin keyboard'
+                        : '3. Try protection now'),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          Center(
+            child: GestureDetector(
+              onTap: () => AboutScreen.showTermsAndConditionsSheet(context),
+              child: Text(
+                'Terms & conditions',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTokens.brandAccent,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  /// Individual clean Setup Option Box
+  Widget _buildSetupOptionBox({
+    required String stepNumber,
+    required String title,
+    required String subtitle,
+    required bool isCompleted,
+    required bool isCurrent,
+    required String actionLabel,
+    required VoidCallback onTap,
+  }) {
+    final borderColor = isCompleted
+        ? AppTokens.brandPurple
+        : (isCurrent ? AppTokens.brandAccent : AppTokens.borderNeutral);
+
+    final bgColor = isCompleted
+        ? AppTokens.surfaceTinted
+        : (isCurrent ? Colors.white : const Color(0xFFF8FAFC));
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: isCompleted || isCurrent ? 1.5 : 1.0),
         ),
         child: Row(
           children: [
-            // Left content (Title and Subtitle)
+            // Number or Check Icon
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isCompleted
+                    ? AppTokens.brandPurple
+                    : (isCurrent ? AppTokens.lavenderSelected : const Color(0xFFE2E8F0)),
+              ),
+              child: Center(
+                child: isCompleted
+                    ? const Icon(Icons.check, size: 18, color: Colors.white)
+                    : Text(
+                        stepNumber,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isCurrent ? AppTokens.brandPurple : const Color(0xFF64748B),
+                        ),
+                      ),
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 15.5,
-                      fontWeight: FontWeight.bold,
-                      color: isClickable ? brandPurple : const Color(0xFF9CA3AF),
+                      fontWeight: FontWeight.w700,
+                      color: AppTokens.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 12.5,
-                      height: 1.35,
-                      color: isClickable
-                          ? const Color(0xFF4B5563)
-                          : const Color(0xFF9CA3AF),
+                      fontWeight: FontWeight.w400,
+                      color: AppTokens.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 14),
 
-            // Trailing Status Indicator (Circle checkbox or checkmark)
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCompleted ? brandPurple : Colors.transparent,
-                border: Border.all(
-                  color: isCompleted
-                      ? brandPurple
-                      : (isClickable
-                          ? const Color(0xFF7C3AED)
-                          : const Color(0xFFD1D5DB)),
-                  width: 2,
+            const SizedBox(width: 10),
+
+            // Trailing action or status
+            if (isCompleted)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppTokens.lavenderSelected,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.check, size: 13, color: AppTokens.brandPurple),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Done',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTokens.brandPurple,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (isCurrent)
+              OutlinedButton(
+                onPressed: onTap,
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(0, 34),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  side: const BorderSide(color: AppTokens.brandAccent, width: 1.2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  actionLabel,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppTokens.brandAccent,
+                  ),
                 ),
               ),
-              child: isCompleted
-                  ? const Icon(
-                      Icons.check,
-                      size: 18,
-                      color: Colors.white,
-                    )
-                  : null,
-            ),
           ],
         ),
       ),

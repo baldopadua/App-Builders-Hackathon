@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../main.dart';
 import '../services/platform_bridge.dart';
 
 class SecretsScreen extends StatefulWidget {
@@ -12,14 +13,14 @@ class SecretsScreen extends StatefulWidget {
 class _SecretsScreenState extends State<SecretsScreen> {
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _valueController = TextEditingController();
+  final FocusNode _labelFocus = FocusNode();
+  final FocusNode _valueFocus = FocusNode();
+
   List<PrivateSecret> _secrets = [];
   bool _isLoading = false;
   bool _isSaving = false;
 
-  static const Color _brandPurple = Color(0xFF581C87); // Deep rich violet
-  static const Color _accentPurple = Color(0xFF7C3AED);
-  static const Color _surfaceLavender = Color(0xFFFAF5FF);
-  static const Color _borderLavender = Color(0xFFE9D5FF);
+  static const int _maxNotes = 5;
 
   @override
   void initState() {
@@ -31,28 +32,33 @@ class _SecretsScreenState extends State<SecretsScreen> {
   void dispose() {
     _labelController.dispose();
     _valueController.dispose();
+    _labelFocus.dispose();
+    _valueFocus.dispose();
     super.dispose();
   }
 
   Future<void> _loadSecrets() async {
     setState(() => _isLoading = true);
-    final secrets = await PlatformBridge.getSecrets();
-    if (mounted) {
-      setState(() {
-        _secrets = secrets;
-        _isLoading = false;
-      });
+    try {
+      final secrets = await PlatformBridge.getSecrets();
+      if (mounted) {
+        setState(() {
+          _secrets = secrets;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _onSaveSecret() async {
-    if (_secrets.length >= 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Vault capacity reached (maximum 5 secrets).'),
-          backgroundColor: _brandPurple,
-          behavior: SnackBarBehavior.floating,
-        ),
+    if (_secrets.length >= _maxNotes) {
+      _showFeedback(
+        'You have $_maxNotes notes. Delete one to add another.',
+        isError: true,
       );
       return;
     }
@@ -61,126 +67,110 @@ class _SecretsScreenState extends State<SecretsScreen> {
     final value = _valueController.text.trim();
 
     if (label.isEmpty || value.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter both a label and a secret.'),
-          behavior: SnackBarBehavior.floating,
-        ),
+      _showFeedback(
+        'Please enter both a note label and the private details.',
+        isError: true,
       );
       return;
     }
 
     setState(() => _isSaving = true);
-    final created = await PlatformBridge.addSecret(label: label, value: value);
-    if (mounted) {
-      setState(() => _isSaving = false);
-      if (created != null) {
-        _labelController.clear();
-        _valueController.clear();
-        FocusScope.of(context).unfocus();
-        _loadSecrets();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('"$label" is now protected!'),
-            backgroundColor: _brandPurple,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+    try {
+      final created = await PlatformBridge.addSecret(label: label, value: value);
+      if (mounted) {
+        setState(() => _isSaving = false);
+        if (created != null) {
+          _labelController.clear();
+          _valueController.clear();
+          FocusScope.of(context).unfocus();
+          _loadSecrets();
+          _showFeedback('Private note saved.');
+        } else {
+          _showFeedback('Could not save note. Please try again.', isError: true);
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showFeedback('Error saving note. Please retry.', isError: true);
       }
     }
   }
 
-  Future<void> _showDeleteConfirmation(PrivateSecret secret) async {
+  void _showFeedback(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.plusJakartaSans(fontSize: 13.5),
+        ),
+        backgroundColor: isError ? AppTokens.redText : AppTokens.brandPurple,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteNote(PrivateSecret secret) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
         return Dialog(
+          backgroundColor: AppTokens.surfaceWhite,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(16),
           ),
-          backgroundColor: Colors.white,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Icon Pill
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3E8FF),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: _accentPurple,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: 18),
-
-                // Dialog Title
                 Text(
-                  'Delete ${secret.label}?',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18.5,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
-                    letterSpacing: -0.2,
+                  'Delete this note?',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppTokens.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 10),
-
-                // Dialog Body
-                const Text(
-                  'This secret will no longer be protected. This removes the saved note from your device.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    height: 1.4,
-                    color: Color(0xFF4B5563),
+                const SizedBox(height: 8),
+                Text(
+                  'Tanggolin will stop watching for "${secret.label}" in your drafts.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    height: 1.45,
+                    color: AppTokens.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // Actions: Cancel / Delete
+                const SizedBox(height: 20),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF4B5563),
-                          side: const BorderSide(color: Color(0xFFE5E7EB)),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Cancel',
-                          style: TextStyle(fontWeight: FontWeight.w600),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppTokens.textSecondary,
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _brandPurple,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Delete',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTokens.redText,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(80, 42),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: Text(
+                        'Delete',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -196,170 +186,75 @@ class _SecretsScreenState extends State<SecretsScreen> {
     if (shouldDelete == true) {
       await PlatformBridge.deleteSecret(secret.id);
       _loadSecrets();
+      _showFeedback('Note removed.');
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isFull = _secrets.length >= 5;
-
-    return Scaffold(
-      backgroundColor: _brandPurple,
-      body: SafeArea(
-        bottom: false,
+  void _showNoteDetailModal(PrivateSecret secret) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top App Bar Header Area
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        color: Colors.white, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      "Teach Me What's Private",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 48), // Balance leading back button
-                ],
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-
-            // White Main Body Container with Top Rounded Corners
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+            const SizedBox(height: 18),
+            Text(
+              secret.label,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppTokens.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Stored on this device, encrypted with AES-GCM.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13.5,
+                color: AppTokens.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _confirmDeleteNote(secret);
+                },
+                icon: const Icon(Icons.delete_outline_rounded,
+                    size: 18, color: AppTokens.redText),
+                label: Text(
+                  'Delete note',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w600,
+                    color: AppTokens.redText,
+                  ),
                 ),
-                child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(color: _brandPurple),
-                      )
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 22, 20, 36),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Capacity Pill Badge: "X / 5 Secrets Protected"
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3E8FF),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                '${_secrets.length} / 5 Secrets Protected',
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF6B21A8),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // Capacity Full Alert Banner (shown when 5 / 5)
-                            if (isFull) ...[
-                              Container(
-                                padding: const EdgeInsets.all(14),
-                                decoration: BoxDecoration(
-                                  color: _surfaceLavender,
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: _borderLavender),
-                                ),
-                                child: const Row(
-                                  children: [
-                                    Icon(Icons.lock_outline_rounded,
-                                        color: _brandPurple, size: 22),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Vault capacity reached.',
-                                            style: TextStyle(
-                                              fontSize: 13.5,
-                                              fontWeight: FontWeight.bold,
-                                              color: _brandPurple,
-                                            ),
-                                          ),
-                                          SizedBox(height: 2),
-                                          Text(
-                                            'Delete a protected note to make room for a new one.',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Color(0xFF6B7280),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // Add Private Note Form Card
-                            _buildAddNoteCard(isFull),
-                            const SizedBox(height: 28),
-
-                            // Protected Notes Section Header
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Protected Notes',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1F2937),
-                                  ),
-                                ),
-                                Text(
-                                  '${_secrets.length} saved',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-
-                            // Empty State OR List of Protected Notes
-                            if (_secrets.isEmpty)
-                              _buildEmptyState()
-                            else
-                              ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: _secrets.length,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  return _buildSecretItemCard(_secrets[index]);
-                                },
-                              ),
-                          ],
-                        ),
-                      ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppTokens.redBorder),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
             ),
           ],
@@ -368,137 +263,273 @@ class _SecretsScreenState extends State<SecretsScreen> {
     );
   }
 
-  /// Builds the "Add Private Note" form card
-  Widget _buildAddNoteCard(bool isFull) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: _surfaceLavender,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _borderLavender, width: 1.2),
+  @override
+  Widget build(BuildContext context) {
+    final isFull = _secrets.length >= _maxNotes;
+
+    return Scaffold(
+      backgroundColor: AppTokens.surfaceWhite,
+      appBar: AppBar(
+        titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          color: AppTokens.textPrimary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Private notes',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                color: AppTokens.textPrimary,
+                letterSpacing: -0.3,
+              ),
+            ),
+            Text(
+              'Teach Tanggolin what to watch for.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w400,
+                color: AppTokens.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Add Private Note',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: _brandPurple,
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Save sensitive notes, project names, or family details. Tanggolin will intercept drafts that match their meaning or keywords.',
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.4,
-              color: Color(0xFF4B5563),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Label Field
-          TextField(
-            controller: _labelController,
-            enabled: !isFull && !_isSaving,
-            decoration: InputDecoration(
-              hintText: "Label (e.g., Jakim's Location, Project Sunflower)",
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF9CA3AF),
-              ),
-              filled: true,
-              fillColor: isFull ? const Color(0xFFF3F4F6) : Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: _accentPurple, width: 1.5),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Value Field
-          TextField(
-            controller: _valueController,
-            enabled: !isFull && !_isSaving,
-            decoration: InputDecoration(
-              hintText: 'Enter the sensitive details to protect...',
-              hintStyle: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF9CA3AF),
-              ),
-              filled: true,
-              fillColor: isFull ? const Color(0xFFF3F4F6) : Colors.white,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: _accentPurple, width: 1.5),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Submit Button: "I-save ang Sikreto / Protect Secret"
-          SizedBox(
-            width: double.infinity,
-            height: 46,
-            child: ElevatedButton(
-              onPressed: (isFull || _isSaving) ? null : _onSaveSecret,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _brandPurple,
-                disabledBackgroundColor: const Color(0xFFDDD6FE),
-                foregroundColor: Colors.white,
-                disabledForegroundColor: Colors.white,
-                elevation: isFull ? 0 : 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTokens.brandPurple),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Limit reached banner if 5/5
+                    if (isFull) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTokens.surfaceTinted,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppTokens.borderLavender),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline_rounded,
+                              size: 18,
+                              color: AppTokens.brandPurple,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'You have $_maxNotes notes. Delete one to add another.',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTokens.brandPurple,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    )
-                  : const Text(
-                      'Save and Protect Secret',
-                      style: TextStyle(
+                      const SizedBox(height: 18),
+                    ],
+
+                    // Direct Form on White Surface (No bulky lavender card)
+                    // Note label
+                    Text(
+                      'Note label',
+                      style: GoogleFonts.plusJakartaSans(
                         fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                        color: AppTokens.textPrimary,
                       ),
                     ),
-            ),
-          ),
-        ],
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _labelController,
+                      focusNode: _labelFocus,
+                      enabled: !isFull && !_isSaving,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        hintText: 'Project nickname',
+                      ),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        color: AppTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Choose a label you can recognize later.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        color: AppTokens.textSecondary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Private details
+                    Text(
+                      'Private details',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: _valueController,
+                      focusNode: _valueFocus,
+                      enabled: !isFull && !_isSaving,
+                      maxLines: null,
+                      minLines: 3,
+                      decoration: const InputDecoration(
+                        hintText: 'The phrase or details to flag',
+                        alignLabelWithHint: true,
+                      ),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 15,
+                        color: AppTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Saved on this device, encrypted.',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12.5,
+                        color: AppTokens.textSecondary,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Save private note button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: (isFull || _isSaving) ? null : _onSaveSecret,
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Save private note'),
+                      ),
+                    ),
+
+                    const SizedBox(height: 36),
+
+                    // Saved notes Section Header with quiet count
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Saved notes',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: AppTokens.textPrimary,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        Text(
+                          '${_secrets.length} of $_maxNotes saved',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppTokens.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Notes List or Empty State
+                    if (_secrets.isEmpty)
+                      _buildEmptyState()
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _secrets.length,
+                        separatorBuilder: (context, index) => const Divider(
+                          color: Color(0xFFF1F5F9),
+                          height: 1,
+                        ),
+                        itemBuilder: (context, index) {
+                          final secret = _secrets[index];
+                          return InkWell(
+                            onTap: () => _showNoteDetailModal(secret),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 4),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          secret.label,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppTokens.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Stored on this device',
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 12.5,
+                                            color: AppTokens.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline_rounded,
+                                      size: 20,
+                                      color: AppTokens.textSecondary,
+                                    ),
+                                    tooltip: 'Delete note',
+                                    onPressed: () => _confirmDeleteNote(secret),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
       ),
     );
   }
 
-  /// Builds the empty state container with pangolin icon
+  /// Empty state with small pangolin silhouette and calm guidance
   Widget _buildEmptyState() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 36),
@@ -506,106 +537,38 @@ class _SecretsScreenState extends State<SecretsScreen> {
         child: Column(
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 56,
+              height: 56,
               decoration: const BoxDecoration(
-                color: Color(0xFFF3E8FF),
+                color: AppTokens.lavenderSelected,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.shield_outlined,
-                color: _accentPurple,
-                size: 38,
+              padding: const EdgeInsets.all(12),
+              child: Image.asset(
+                'assets/icons/tanggolin_icon.png',
+                fit: BoxFit.contain,
               ),
             ),
-            const SizedBox(height: 14),
-            const Text(
-              'No secrets saved yet.',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
+            const SizedBox(height: 12),
+            Text(
+              'No private notes yet',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppTokens.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Add sensitive notes above to train your on-device shield.',
+            Text(
+              'Add a phrase or detail you want Tanggolin to watch for.',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 13,
-                color: Color(0xFF6B7280),
+                color: AppTokens.textSecondary,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Builds each protected secret card showing ONLY the label
-  Widget _buildSecretItemCard(PrivateSecret secret) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: _surfaceLavender,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _borderLavender, width: 1.2),
-      ),
-      child: Row(
-        children: [
-          // Leading Shield Icon
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEDE9FE),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.verified_user_outlined,
-              color: _accentPurple,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-
-          // Label and Security Subtitle (never reveals the secret text)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  secret.label,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: _brandPurple,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '••••••••  Encrypted AES-GCM',
-                  style: GoogleFonts.robotoMono(
-                    fontSize: 11.5,
-                    color: const Color(0xFF6B7280),
-                    letterSpacing: 0.6,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Delete Action Button
-          IconButton(
-            icon: const Icon(
-              Icons.delete_outline_rounded,
-              color: _accentPurple,
-              size: 22,
-            ),
-            onPressed: () => _showDeleteConfirmation(secret),
-          ),
-        ],
       ),
     );
   }

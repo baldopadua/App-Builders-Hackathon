@@ -5,119 +5,106 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/bg_warning_banner_high"
-    android:padding="12dp"
+    android:padding="13dp"
     android:layout_marginHorizontal="6dp"
     android:layout_marginTop="2dp"
     android:layout_marginBottom="4dp">
 
-    <!-- Sleek Header: Status Icon + Text Badge (No Emojis) -->
+    <!-- Content Row: Authentic Tanggolin Icon + Text Stack -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="6dp">
+        android:gravity="top">
 
+        <!-- Authentic Tanggolin Brand Icon -->
         <ImageView
             android:id="@+id/banner_icon"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:src="@drawable/ic_warning_high"
-            android:contentDescription="Alert Icon" />
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginTop="1dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_tanggolin"
+            android:contentDescription="Tanggolin protection mark" />
 
-        <TextView
-            android:id="@+id/banner_badge"
-            android:layout_width="wrap_content"
+        <!-- Text Stack: Headline & Action Tip -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:background="@drawable/bg_badge_high"
-            android:paddingHorizontal="6dp"
-            android:paddingVertical="2dp"
-            android:text="ALERT"
-            android:textColor="#991B1B"
-            android:textSize="10sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.06"
-            android:fontFamily="sans-serif-medium" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Optional legacy badge id kept hidden for backward compatibility -->
+            <TextView
+                android:id="@+id/banner_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/banner_headline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Password detected."
+                android:textStyle="bold"
+                android:textColor="#991B1B"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif-medium"
+                android:letterSpacing="-0.01" />
+
+            <TextView
+                android:id="@+id/banner_tip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Mask it before sharing."
+                android:textColor="#7F1D1D"
+                android:textSize="13sp"
+                android:lineSpacingExtra="1dp"
+                android:fontFamily="sans-serif" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Clear, Readable English Headline -->
-    <TextView
-        android:id="@+id/banner_headline"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Careful! OTP or PIN code detected."
-        android:textStyle="bold"
-        android:textColor="#991B1B"
-        android:textSize="16sp"
-        android:fontFamily="sans-serif-medium"
-        android:layout_marginBottom="3dp" />
-
-    <!-- Reason & Tip Text -->
-    <TextView
-        android:id="@+id/banner_tip"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="One-time passcodes protect your accounts. Never share them over chat."
-        android:textColor="#7F1D1D"
-        android:textSize="13.5sp"
-        android:lineSpacingExtra="1dp"
-        android:fontFamily="sans-serif"
-        android:layout_marginBottom="10dp" />
-
-    <!-- Sleek Action Buttons Bar -->
+    <!-- Clean Action Row: [Dismiss] and [Mask text] -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical|end">
+        android:gravity="center_vertical|end"
+        android:layout_marginTop="10dp">
 
         <!-- Dismiss Button -->
         <Button
             android:id="@+id/btn_dismiss"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
+            android:layout_height="42dp"
+            android:minHeight="42dp"
             android:minWidth="0dp"
             android:text="Dismiss"
             android:textColor="#991B1B"
-            android:textSize="13sp"
+            android:textSize="13.5sp"
             android:fontFamily="sans-serif-medium"
             android:background="@drawable/bg_button_ghost"
             android:stateListAnimator="@null"
-            android:paddingHorizontal="10dp"
-            android:layout_marginEnd="6dp" />
-
-        <!-- Review Button -->
-        <Button
-            android:id="@+id/btn_review"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:text="Review"
-            android:textColor="#991B1B"
-            android:textSize="13sp"
-            android:fontFamily="sans-serif-medium"
-            android:background="@drawable/bg_button_ghost"
-            android:stateListAnimator="@null"
-            android:paddingHorizontal="10dp"
+            android:paddingHorizontal="14dp"
             android:layout_marginEnd="8dp" />
 
-        <!-- Hide Button (Clean Solid Pill, No Emojis) -->
+        <!-- Mask Text Button (Solid Pill) -->
         <Button
             android:id="@+id/btn_itago"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="78dp"
-            android:text="Hide"
+            android:layout_height="42dp"
+            android:minHeight="42dp"
+            android:minWidth="96dp"
+            android:text="Mask text"
             android:textColor="#FFFFFF"
-            android:textSize="13sp"
+            android:textSize="13.5sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
             android:background="@drawable/bg_button_itago_high"
             android:stateListAnimator="@null"
-            android:paddingHorizontal="16dp" />
+            android:paddingHorizontal="18dp" />
     </LinearLayout>
 </LinearLayout>

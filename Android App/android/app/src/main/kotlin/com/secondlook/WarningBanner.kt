@@ -43,7 +43,6 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     private val bannerIcon: ImageView? = view.findViewById(R.id.banner_icon)
     private val bannerBadge: TextView? = view.findViewById(R.id.banner_badge)
     private val btnItago: Button = view.findViewById(R.id.btn_itago)
-    private val btnReview: Button = view.findViewById(R.id.btn_review)
     private val btnDismiss: Button = view.findViewById(R.id.btn_dismiss)
 
     private val holdHandler = Handler(Looper.getMainLooper())
@@ -55,7 +54,6 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     }
 
     private var onDismissListener: (() -> Unit)? = null
-    private var onReviewListener: (() -> Unit)? = null
 
     fun showWarning(warning: Warning) {
         cancelHold()
@@ -83,7 +81,7 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
     }
 
     /**
-     * Transforms the banner UI for intercepted Send events: [Hide] [Review] [Send anyway]
+     * Transforms the banner UI for intercepted Send events: [Send anyway] [Mask text]
      */
     fun showSendIntercept(warning: Warning, onSendAnyway: () -> Unit) {
         cancelHold()
@@ -98,13 +96,7 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
             hide()
             onSendAnyway()
         }
-
-        btnReview.visibility = View.VISIBLE
-        btnReview.text = "Review"
-        btnReview.setOnClickListener {
-            hide()
-            onReviewListener?.invoke()
-        }
+        btnItago.visibility = if (warning.canHide) View.VISIBLE else View.GONE
 
         if (container.visibility != View.VISIBLE) {
             container.visibility = View.VISIBLE
@@ -144,14 +136,6 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
         btnItago.setOnClickListener { listener() }
     }
 
-    fun setOnReviewClickListener(listener: () -> Unit) {
-        onReviewListener = listener
-        btnReview.setOnClickListener {
-            hide()
-            listener()
-        }
-    }
-
     fun setOnDismissClickListener(listener: () -> Unit) {
         onDismissListener = listener
         btnDismiss.setOnClickListener {
@@ -164,14 +148,12 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
         container.setBackgroundResource(R.drawable.bg_warning_banner_high)
         headlineText.setTextColor(Color.parseColor("#991B1B"))
         tipText.setTextColor(Color.parseColor("#7F1D1D"))
-        bannerIcon?.setImageResource(R.drawable.ic_warning_high)
-        bannerBadge?.text = "ALERT"
-        bannerBadge?.setTextColor(Color.parseColor("#991B1B"))
-        bannerBadge?.setBackgroundResource(R.drawable.bg_badge_high)
+        bannerIcon?.setImageResource(R.drawable.ic_tanggolin)
+        bannerBadge?.visibility = View.GONE
         btnItago.setBackgroundResource(R.drawable.bg_button_itago_high)
-        btnItago.text = "Hide"
+        btnItago.text = "Mask text"
         btnItago.backgroundTintList = null
-        btnReview.setTextColor(Color.parseColor("#991B1B"))
+        btnDismiss.text = "Dismiss"
         btnDismiss.setTextColor(Color.parseColor("#991B1B"))
     }
 
@@ -179,14 +161,12 @@ class WarningBanner(inflater: LayoutInflater, parent: ViewGroup) {
         container.setBackgroundResource(R.drawable.bg_warning_banner_medium)
         headlineText.setTextColor(Color.parseColor("#854D0E"))
         tipText.setTextColor(Color.parseColor("#78350F"))
-        bannerIcon?.setImageResource(R.drawable.ic_warning_medium)
-        bannerBadge?.text = "NOTICE · INTENDED?"
-        bannerBadge?.setTextColor(Color.parseColor("#854D0E"))
-        bannerBadge?.setBackgroundResource(R.drawable.bg_badge_medium)
+        bannerIcon?.setImageResource(R.drawable.ic_tanggolin)
+        bannerBadge?.visibility = View.GONE
         btnItago.setBackgroundResource(R.drawable.bg_button_itago_medium)
-        btnItago.text = "Hide"
+        btnItago.text = "Mask text"
         btnItago.backgroundTintList = null
-        btnReview.setTextColor(Color.parseColor("#854D0E"))
+        btnDismiss.text = "Dismiss"
         btnDismiss.setTextColor(Color.parseColor("#854D0E"))
     }
 }
