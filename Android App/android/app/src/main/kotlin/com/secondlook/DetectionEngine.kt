@@ -121,12 +121,13 @@ object DetectionEngine {
      * Masks detected sensitive secrets in the draft text.
      */
     fun hide(text: String, warning: Warning? = null): String {
-        return try {
+        val rawMasked = try {
             activeAdapter.hide(text, warning)
         } catch (e: Exception) {
             Log.e(TAG, "Exception in active adapter hide; using fallback", e)
             fallbackAdapter.hide(text, warning)
         }
+        return com.secondlook.ai.WordMasker.ensureFullWordMask(text, rawMasked, warning)
     }
 
     /**

@@ -187,4 +187,29 @@ object SecretManager {
             it.value.isNotBlank() && lower.contains(it.value.lowercase())
         }
     }
+
+    /**
+     * Finds a user-saved private note in the text, returning the note and its character range.
+     */
+    fun findProtectedSecret(text: String): Pair<SecretNote, IntRange>? {
+        val lower = text.lowercase()
+        for (secret in cachedSecrets) {
+            if (secret.value.isNotBlank()) {
+                val secretLower = secret.value.lowercase()
+                val idx = lower.indexOf(secretLower)
+                if (idx >= 0) {
+                    return Pair(secret, idx until (idx + secret.value.length))
+                }
+            }
+        }
+        return null
+    }
+
+    fun addSecretForTesting(note: SecretNote) {
+        cachedSecrets.add(note)
+    }
+
+    fun clearSecretsForTesting() {
+        cachedSecrets.clear()
+    }
 }

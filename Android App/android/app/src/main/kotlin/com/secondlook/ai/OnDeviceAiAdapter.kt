@@ -100,8 +100,9 @@ class OnDeviceAiAdapter : AiDetectionAdapter {
         if (text.isBlank()) return null
         val result = checker.check(text) ?: return null
 
-        val start = result.start.coerceIn(0, text.length)
-        val end = result.end.coerceIn(start, text.length)
+        val (expStart, expEnd) = WordMasker.expandSecretBoundaries(text, result.start, result.end)
+        val start = expStart.coerceIn(0, text.length)
+        val end = expEnd.coerceIn(start, text.length)
         val matched = if (start < end) text.substring(start, end) else ""
 
         return Warning(
@@ -124,19 +125,17 @@ class OnDeviceAiAdapter : AiDetectionAdapter {
     }
 
     override fun hide(text: String, warning: Warning?): String {
-        return if (warning != null && warning.canHide && warning.matchedText.isNotEmpty()) {
-            val s = warning.start.coerceIn(0, text.length)
-            val e = warning.end.coerceIn(s, text.length)
-            val kind = if (warning.type == WarningType.HIGH) "password" else "phone"
-            val masked = Redactor.maskSpan(text.substring(s, e), kind)
-            if (masked != null) {
-                text.substring(0, s) + masked + text.substring(e)
-            } else {
-                Redactor.hideAll(text, { checker.check(it) })
+        val warn = warning ?: detectSync(text)
+        if (warn != null && warn.canHide && (warn.start < warn.end || warn.matchedText.isNotEmpty())) {
+            val (s, e) = WordMasker.expandSecretBoundaries(text, warn.start, warn.end)
+            if (s < e) {
+                val secret = text.substring(s, e)
+                val masked = "•".repeat(secret.length)
+                return text.substring(0, s) + masked + text.substring(e)
             }
-        } else {
-            Redactor.hideAll(text, { checker.check(it) })
         }
+        val masked = Redactor.hideAll(text, { checker.check(it) })
+        return WordMasker.ensureFullWordMask(text, masked, warn)
     }
 
     /**

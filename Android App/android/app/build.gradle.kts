@@ -36,6 +36,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 kotlin {
@@ -50,4 +54,5 @@ flutter {
 
 dependencies {
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.26.0")
+    testImplementation("junit:junit:4.13.2")
 }

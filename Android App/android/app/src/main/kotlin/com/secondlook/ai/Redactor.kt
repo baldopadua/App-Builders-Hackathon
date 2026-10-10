@@ -21,7 +21,7 @@ object Redactor {
     /** Masked replacement for a risky span, or null when masking makes no sense (private notes). */
     fun maskSpan(span: String, kind: String): String? = when (kind) {
         "private_match" -> null
-        "password", "otp", "my_secret" -> MASK
+        "password", "otp", "my_secret" -> DOT.toString().repeat(span.length.coerceAtLeast(4))
         "api_key" -> when {
             span.startsWith("-----BEGIN") -> KEY_REMOVED
             URL_PASSWORD.containsMatchIn(span) -> URL_PASSWORD.replace(span) { it.groupValues[1] + MASK + "@" }
@@ -35,8 +35,9 @@ object Redactor {
 
     /** The whole draft with this result's span masked, or null when it can't be masked (private notes). */
     fun hide(text: String, r: RiskResult): String? {
-        val start = r.start.coerceIn(0, text.length)
-        val end = r.end.coerceIn(start, text.length)
+        val (expStart, expEnd) = WordMasker.expandSecretBoundaries(text, r.start, r.end)
+        val start = expStart.coerceIn(0, text.length)
+        val end = expEnd.coerceIn(start, text.length)
         val masked = maskSpan(text.substring(start, end), r.kind) ?: return null
         return text.substring(0, start) + masked + text.substring(end)
     }
