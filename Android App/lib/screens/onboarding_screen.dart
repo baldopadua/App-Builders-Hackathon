@@ -88,6 +88,34 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
   }
 
+  void _onNext() {
+    if (_currentIndex < _slides.length - 1) {
+      setState(() {
+        _currentIndex++;
+      });
+    } else {
+      setState(() {
+        _showActivation = true;
+      });
+    }
+  }
+
+  void _skipToActivation() {
+    setState(() {
+      _showActivation = true;
+    });
+  }
+
+  Future<void> _handleEnableSettings() async {
+    await PlatformBridge.openInputMethodSettings();
+    await Future.delayed(const Duration(milliseconds: 600));
+    final enabled = await PlatformBridge.isKeyboardEnabled();
+    if (enabled) {
+      await PlatformBridge.setAcceptedTerms(true);
+    }
+    _checkKeyboardStatus();
+  }
+
   Future<void> _handleChooseKeyboard() async {
     if (!_isKeyboardEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,22 +127,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       return;
     }
     await PlatformBridge.showInputMethodPicker();
-    await Future.delayed(const Duration(milliseconds: 600));
-    final enabled = await PlatformBridge.isKeyboardEnabled();
-    if (enabled) {
-      await PlatformBridge.setAcceptedTerms(true);
-    }
+    await Future.delayed(const Duration(milliseconds: 800));
     _checkKeyboardStatus();
   }
 
-  void _startSafeTest() {
+  Future<void> _startSafeTest() async {
+    await PlatformBridge.setAcceptedTerms(true);
     setState(() {
       _hasCompletedSafeTest = true;
     });
-  }
-
-  Future<void> _finishOnboarding() async {
-    await PlatformBridge.setAcceptedTerms(true);
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
