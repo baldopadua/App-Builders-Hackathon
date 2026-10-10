@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
+import '../services/platform_bridge.dart';
 import 'about_screen.dart';
 import 'secrets_screen.dart';
 
@@ -15,6 +16,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   final TextEditingController _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   String? _selectedSampleKey;
+  bool _isSelectingNote = false;
 
   final List<Map<String, String>> _samples = [
     {
@@ -40,7 +42,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
     {
       'key': 'private_note',
       'label': 'Private note',
-      'text': 'Meeting notes for Project Orion: safe discussion',
+      'text': '',
     },
   ];
 
@@ -48,6 +50,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
   void initState() {
     super.initState();
     _textController.addListener(_onTextUpdated);
+    _refreshPrivateNoteSample();
   }
 
   @override
@@ -56,6 +59,27 @@ class _PracticeScreenState extends State<PracticeScreen> {
     _textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _refreshPrivateNoteSample() async {
+    try {
+      final secrets = await PlatformBridge.getSecrets();
+      if (!mounted) return;
+      final idx = _samples.indexWhere((s) => s['key'] == 'private_note');
+      if (idx != -1) {
+        if (secrets.isNotEmpty) {
+          final firstNote = secrets.firstWhere(
+            (s) => s.value.trim().isNotEmpty,
+            orElse: () => secrets.first,
+          );
+          _samples[idx]['text'] = firstNote.value.trim().isNotEmpty
+              ? firstNote.value
+              : firstNote.label;
+        } else {
+          _samples[idx]['text'] = '';
+        }
+      }
+    } catch (_) {}
   }
 
   void _onTextUpdated() {
@@ -76,14 +100,181 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
-  void _onSelectSample(String key, String text) {
+  Future<void> _onSelectSample(String key, String defaultText) async {
+    if (key == 'private_note') {
+      if (_isSelectingNote) return;
+      _isSelectingNote = true;
+      try {
+        final secrets = await PlatformBridge.getSecrets();
+        if (!mounted) return;
+
+        if (secrets.isEmpty) {
+          await _showNoNotesPrompt();
+          return;
+        }
+
+        final firstNote = secrets.firstWhere(
+          (s) => s.value.trim().isNotEmpty,
+          orElse: () => secrets.first,
+        );
+        final noteText = firstNote.value.trim().isNotEmpty
+            ? firstNote.value
+            : firstNote.label;
+
+        final idx = _samples.indexWhere((s) => s['key'] == 'private_note');
+        if (idx != -1) {
+          _samples[idx]['text'] = noteText;
+        }
+
+        setState(() {
+          _selectedSampleKey = key;
+          _textController.text = noteText;
+          _textController.selection = TextSelection.fromPosition(
+            TextPosition(offset: noteText.length),
+          );
+        });
+      } catch (_) {
+        if (!mounted) return;
+        await _showNoNotesPrompt();
+      } finally {
+        _isSelectingNote = false;
+      }
+      return;
+    }
+
     setState(() {
       _selectedSampleKey = key;
-      _textController.text = text;
+      _textController.text = defaultText;
       _textController.selection = TextSelection.fromPosition(
-        TextPosition(offset: text.length),
+        TextPosition(offset: defaultText.length),
       );
     });
+  }
+
+  Future<void> _showNoNotesPrompt() async {
+    final shouldCreate = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: AppTokens.surfaceWhite,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppTokens.surfaceTinted,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTokens.borderLavender),
+                      ),
+                      child: const Icon(
+                        Icons.bookmark_outline_rounded,
+                        color: AppTokens.brandPurple,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'No private notes yet',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppTokens.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Add a private note first so Tanggolin can practice flagging your sensitive details in drafts.',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    color: AppTokens.textSecondary,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(
+                        'Not now',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w600,
+                          color: AppTokens.textSecondary,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTokens.brandPurple,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        'Create note',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (shouldCreate == true && mounted) {
+      await _navigateToSecrets();
+      if (!mounted) return;
+      final secrets = await PlatformBridge.getSecrets();
+      if (mounted && secrets.isNotEmpty) {
+        final firstNote = secrets.firstWhere(
+          (s) => s.value.trim().isNotEmpty,
+          orElse: () => secrets.first,
+        );
+        final noteText = firstNote.value.trim().isNotEmpty
+            ? firstNote.value
+            : firstNote.label;
+
+        final idx = _samples.indexWhere((s) => s['key'] == 'private_note');
+        if (idx != -1) {
+          _samples[idx]['text'] = noteText;
+        }
+
+        setState(() {
+          _selectedSampleKey = 'private_note';
+          _textController.text = noteText;
+          _textController.selection = TextSelection.fromPosition(
+            TextPosition(offset: noteText.length),
+          );
+        });
+      }
+    }
   }
 
   void _clearText() {
@@ -94,11 +285,13 @@ class _PracticeScreenState extends State<PracticeScreen> {
     });
   }
 
-  void _navigateToSecrets() {
-    Navigator.push(
+  Future<void> _navigateToSecrets() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SecretsScreen()),
     );
+    if (!mounted) return;
+    _refreshPrivateNoteSample();
   }
 
   void _navigateToAbout() {
