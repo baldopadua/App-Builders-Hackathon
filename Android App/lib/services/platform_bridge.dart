@@ -205,4 +205,26 @@ class PlatformBridge {
       return false;
     }
   }
+
+  /// Checks if the user has already accepted the Terms & Conditions
+  static Future<bool> hasAcceptedTerms() async {
+    try {
+      final bool? result =
+          await _channel.invokeMethod<bool>('hasAcceptedTerms');
+      return result ?? false;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
+
+  /// Records the user's acceptance of the Terms & Conditions
+  static Future<bool> setAcceptedTerms(bool accepted) async {
+    try {
+      final bool? result = await _channel
+          .invokeMethod<bool>('setAcceptedTerms', {'accepted': accepted});
+      return result ?? true;
+    } on PlatformException catch (_) {
+      return false;
+    }
+  }
 }

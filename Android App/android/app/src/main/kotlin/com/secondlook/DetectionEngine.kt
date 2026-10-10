@@ -87,6 +87,19 @@ object DetectionEngine {
         get() = activeAdapter.isReady
 
     /**
+     * Fast synchronous check using the rule-based adapter only (< 1ms).
+     * Used for the 250ms keystroke fast-path and Auto-Itago.
+     */
+    fun detectRulesOnly(text: String): Warning? {
+        return try {
+            fallbackAdapter.detectSync(text)
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception in fallbackAdapter detectRulesOnly", e)
+            null
+        }
+    }
+
+    /**
      * Synchronously analyzes draft text for immediate Send key interception.
      * Fast-paths through active adapter, falling back seamlessly on error or timeout.
      */

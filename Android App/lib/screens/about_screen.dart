@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/platform_bridge.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -330,7 +331,10 @@ class AboutScreen extends StatelessWidget {
   }
 
   /// Displays comprehensive Terms & Conditions and Data Handling disclosure modal sheet
-  static void showTermsAndConditionsSheet(BuildContext context) {
+  static void showTermsAndConditionsSheet(BuildContext context) async {
+    final alreadyAccepted = await PlatformBridge.hasAcceptedTerms();
+    if (!context.mounted) return;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -457,26 +461,58 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
 
-                    // Accept button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _brandPurple,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
+                    // Acceptance status button/badge
+                    if (alreadyAccepted)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
                         ),
-                        elevation: 0,
-                      ),
-                      onPressed: () => Navigator.pop(ctx),
-                      child: const Text(
-                        'I Understand & Accept',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF10B981),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Already accepted during onboarding',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF475569),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _brandPurple,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () async {
+                          await PlatformBridge.setAcceptedTerms(true);
+                          if (ctx.mounted) Navigator.pop(ctx);
+                        },
+                        child: const Text(
+                          'I Understand & Accept',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

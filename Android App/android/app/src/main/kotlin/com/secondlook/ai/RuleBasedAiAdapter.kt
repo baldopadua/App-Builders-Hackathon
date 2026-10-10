@@ -142,6 +142,11 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         }
     }
 
+    private val PW_PATTERN = Regex("""(?i)\b(?:password|passcode|passwd|pwd|pw|db_password)\b(\s*(?:[:=]|is|ay|ko(?:\s+ay)?|\s)\s*)["']?([^\s"']{3,})""")
+    private val PW_STOPWORDS = setOf(
+        "ang", "ng", "sa", "ko", "ay", "mo", "na", "ka", "po", "the", "is", "for", "to", "and", "my", "your", "with", "word", "words", "namin", "natin", "nila", "niya"
+    )
+
     override fun hide(text: String, warning: Warning?): String {
         var result = text
 
@@ -152,8 +157,19 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
             return result.replaceRange(otpMatch.range, bullets)
         }
 
+        val pwMatch = PW_PATTERN.find(result)
+        if (pwMatch != null) {
+            val candidate = pwMatch.groupValues[2].trim('"', '\'')
+            if (candidate.lowercase() !in PW_STOPWORDS) {
+                val bullets = "•".repeat(candidate.length)
+                return result.substring(0, pwMatch.range.first) +
+                       pwMatch.groupValues[0].replace(candidate, bullets) +
+                       result.substring(pwMatch.range.last + 1)
+            }
+        }
+
         val secretPatterns = listOf(
-            Regex("""(?i)\b(password|pin|otp|code|pass|pw)\s*(?:is|:|:=|=)?\s*([^\s]+)"""),
+            Regex("""(?i)\b(password|pin|otp|code|pass|pw)\b\s*(?:is|:|:=|=)\s*([^\s]+)"""),
             Regex("""\b09\d{9}\b"""),
             Regex("""\+63\s?9\d{9}\b"""),
             Regex("""(?i)\bhunter2\b"""),
@@ -203,12 +219,9 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
 
     private fun isPassword(text: String, lower: String): Boolean {
         if (lower.contains("hunter2")) return true
-        val hasPwKeyword = lower.contains("password") ||
-                lower.contains("pass:") ||
-                lower.contains("pw:") ||
-                lower.contains("password ko") ||
-                lower.contains("db_password")
-        return hasPwKeyword && text.length > 6
+        val m = PW_PATTERN.find(text) ?: return false
+        val candidate = m.groupValues[2].trim('"', '\'').lowercase()
+        return candidate !in PW_STOPWORDS
     }
 
     private fun isApiKey(text: String, lower: String): Boolean {

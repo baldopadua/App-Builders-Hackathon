@@ -1,12 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/keyboard_container"
+    android:id="@+id/root_ime_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@color/keyboard_bg"
-    android:paddingHorizontal="3dp"
-    android:paddingBottom="6dp">
+    android:background="@android:color/transparent">
+
+    <!-- Send Shield Band (Layer 5: covers app composer row during red warning) -->
+    <FrameLayout
+        android:id="@+id/send_shield_container"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:background="@android:color/transparent"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="4dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/send_shield_pill"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_send_shield_pill"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:elevation="6dp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tv_send_shield_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛡️ I-review muna — idiin 2s para i-unlock ang Send"
+                android:textColor="#FFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/keyboard_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/keyboard_bg"
+        android:paddingHorizontal="3dp"
+        android:paddingBottom="6dp">
 
     <!-- Top Banner Placeholder (Warning Banner expands here dynamically) -->
     <FrameLayout
@@ -210,4 +250,5 @@
             android:layout_weight="2.0"
             android:textSize="28sp" />
     </LinearLayout>
+</LinearLayout>
 </LinearLayout>

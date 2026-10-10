@@ -5,6 +5,7 @@ import android.inputmethodservice.InputMethodService
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -20,21 +21,156 @@ class SecondLookIME : InputMethodService() {
     private lateinit var warningBanner: WarningBanner
     private var currentWarning: Warning? = null
     private val debounceHandler = Handler(Looper.getMainLooper())
+
+    // Layer 5: Send Shield state & views
+    private var rootImeLayout: View? = null
+    private var keyboardContainer: View? = null
+    private var sendShieldContainer: FrameLayout? = null
+    private var sendShieldPill: LinearLayout? = null
+    private var tvSendShieldText: TextView? = null
+    private var isShieldOn = false
+    private val shieldHoldHandler = Handler(Looper.getMainLooper())
+
+    // Layer 2: Auto-Itago state
+    // 1. PIN / OTP / Passcode with digits (e.g. 'PIN ko 4821', 'OTP: 123456', 'passcode 9988')
+    private val PIN_OTP_REGEX = Regex("""(?i)\b(m?pin|otp|passcode)\b([^\d\n]{0,20}?)(\d{4,8})\b""")
+
+    // 2. Password with explicit value (e.g. 'password ko 1234', 'password: secret', 'pw: 123')
+    private val PW_VALUE_REGEX = Regex("""(?i)\b(password|pass|pw)\b(\s*(?:ko(?:\s+ay)?|ay|is|:|:=|=|\s)\s*)([A-Za-z0-9_\-!@#$%^&*]{3,})\b""")
+
+    // Common grammatical particles/stopwords that must never be treated as passwords
+    private val PW_STOPWORDS = setOf(
+        "ang", "ng", "sa", "ko", "ay", "mo", "na", "ka", "po", "the", "is", "for", "to", "and", "my", "your", "with", "word", "words", "namin", "natin", "nila", "niya"
+    )
+
+    // Approved secrets in RAM only (cleared on field finish)
+    private val approvedSecrets = mutableSetOf<String>()
+
+    private var restoreText: String? = null
+    private var maskedText: String? = null
+
+    private fun maskSecret(text: String): String? {
+        var out = text
+
+        // 1. Check PIN / OTP digits first (e.g. 'PIN ko 4821', 'OTP: 123456')
+        val pinMatch = PIN_OTP_REGEX.find(out)
+        if (pinMatch != null) {
+            val digits = pinMatch.groupValues[3]
+            if (digits !in approvedSecrets) {
+                val bullets = "•".repeat(digits.length)
+                return out.substring(0, pinMatch.range.first) +
+                       pinMatch.groupValues[1] + pinMatch.groupValues[2] + bullets +
+                       out.substring(pinMatch.range.last + 1)
+            }
+        }
+
+        // 2. Check Password with actual value (e.g. 'password ko 1234', 'password: secret')
+        var pwHit = false
+        val pwOut = PW_VALUE_REGEX.replace(out) { m ->
+            val secretValue = m.groupValues[3]
+            if (secretValue.lowercase() in PW_STOPWORDS || secretValue in approvedSecrets) {
+                return@replace m.value
+            }
+            pwHit = true
+            val bullets = "•".repeat(secretValue.length)
+            m.groupValues[1] + m.groupValues[2] + bullets
+        }
+
+        return if (pwHit) pwOut else null
+    }
+
+    // Layer 1 + 2: Fast rules check + Auto-Itago
+    private val rulesRunnable = Runnable {
+        val text = getCurrentText()
+        if (text.isEmpty() || text == maskedText) return@Runnable
+        if (text == restoreText) return@Runnable
+
+        // If currently in masked state, absorb newly typed or deleted characters smoothly
+        val currentMasked = maskedText
+        val currentRestore = restoreText
+        if (currentMasked != null && currentRestore != null) {
+            if (text.startsWith(currentMasked) && text.length > currentMasked.length) {
+                val appended = text.substring(currentMasked.length)
+                val newRestore = currentRestore + appended
+                val newMasked = currentMasked + "•".repeat(appended.length)
+                restoreText = newRestore
+                maskedText = newMasked
+                replaceCurrentText(newMasked)
+                return@Runnable
+            } else if (currentMasked.startsWith(text) && text.length < currentMasked.length) {
+                val diff = currentMasked.length - text.length
+                restoreText = currentRestore.dropLast(diff)
+                maskedText = text
+                return@Runnable
+            } else if (!text.contains("•")) {
+                restoreText = null
+                maskedText = null
+            }
+        }
+
+        val w = DetectionEngine.detectRulesOnly(text) ?: return@Runnable
+        if (w.type != WarningType.HIGH || !SettingsManager.isIngatModeEnabled(this)) return@Runnable
+
+        val masked = maskSecret(text) ?: return@Runnable
+        Log.i("SecondLookIME", "Auto-Itago triggered! Masking secret in draft (${text.length} chars)")
+        restoreText = text
+        maskedText = masked
+        replaceCurrentText(masked)
+        currentWarning = w
+        updatePangolinState(w)
+        FeedbackManager.notifyWarning(applicationContext, isHighAlert = true)
+        showSendShield()
+
+        if (::warningBanner.isInitialized) {
+            warningBanner.showAutoHidden(w) {
+                val original = restoreText
+                if (original != null && getCurrentText() == maskedText) {
+                    PIN_OTP_REGEX.findAll(original).forEach { m ->
+                        approvedSecrets += m.groupValues[3]
+                    }
+                    PW_VALUE_REGEX.findAll(original).forEach { m ->
+                        val v = m.groupValues[3]
+                        if (v.lowercase() !in PW_STOPWORDS) {
+                            approvedSecrets += v
+                        }
+                    }
+                    replaceCurrentText(original)
+                    warningBanner.showRestored()
+                    hideSendShield()
+                }
+                restoreText = null
+                maskedText = null
+            }
+        }
+    }
+
+    // Section 11.1: No draft text in logs (logs only length and warning type)
     private val debounceRunnable = Runnable {
         val text = getCurrentText()
-        Log.d("SecondLookIME", "500ms pause reached, analyzing draft: $text")
+        if (maskedText != null && text == maskedText) {
+            return@Runnable
+        }
+        Log.d("SecondLookIME", "500ms pause reached, analyzing draft (${text.length} chars)")
         DetectionEngine.detectAsync(text) { warning ->
-            Log.d("SecondLookIME", "DetectionEngine result: $warning")
+            Log.d("SecondLookIME", "DetectionEngine result: ${warning?.type} - ${warning?.headline}")
             val isNewWarning = warning != null && (currentWarning == null || currentWarning?.type != warning.type || currentWarning?.headline != warning.headline)
             currentWarning = warning
             if (::warningBanner.isInitialized) {
                 if (warning != null) {
                     warningBanner.showWarning(warning)
+                    if (warning.type == WarningType.HIGH) {
+                        showSendShield()
+                    } else {
+                        hideSendShield()
+                    }
                     if (isNewWarning) {
                         FeedbackManager.notifyWarning(applicationContext, warning.type == WarningType.HIGH)
                     }
                 } else {
-                    warningBanner.hide()
+                    hideSendShield()
+                    if (maskedText == null || text != maskedText) {
+                        warningBanner.hide()
+                    }
                 }
             }
             updatePangolinState(warning)
@@ -133,8 +269,68 @@ class SecondLookIME : InputMethodService() {
         FeedbackManager.init(applicationContext)
     }
 
+    private fun showSendShield() {
+        if (!SettingsManager.isIngatModeEnabled(this)) return
+        val isChatApp = currentInputEditorInfo?.packageName in chatApps
+        if (!isChatApp) return
+        if (isShieldOn) return
+
+        isShieldOn = true
+        sendShieldContainer?.visibility = View.VISIBLE
+        tvSendShieldText?.text = "🛡️ I-review muna — idiin 2s para i-unlock ang Send"
+        window?.window?.decorView?.requestLayout()
+    }
+
+    private fun hideSendShield() {
+        shieldHoldHandler.removeCallbacksAndMessages(null)
+        if (!isShieldOn) return
+
+        isShieldOn = false
+        sendShieldContainer?.visibility = View.GONE
+        window?.window?.decorView?.requestLayout()
+    }
+
+    override fun onComputeInsets(outInsets: Insets) {
+        super.onComputeInsets(outInsets)
+        val kb = keyboardContainer
+        val kbTop = kb?.top ?: 0
+        outInsets.contentTopInsets = kbTop
+        outInsets.visibleTopInsets = kbTop
+        outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_REGION
+        val top = if (isShieldOn) 0 else kbTop
+        val root = rootImeLayout ?: return
+        outInsets.touchableRegion.set(0, top, root.width, root.height)
+    }
+
     override fun onCreateInputView(): View {
         val keyboardView = layoutInflater.inflate(R.layout.keyboard_layout, null)
+        rootImeLayout = keyboardView
+        keyboardContainer = keyboardView.findViewById(R.id.keyboard_container)
+        sendShieldContainer = keyboardView.findViewById(R.id.send_shield_container)
+        sendShieldPill = keyboardView.findViewById(R.id.send_shield_pill)
+        tvSendShieldText = keyboardView.findViewById(R.id.tv_send_shield_text)
+
+        sendShieldPill?.setOnTouchListener { v, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    v.isPressed = true
+                    v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                    tvSendShieldText?.text = "Idiin pa (2s) para i-unlock..."
+                    shieldHoldHandler.postDelayed({
+                        v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        hideSendShield()
+                    }, 2000)
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.isPressed = false
+                    shieldHoldHandler.removeCallbacksAndMessages(null)
+                    tvSendShieldText?.text = "🛡️ I-review muna — idiin 2s para i-unlock ang Send"
+                    true
+                }
+                else -> false
+            }
+        }
         
         // Setup Warning Banner
         val bannerContainer = keyboardView.findViewById<FrameLayout>(R.id.warning_banner_container)
@@ -144,14 +340,35 @@ class SecondLookIME : InputMethodService() {
         warningBanner = WarningBanner(layoutInflater, bannerContainer)
         warningBanner.setOnItagoClickListener {
             val text = getCurrentText()
-            val masked = DetectionEngine.hide(text, currentWarning)
+            val masked = maskSecret(text) ?: DetectionEngine.hide(text, currentWarning)
+            restoreText = text
+            maskedText = masked
             replaceCurrentText(masked)
-            warningBanner.hide()
-            currentWarning = null
-            updatePangolinState(null)
+            FeedbackManager.notifyWarning(applicationContext, isHighAlert = false)
+            val w = currentWarning ?: Warning(WarningType.HIGH, "Itinago ang secret", "Itinago")
+            warningBanner.showAutoHidden(w) {
+                val original = restoreText
+                if (original != null && getCurrentText() == maskedText) {
+                    PIN_OTP_REGEX.findAll(original).forEach { m ->
+                        approvedSecrets += m.groupValues[3]
+                    }
+                    PW_VALUE_REGEX.findAll(original).forEach { m ->
+                        val v = m.groupValues[3]
+                        if (v.lowercase() !in PW_STOPWORDS) {
+                            approvedSecrets += v
+                        }
+                    }
+                    replaceCurrentText(original)
+                    warningBanner.showRestored()
+                    hideSendShield()
+                }
+                restoreText = null
+                maskedText = null
+            }
         }
         warningBanner.setOnDismissClickListener {
             currentWarning = null
+            hideSendShield()
             updatePangolinState(null)
             Log.d("SecondLookIME", "Warning dismissed by user")
         }
@@ -231,18 +448,40 @@ class SecondLookIME : InputMethodService() {
         return before + after
     }
 
-    private fun onTextChanged() {
+    private fun onTextChanged(immediate: Boolean = false) {
+        debounceHandler.removeCallbacks(rulesRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
+
+        val text = getCurrentText()
+        val inMaskedState = maskedText != null
+
+        val delay = when {
+            immediate -> 0L
+            inMaskedState -> 50L // While already masked, immediately absorb newly typed characters
+            text.endsWith(" ") || text.endsWith("\n") || text.endsWith(",") || text.endsWith(".") -> 250L // Word completed
+            else -> 1200L // Still actively typing mid-word: allow 1.2s of inactivity before auto-hiding
+        }
+
+        if (delay == 0L) {
+            rulesRunnable.run()
+        } else {
+            debounceHandler.postDelayed(rulesRunnable, delay)
+        }
         debounceHandler.postDelayed(debounceRunnable, 500)
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
         deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
+        debounceHandler.removeCallbacks(rulesRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
         delButton?.isPressed = false
 
         currentWarning = null
+        restoreText = null
+        maskedText = null
+        approvedSecrets.clear()
+        hideSendShield()
         updatePangolinState(null)
         if (::warningBanner.isInitialized) {
             warningBanner.hide()
@@ -254,7 +493,12 @@ class SecondLookIME : InputMethodService() {
     override fun onFinishInput() {
         super.onFinishInput()
         deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
+        debounceHandler.removeCallbacks(rulesRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
+        restoreText = null
+        maskedText = null
+        approvedSecrets.clear()
+        hideSendShield()
         if (::warningBanner.isInitialized) {
             warningBanner.cancelHold()
         }
@@ -263,7 +507,11 @@ class SecondLookIME : InputMethodService() {
     override fun onDestroy() {
         super.onDestroy()
         deleteRepeatHandler.removeCallbacks(deleteRepeatRunnable)
+        debounceHandler.removeCallbacks(rulesRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
+        restoreText = null
+        maskedText = null
+        approvedSecrets.clear()
         if (::warningBanner.isInitialized) {
             warningBanner.cancelHold()
         }
@@ -414,25 +662,25 @@ class SecondLookIME : InputMethodService() {
         (view.findViewById<Button>(R.id.btn_comma) ?: view.findViewWithTag<Button>(","))?.setOnClickListener { v ->
             FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText(",", 1)
-            onTextChanged()
+            onTextChanged(immediate = true)
         }
 
         (view.findViewById<Button>(R.id.btn_period) ?: view.findViewWithTag<Button>("."))?.setOnClickListener { v ->
             FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText(".", 1)
-            onTextChanged()
+            onTextChanged(immediate = true)
         }
 
         (view.findViewById<Button>(R.id.btn_apostrophe) ?: view.findViewWithTag<Button>("'"))?.setOnClickListener { v ->
             FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText("'", 1)
-            onTextChanged()
+            onTextChanged(immediate = true)
         }
 
         (view.findViewById<Button>(R.id.btn_space) ?: view.findViewWithTag<Button>("SPACE"))?.setOnClickListener { v ->
             FeedbackManager.vibrateKeyPress(applicationContext, v)
             currentInputConnection?.commitText(" ", 1)
-            onTextChanged()
+            onTextChanged(immediate = true)
         }
 
         enterButton = view.findViewById<Button>(R.id.btn_enter) ?: view.findViewWithTag<Button>("ENTER")
@@ -481,22 +729,50 @@ class SecondLookIME : InputMethodService() {
         }
     }
 
+    // Layer 3: Chat apps list for Enter key hold interception
+    private val chatApps = setOf(
+        "com.facebook.orca",                 // Messenger
+        "com.facebook.katana",               // Facebook
+        "com.facebook.lite",                 // FB Lite / Messenger Lite
+        "com.google.android.apps.messaging", // Google Messages (SMS)
+        "com.whatsapp",
+        "com.whatsapp.w4b",                  // WhatsApp Business
+        "org.telegram.messenger",
+        "org.telegram.plus",
+        "com.viber.voip",
+        "com.instagram.android",             // Instagram Direct
+        "com.discord",                       // Discord
+        "com.tencent.mm",                    // WeChat
+        "jp.naver.line.android",             // LINE
+        "com.skype.raider"                   // Skype
+    )
+
     private fun handleEnterClick() {
+        debounceHandler.removeCallbacks(rulesRunnable)
         debounceHandler.removeCallbacks(debounceRunnable)
+
+        // If intercept banner is already active, prompt user with hold vibration
+        if (::warningBanner.isInitialized && warningBanner.isInterceptActive()) {
+            warningBanner.showHoldPrompt()
+            return
+        }
 
         val draft = getCurrentText()
         val warning = DetectionEngine.detectSync(draft)
         currentWarning = warning
-        Log.d("SecondLookIME", "Final sync check on Send/Enter: $warning")
+        Log.d("SecondLookIME", "Final sync check on Send/Enter: ${warning?.type} - ${warning?.headline}")
 
         val actionInfo = getEnterActionInfo(currentInputEditorInfo)
+        val isChatApp = currentInputEditorInfo?.packageName in chatApps
+        val isSendAction = actionInfo.isSendOrSubmit || actionInfo.targetAction == EditorInfo.IME_ACTION_SEND || isChatApp
 
-        // Intercept if Red Warning (High Alert) is active: Prompt user with alert banner
-        if (warning?.type == WarningType.HIGH && (actionInfo.isSendOrSubmit || actionInfo.targetAction == EditorInfo.IME_ACTION_SEND)) {
-            Log.w("SecondLookIME", "Intercepted Send action! Displaying alert banner")
+        // Intercept if Red Warning (High Alert) is active on Send or inside a chat app
+        if (warning?.type == WarningType.HIGH && isSendAction) {
+            val isIngatMode = SettingsManager.isIngatModeEnabled(this)
+            Log.w("SecondLookIME", "Intercepted Send action in ${currentInputEditorInfo?.packageName} (IngatMode=$isIngatMode)")
             FeedbackManager.notifyWarning(applicationContext, isHighAlert = true)
             if (::warningBanner.isInitialized) {
-                warningBanner.showSendIntercept(warning) {
+                warningBanner.showSendIntercept(warning, isIngatMode) {
                     Log.i("SecondLookIME", "User authorized send. Dispatching held action.")
                     currentWarning = null
                     dispatchAction(actionInfo)

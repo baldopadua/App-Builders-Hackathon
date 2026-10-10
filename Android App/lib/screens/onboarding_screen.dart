@@ -93,11 +93,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
     if (mounted) {
       setState(() {
-        if (isEnabled) _step1Completed = true;
-        if (isSelected) {
-          _step1Completed = true;
-          _step2Completed = true;
-        }
+        _step1Completed = isEnabled;
+        _step2Completed = isSelected;
       });
     }
   }
@@ -128,9 +125,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     await PlatformBridge.openInputMethodSettings();
     await Future.delayed(const Duration(milliseconds: 600));
     final enabled = await PlatformBridge.isKeyboardEnabled();
+    if (enabled) {
+      // Record acceptance of terms when keyboard is first enabled
+      await PlatformBridge.setAcceptedTerms(true);
+    }
     if (mounted) {
       setState(() {
-        _step1Completed = enabled || true; // Fallback so user is not blocked
+        _step1Completed = enabled;
       });
     }
   }
@@ -142,11 +143,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       return;
     }
     await PlatformBridge.showInputMethodPicker();
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 800));
     final selected = await PlatformBridge.isKeyboardSelected();
     if (mounted) {
       setState(() {
-        _step2Completed = selected || true;
+        _step2Completed = selected;
       });
     }
   }
@@ -173,7 +174,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  void _finishOnboarding() {
+  Future<void> _finishOnboarding() async {
+    await PlatformBridge.setAcceptedTerms(true);
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
