@@ -211,6 +211,11 @@ class RuleBasedAiAdapter : AiDetectionAdapter {
         }
     }
 
+    private val PW_PATTERN = Regex("""(?i)\b(?:password|passcode|passwd|pwd|pw|db_password)\b(\s*(?:[:=]|is|ay|ko(?:\s+ay)?|\s)\s*)["']?([^\s"']{3,})""")
+    private val PW_STOPWORDS = setOf(
+        "ang", "ng", "sa", "ko", "ay", "mo", "na", "ka", "po", "the", "is", "for", "to", "and", "my", "your", "with", "word", "words", "namin", "natin", "nila", "niya"
+    )
+
     override fun hide(text: String, warning: Warning?): String {
         val targetWarning = if (warning != null && warning.canHide && warning.start < warning.end && warning.end <= text.length) {
             warning

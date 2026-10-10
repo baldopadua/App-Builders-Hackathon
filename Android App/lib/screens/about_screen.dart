@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
+import '../services/platform_bridge.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -317,7 +318,9 @@ class AboutScreen extends StatelessWidget {
 
   /// Clean, bounded Terms & Conditions modal sheet (Section 15)
   static void showTermsAndConditionsSheet(BuildContext context,
-      {bool isFirstTimeAcceptance = false}) {
+      {bool isFirstTimeAcceptance = false}) async {
+    final alreadyAccepted = await PlatformBridge.hasAcceptedTerms();
+    if (!context.mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -428,18 +431,59 @@ class AboutScreen extends StatelessWidget {
                           'Tanggolin contains zero advertising SDKs, analytics tracking, or behavioral profiling.',
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: Text(
-                          isFirstTimeAcceptance
-                              ? 'I Understand & Accept'
-                              : 'Done',
+                    if (alreadyAccepted) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF10B981),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Already accepted during onboarding',
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF475569),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Done'),
+                        ),
+                      ),
+                    ] else
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            await PlatformBridge.setAcceptedTerms(true);
+                            if (ctx.mounted) Navigator.pop(ctx);
+                          },
+                          child: Text(
+                            isFirstTimeAcceptance
+                                ? 'I Understand & Accept'
+                                : 'Done',
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

@@ -74,6 +74,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     try {
       final isEnabled = await PlatformBridge.isKeyboardEnabled();
       final isSelected = await PlatformBridge.isKeyboardSelected();
+      if (isEnabled) {
+        await PlatformBridge.setAcceptedTerms(true);
+      }
       if (mounted) {
         setState(() {
           _isKeyboardEnabled = isEnabled;
@@ -83,29 +86,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     } catch (_) {
       // Ignored
     }
-  }
-
-  void _onNext() {
-    if (_currentIndex < _slides.length - 1) {
-      setState(() {
-        _currentIndex++;
-      });
-    } else {
-      setState(() {
-        _showActivation = true;
-      });
-    }
-  }
-
-  void _skipToActivation() {
-    setState(() {
-      _showActivation = true;
-    });
-  }
-
-  Future<void> _handleEnableSettings() async {
-    await PlatformBridge.openInputMethodSettings();
-    Future.delayed(const Duration(milliseconds: 500), _checkKeyboardStatus);
   }
 
   Future<void> _handleChooseKeyboard() async {
@@ -119,13 +99,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       return;
     }
     await PlatformBridge.showInputMethodPicker();
-    Future.delayed(const Duration(milliseconds: 500), _checkKeyboardStatus);
+    await Future.delayed(const Duration(milliseconds: 600));
+    final enabled = await PlatformBridge.isKeyboardEnabled();
+    if (enabled) {
+      await PlatformBridge.setAcceptedTerms(true);
+    }
+    _checkKeyboardStatus();
   }
 
   void _startSafeTest() {
     setState(() {
       _hasCompletedSafeTest = true;
     });
+  }
+
+  Future<void> _finishOnboarding() async {
+    await PlatformBridge.setAcceptedTerms(true);
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>

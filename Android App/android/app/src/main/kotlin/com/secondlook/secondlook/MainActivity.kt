@@ -113,6 +113,14 @@ class MainActivity : FlutterActivity() {
                     val isSelected = defaultIme.contains(packageName) || defaultIme.contains("SecondLookIME")
                     result.success(isSelected)
                 }
+                "hasAcceptedTerms" -> {
+                    result.success(SettingsManager.hasAcceptedTerms(applicationContext))
+                }
+                "setAcceptedTerms" -> {
+                    val accepted = call.argument<Boolean>("accepted") ?: true
+                    SettingsManager.setAcceptedTerms(applicationContext, accepted)
+                    result.success(true)
+                }
                 else -> {
                     result.notImplemented()
                 }
